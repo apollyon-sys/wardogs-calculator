@@ -39,6 +39,9 @@ let analyticsLastCalculationFingerprint = null;
 let analyticsSessionKeys =
     loadAnalyticsSessionKeys();
 
+let analyticsMapLayerHooksInstalled =
+    false;
+
 
 function loadAnalyticsSessionKeys() {
     try {
@@ -422,6 +425,169 @@ function trackCalculationState(inRange) {
             ANALYTICS_CALCULATION_DELAY
         );
 }
+
+
+/* =========================
+   V1.7 FEATURE TELEMETRY
+   ========================= */
+
+/*
+ * Keep the new feature telemetry here instead of coupling Umami calls to
+ * Terrain3D or Map Tools implementation details.
+ *
+ * Only explicit user actions are recorded. No coordinates, MIL values,
+ * terrain height differences, candidate commands, or ballistic payload data
+ * are sent.
+ */
+
+function getAnalyticsMapId() {
+    return (
+        typeof S === 'object' &&
+        S &&
+        typeof S.map === 'string'
+    )
+        ? S.map
+        : '';
+}
+
+function handleAnalyticsFeatureChange(event) {
+    const target =
+        event?.target;
+
+    if (
+        !target ||
+        target.id !==
+            'experimentalTerrainCorrectionToggle'
+    ) {
+        return;
+    }
+
+    trackAnalytics(
+        'terrain3d-toggle',
+        {
+            enabled:
+                Boolean(
+                    target.checked
+                ),
+            map:
+                getAnalyticsMapId()
+        }
+    );
+}
+
+function installMapLayerAnalyticsHooks() {
+    if (
+        analyticsMapLayerHooksInstalled
+    ) {
+        return true;
+    }
+
+    if (
+        typeof window.setMapLayerVisible !==
+            'function' ||
+        typeof window.setMapLayerGroupVisible !==
+            'function'
+    ) {
+        return false;
+    }
+
+    const originalSetMapLayerVisible =
+        window.setMapLayerVisible;
+
+    const originalSetMapLayerGroupVisible =
+        window.setMapLayerGroupVisible;
+
+    window.setMapLayerVisible =
+        function analyticsSetMapLayerVisible(
+            layer,
+            visible
+        ) {
+            const result =
+                originalSetMapLayerVisible.apply(
+                    this,
+                    arguments
+                );
+
+            if (layer === 'contours') {
+                trackAnalytics(
+                    'contours-toggle',
+                    {
+                        enabled:
+                            Boolean(
+                                visible
+                            ),
+                        map:
+                            getAnalyticsMapId()
+                    }
+                );
+            }
+
+            return result;
+        };
+
+    window.setMapLayerGroupVisible =
+        function analyticsSetMapLayerGroupVisible(
+            layerIds,
+            visible
+        ) {
+            const result =
+                originalSetMapLayerGroupVisible.apply(
+                    this,
+                    arguments
+                );
+
+            if (
+                Array.isArray(layerIds) &&
+                layerIds.includes(
+                    'contours'
+                )
+            ) {
+                trackAnalytics(
+                    'contours-toggle',
+                    {
+                        enabled:
+                            Boolean(
+                                visible
+                            ),
+                        map:
+                            getAnalyticsMapId()
+                    }
+                );
+            }
+
+            return result;
+        };
+
+    analyticsMapLayerHooksInstalled =
+        true;
+
+    return true;
+}
+
+function initializeAnalyticsFeatureTelemetry() {
+    installMapLayerAnalyticsHooks();
+}
+
+document.addEventListener(
+    'change',
+    handleAnalyticsFeatureChange
+);
+
+document.addEventListener(
+    'DOMContentLoaded',
+    initializeAnalyticsFeatureTelemetry,
+    {
+        once: true
+    }
+);
+
+window.addEventListener(
+    'load',
+    initializeAnalyticsFeatureTelemetry,
+    {
+        once: true
+    }
+);
 
 window.addEventListener(
     'load',
