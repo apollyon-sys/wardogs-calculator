@@ -206,7 +206,24 @@ export const SEO_PAGE_CONTENT = {
             'Marcadores táticos'
         ]
     },
-
+    
+    ja: {
+        description: 'SPH-2と迫撃砲に対応した無料のWARDOGS砲兵用弾道計算機。Bakurani/Ozetiのマップ、等高線、実験的なTerrain3D MIL補正、戦術ツールを備えています。',
+        heading: 'この計算機について',
+        intro: 'WARDOGS Artillery Calculatorは、迫撃砲とSPH-2の射撃諸元を算出するための無料・オープンソースのコミュニティツールです。BakuraniとOzetiのインタラクティブ戦術マップ、座標による目標指定、距離・方位角・MILの計算、地形の等高線、対応する地形での実験的なSPH-2向けTerrain3D MIL補正を提供します。',
+        usage: 'マップと火器を選び、砲と目標の位置を置くと射撃諸元が表示されます。保存した目標は主要な射撃情報を一覧にそのまま表示し、計測・描画・等高線レイヤー・戦術マーカーは作戦の計画に使えます。実験的なTerrain3D補正は既定でオフになっており、利用者が自分で有効にします。SAFEと判定されたSPH-2の候補にのみ適用され、不確実な場合や非対応の場合は自動的に通常の射表を使用します。車体の傾斜補正には対応していません。',
+        features: [
+            'WARDOGSの迫撃砲計算と射撃諸元',
+            'SPH-2のLOW / HIGH射撃諸元',
+            'SPH-2向けの実験的Terrain3D MIL補正',
+            '等高線付きBakuraniインタラクティブマップ',
+            '等高線付きOzeti戦術マップ',
+            '保存した目標の射撃情報',
+            '計測ツールと描画ツール',
+            '戦術マップマーカー'
+        ]
+    },
+    
     cat: {
         description: 'Free WARDOGS arty and mortar meowculator with SPH-2, Bakurani/Ozeti meowps, contour paws and experimental Terrain3D MIL meowgic.',
         heading: 'About the meowculator',
