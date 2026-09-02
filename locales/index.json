@@ -102,6 +102,16 @@
       "ogLocale": "ko_KR"
     },
     {
+      "id": "ja",
+      "file": "ja.json",
+      "name": "Japanese",
+      "nativeName": "日本語",
+      "flag": "🇯🇵",
+      "flagAsset": "assets/flags/jp.svg",
+      "hreflang": "ja",
+      "ogLocale": "ja_JP"
+    },
+    {
       "id": "cat",
       "file": "cat.json",
       "name": "Cat",

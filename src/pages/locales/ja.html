@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html data-page-language="ja" lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/><base href="../"/>
+<script src="js/core/mobile-redirect.js"></script>
+<script data-website-id="5bf09dda-86d4-43fb-a730-3a8e32351463" defer="" src="https://cloud.umami.is/script.js"></script>
+<title>WARDOGS 砲兵用弾道計算機 & インタラクティブマップ</title>
+<link href="../assets/favicon.png" rel="icon"/>
+<link href="style.css" rel="stylesheet"/>
+<meta content="WARDOGS向けの無料・オープンソースの砲兵/迫撃砲の弾道計算機。BakuraniとOzetiのマップ、迫撃砲とSPH-2の射撃諸元、Terrain3Dの標高情報、保存した目標、戦術マップツールを提供します。" name="description"/><meta content="index, follow, max-image-preview:large" name="robots"/><meta content="#101316" name="theme-color"/><link href="https://wardogs-artillery.com/ja/" rel="canonical"/><link href="https://wardogs-artillery.com/" hreflang="en" rel="alternate"/><link href="https://wardogs-artillery.com/ru/" hreflang="ru" rel="alternate"/><link href="https://wardogs-artillery.com/uk/" hreflang="uk" rel="alternate"/><link href="https://wardogs-artillery.com/de/" hreflang="de" rel="alternate"/><link href="https://wardogs-artillery.com/fr/" hreflang="fr" rel="alternate"/><link href="https://wardogs-artillery.com/es/" hreflang="es" rel="alternate"/><link href="https://wardogs-artillery.com/pl/" hreflang="pl" rel="alternate"/><link href="https://wardogs-artillery.com/pt/" hreflang="pt" rel="alternate"/><link href="https://wardogs-artillery.com/zh-cn/" hreflang="zh-CN" rel="alternate"/><link href="https://wardogs-artillery.com/ja/" hreflang="ko" rel="alternate"/><link href="https://wardogs-artillery.com/" hreflang="x-default" rel="alternate"/><meta content="website" property="og:type"/><meta content="WARDOGS Artillery Calculator" property="og:site_name"/><meta content="WARDOGS 砲兵用弾道計算機 & インタラクティブマップ" property="og:title"/><meta content="WARDOGS向けの無料・オープンソースの砲兵/迫撃砲の弾道計算機。BakuraniとOzetiのマップ、迫撃砲とSPH-2の射撃諸元、Terrain3Dの標高情報、保存した目標、戦術マップツールを提供します。" property="og:description"/><meta content="https://wardogs-artillery.com/ja/" property="og:url"/>
+<meta content="https://wardogs-artillery.com/assets/preview.png" property="og:image"/>
+<meta content="image/png" property="og:image:type"/>
+<meta content="1200" property="og:image:width"/>
+<meta content="675" property="og:image:height"/>
+<meta content="WARDOGS 砲兵用弾道計算機の戦術マップと射撃諸元の画面" property="og:image:alt"/><meta content="ja_JP" property="og:locale"/><meta content="en_GB" property="og:locale:alternate"/><meta content="ru_RU" property="og:locale:alternate"/><meta content="uk_UA" property="og:locale:alternate"/><meta content="de_DE" property="og:locale:alternate"/><meta content="fr_FR" property="og:locale:alternate"/><meta content="es_ES" property="og:locale:alternate"/><meta content="pl_PL" property="og:locale:alternate"/><meta content="pt_PT" property="og:locale:alternate"/><meta content="zh_CN" property="og:locale:alternate"/><meta content="ko_KR" property="og:locale:alternate"/><meta content="summary_large_image" name="twitter:card"/>
+<meta content="https://wardogs-artillery.com/assets/preview.png" name="twitter:image"/>
+<meta content="WARDOGS 砲兵用弾道計算機 & インタラクティブマップ" name="twitter:title"/><meta content="WARDOGS向けの無料・オープンソースの砲兵/迫撃砲の弾道計算機。BakuraniとOzetiのマップ、迫撃砲とSPH-2の射撃諸元、Terrain3Dの標高情報、保存した目標、戦術マップツールを提供します。" name="twitter:description"/><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "WARDOGS Artillery Calculator",
+  "url": "https://wardogs-artillery.com/ja/", "image": "https://wardogs-artillery.com/assets/preview.png",
+  "description": "WARDOGS向けの無料・オープンソースの砲兵/迫撃砲の弾道計算機。BakuraniとOzetiのマップ、迫撃砲とSPH-2の射撃諸元、Terrain3Dの標高情報、保存した目標、戦術マップツールを提供します。",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Any",
+  "isAccessibleForFree": true,
+  "inLanguage": "ja",
+  "browserRequirements": "Requires JavaScript and a modern web browser",
+  "codeRepository": "https://github.com/apollyon-sys/wardogs-calculator"
+}</script></head>
+<body>
+<header>
+<div class="header-title">
+<img alt="" aria-hidden="true" class="header-brand-icon" src="assets/favicon.png"/>
+<h1 data-i18n="title">WARDOGS // 砲兵用弾道計算機</h1>
+<span data-i18n="gridInfo">1 km → 100 m マス 10×10</span>
+</div>
+<div class="header-controls">
+<button aria-label="テーマ切り替え" class="theme-toggle" id="themeToggle" title="テーマ切り替え" type="button">
+<span id="themeIcon">☼</span>
+</button>
+<select class="language-select" id="language"></select>
+</div>
+</header>
+<main>
+<aside>
+<!-- MAP -->
+<div class="section">
+<h2 data-i18n="map">マップ</h2>
+<label data-i18n="presetMap">プリセットマップ</label>
+<select id="mapSelect"></select>
+<div id="customMapSizing">
+<div class="grid2" style="margin-top:7px">
+<div>
+<label data-i18n="width">幅 (km)</label>
+<input id="w" max="100" min="1" type="number" value="10"/>
+</div>
+<div>
+<label data-i18n="height">高さ (km)</label>
+<input id="h" max="100" min="1" type="number" value="10"/>
+</div>
+</div>
+<button class="primary" data-i18n="apply" id="apply" style="margin-top:8px">適用</button>
+</div>
+</div>
+<!-- WEAPON -->
+<div class="section">
+<h2 data-i18n="weapon">火器</h2>
+<label data-i18n="weaponType">火器種別</label>
+<select id="weapon"></select>
+<div class="result" style="margin-top:8px">
+<div class="row">
+<span data-i18n="weaponRange">射程</span>
+<b id="range">
+            600 m
+          </b>
+</div>
+<div class="row">
+<span data-i18n="targetStatus">目標の状態</span>
+<b id="rangeStatus">
+            In range
+          </b>
+</div>
+</div>
+<p class="hint" data-i18n="rangeHint">円は砲の位置を基準に、選択した火器の最小射程と最大射程を示します。</p>
+</div>
+<!-- POINT SELECTION -->
+<div class="section">
+<h2 data-i18n="pointSelection">地点の選択</h2>
+<div class="mode">
+<button class="active" data-i18n="artillery" id="originMode">砲</button>
+<button data-i18n="target" id="targetMode">目標</button>
+</div>
+<label data-i18n="artilleryXY">砲 X / Y</label>
+<div class="grid2">
+<input id="ox" step="0.01" type="number" value="2000"/>
+<input id="oy" step="0.01" type="number" value="2000"/>
+</div>
+<div class="point-coordinate-actions">
+<button data-i18n="copyCoordinates" id="coordinateOriginCopy" type="button">コピー</button>
+<button data-i18n="pasteCoordinates" id="coordinateOriginPaste" type="button">貼り付け</button>
+<button aria-pressed="false" class="point-lock-button" id="coordinateOriginLock" type="button">Lock</button>
+</div>
+<label data-i18n="targetXY">目標 X / Y</label>
+<div class="grid2">
+<input id="tx" step="0.01" type="number" value="2500"/>
+<input id="ty" step="0.01" type="number" value="2500"/>
+</div>
+<div class="point-coordinate-actions">
+<button data-i18n="copyCoordinates" id="coordinateTargetCopy" type="button">コピー</button>
+<button data-i18n="pasteCoordinates" id="coordinateTargetPaste" type="button">貼り付け</button>
+<button aria-pressed="false" class="point-lock-button" id="coordinateTargetLock" type="button">Lock</button>
+</div>
+</div>
+<!-- RESULT -->
+<div class="section">
+<h2 data-i18n="result">計算結果</h2>
+<div class="result solution-result">
+<div class="solution-primary-grid">
+<div class="solution-metric">
+<span class="solution-metric-label" data-i18n="distance">距離</span>
+<strong class="solution-metric-value" id="distm">707 m</strong>
+<span class="solution-metric-sub" id="dist">0.71 km</span>
+</div>
+<div class="solution-metric solution-metric-highlight">
+<span class="solution-metric-label" data-i18n="mil">MIL</span>
+<strong class="solution-metric-value" id="mil">—</strong>
+<span class="solution-metric-sub" id="milAlt" hidden></span>
+</div>
+<div class="solution-metric">
+<span class="solution-metric-label" data-i18n="azimuth">方位角</span>
+<strong class="solution-metric-value" id="angle">45.0°</strong>
+<span class="solution-metric-sub solution-metric-spacer" aria-hidden="true">&nbsp;</span>
+</div>
+</div>
+<div class="solution-secondary-grid">
+<div class="solution-secondary-item"><span>ΔX</span><b id="dx">+500 m</b></div>
+<div class="solution-secondary-item"><span>ΔY</span><b id="dy">+500 m</b></div>
+</div>
+</div>
+<p class="hint" data-i18n="azimuthHint">方位角: 0° 北、90° 東、180° 南、270° 西。</p>
+</div>
+<!-- CONTROLS -->
+<div class="section">
+<h2 data-i18n="controls">操作</h2>
+<div class="grid2">
+<button id="zoomOut">
+          −
+        </button>
+<button id="zoomIn">
+          +
+        </button>
+</div>
+<button data-i18n="fit" id="fit" style="margin-top:7px">全体表示</button>
+<button data-i18n="swap" id="swap" style="margin-top:7px">地点を入れ替え</button>
+<button data-i18n="clear" id="clear" style="margin-top:7px">リセット</button>
+<p class="hint" data-i18n="controlsHint">左クリック — 地点を置く · マーカーをドラッグ — 地点を移動 · スクロール — 拡大縮小 · 右クリック — マップを移動</p>
+</div>
+</aside>
+<button aria-label="サイドバーを隠す" aria-expanded="true" class="sidebar-toggle" id="sidebarToggle" title="サイドバーを隠す" type="button">
+<span aria-hidden="true" class="sidebar-toggle-icon">‹</span>
+</button>
+<!-- WORKSPACE -->
+<section class="workspace">
+<div class="toolbar">
+<span class="status" id="status"></span>
+</div>
+<div class="map">
+<canvas id="canvas"></canvas>
+<!-- CURSOR -->
+<div class="cursor-coords" id="cursorCoords">
+<span class="cursor-y">
+          y0.00
+        </span>
+<span class="cursor-x">
+          x0.00
+        </span>
+</div>
+<!-- SAVED TARGETS -->
+<div class="saved-targets">
+<div class="saved-targets-header">
+<span data-i18n="savedTargets">保存した目標</span>
+<span class="saved-targets-count" id="savedTargetsCount">
+      0
+    </span>
+</div>
+<div class="saved-targets-list" id="savedTargetsList"></div>
+<div class="saved-target-options">
+<label class="save-artillery-option">
+<input id="saveArtilleryPosition" type="checkbox"/>
+<span data-i18n="saveArtilleryPosition">砲の位置も保存</span>
+</label>
+</div>
+<div class="saved-target-actions">
+<button class="save-target-button" data-i18n="save" id="saveTarget" type="button">保存</button>
+<div class="saved-target-transfer-actions">
+<button data-i18n="exportAllTargets" id="exportSavedTargets" type="button">すべてエクスポート</button>
+<button data-i18n="importTargets" id="importSavedTargets" type="button">インポート</button>
+</div>
+<div aria-live="polite" class="saved-target-transfer-status" id="savedTargetsTransferStatus"></div>
+</div>
+</div>
+<!-- MAP TOOLS -->
+<div class="map-tools" id="mapTools">
+<div class="map-tool-popover map-tool-palette" id="pencilPalette"></div>
+<div class="map-tool-popover map-tool-marker-picker" id="markerPicker"></div>
+<div class="map-tool-popover map-tool-coordinate-search" id="coordinateSearchPopover">
+<div class="map-tool-popover-title" id="coordinateSearchTitle">座標検索</div>
+<div class="map-tool-search-grid">
+<input id="coordinateSearchX" inputmode="numeric" placeholder="X" type="number"/>
+<input id="coordinateSearchY" inputmode="numeric" placeholder="Y" type="number"/>
+</div>
+<button class="map-tool-search-go" id="coordinateSearchGo" type="button">移動</button>
+<div class="map-tool-search-error" id="coordinateSearchError"></div>
+</div>
+<div class="map-tool-popover map-tool-layers" id="mapLayersPopover"></div>
+<div class="map-tool-popover map-tool-data-transfer" id="mapDataTransferPopover"></div>
+<div class="map-tools-bar">
+<button aria-label="計測" class="map-tool-button" data-tool="ruler" id="mapToolRuler" title="計測" type="button">
+<span aria-hidden="true">📏</span>
+</button>
+<button aria-label="ペン" class="map-tool-button" data-tool="pencil" id="mapToolPencil" title="ペン" type="button">
+<span aria-hidden="true">✎</span>
+</button>
+<button aria-label="消しゴム" class="map-tool-button" data-tool="eraser" id="mapToolEraser" title="消しゴム" type="button">
+<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+<path d="m4.5 14.5 8-8a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L10 19H6.5L4.5 17a1.8 1.8 0 0 1 0-2.5Z"/>
+<path d="m9.5 9.5 5 5"/>
+<path d="M10 19h9"/>
+</svg>
+</button>
+<button aria-label="マーカー" class="map-tool-button" data-tool="marker" id="mapToolMarker" title="マーカー" type="button">
+<span aria-hidden="true">⌖</span>
+</button>
+<button aria-label="座標検索" class="map-tool-button" data-tool="coordinateSearch" id="mapToolCoordinateSearch" title="座標検索" type="button">
+<span aria-hidden="true">⌕</span>
+</button>
+<button aria-label="レイヤー" class="map-tool-button" data-tool="layers" id="mapToolLayers" title="レイヤー" type="button">
+<span aria-hidden="true">☷</span>
+</button>
+<button aria-label="インポート / エクスポート" class="map-tool-button" data-tool="dataTransfer" id="mapToolDataTransfer" title="インポート / エクスポート" type="button">
+<svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v10"/><path d="m4 11 3 3 3-3"/><path d="M17 20V10"/><path d="m14 13 3-3 3 3"/></svg>
+</button>
+<button aria-label="全画面" class="map-tool-button map-tool-fullscreen-button" id="mapToolFullscreen" title="全画面" type="button">
+<span aria-hidden="true" class="map-tool-fullscreen-icon">⛶</span>
+</button>
+</div>
+</div>
+<!-- LEGEND -->
+<div class="legend">
+<b data-i18n="lmb">左クリック</b>
+
+        —
+
+        <span data-i18n="point">地点</span>
+
+        ·
+
+        <b data-i18n="grid">グリッド</b>
+
+        —
+
+        <span data-i18n="majorGrid">主グリッド線</span>
+</div>
+</div>
+</section>
+</main>
+<footer id="siteFooter"></footer>
+<script src="js/core/core.js"></script>
+<script src="js/core/resources.js"></script>
+<script src="js/core/config.js"></script>
+<script src="js/core/analytics.js"></script>
+<script src="js/core/file-transfer.js"></script>
+<script src="js/ui/i18n.js"></script>
+<script src="js/ui/theme.js"></script><script src="js/ui/footer.js"></script>
+<script src="js/ui/layout.js"></script>
+<script src="js/features/saved-targets.js"></script>
+<script src="js/features/motd.js"></script>
+<script src="js/features/weapons.js"></script>
+<script src="js/map/assets.js"></script>
+<script src="js/map/maps.js"></script>
+<script src="js/map/map-view.js"></script>
+<script src="js/map/camera-keys.js"></script>
+<script src="js/map/tiles.js"></script>
+<script src="js/map/contours.js"></script>
+<script src="js/map/overlays.js"></script>
+<script src="js/map/map-tools.js"></script>
+<script src="js/map/grid.js"></script>
+<script src="js/map/renderer.js"></script>
+<script src="js/features/coordinates.js"></script>
+<script src="js/features/point-locks.js"></script>
+<script src="js/features/results.js"></script>
+<script src="js/ui/inputs.js"></script>
+<script src="js/ui/cursor.js"></script>
+<script src="js/events.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
