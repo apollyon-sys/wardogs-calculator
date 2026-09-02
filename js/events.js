@@ -715,6 +715,15 @@ function bindEvents() {
 
             e.preventDefault();
 
+            /*
+             * With the marker tool active, the wheel turns the FOB build
+             * area under the cursor instead of zooming. Everywhere else —
+             * every other tool, every other spot on the map — it zooms.
+             */
+            if (handleMapToolWheel(e)) {
+                return;
+            }
+
             const rect =
                 c.getBoundingClientRect();
 

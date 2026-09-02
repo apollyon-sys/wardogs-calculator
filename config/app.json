@@ -28,6 +28,12 @@
     "camera": {
       "maxZoom": 100,
       "panSpeed": 800
+    },
+    "rings": {
+      "fob": {
+        "halfSide": 60,
+        "color": "#5fa8d3"
+      }
     }
   }
 }

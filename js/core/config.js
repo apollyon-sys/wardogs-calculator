@@ -7,6 +7,22 @@ const DEFAULT_APP_CONFIG = {
         camera: {
             maxZoom: 100,
             panSpeed: 800
+        },
+
+        /*
+         * A FOB build area is a square, so it is measured by `halfSide`:
+         * the distance from the FOB to an edge, and the buildable side is
+         * twice it. There is no circle involved and no radius to name.
+         *
+         * The 60 m half-side is confirmed from the game data — the build
+         * area is a 120 x 120 m square. Override it in config/app.json
+         * rather than here.
+         */
+        rings: {
+            fob: {
+                halfSide: 60,
+                color: '#5fa8d3'
+            }
         }
     },
 
@@ -54,6 +70,14 @@ function mergeAppConfig(base, override) {
             camera: {
                 ...base.map.camera,
                 ...(override?.map?.camera || {})
+            },
+            rings: {
+                ...base.map.rings,
+                ...(override?.map?.rings || {}),
+                fob: {
+                    ...base.map.rings.fob,
+                    ...(override?.map?.rings?.fob || {})
+                }
             }
         },
 
@@ -112,6 +136,55 @@ function getMapToolShortcut(action) {
     )
         .trim()
         .toLowerCase();
+}
+
+/*
+ * A ring kind names its own measurement key in config/app.json rather than
+ * sharing one that would only be honest about some of them: a FOB build area
+ * has a `halfSide`. The measurement comes back as `size`, so the drawing code
+ * does not have to know which kind it was handed.
+ */
+const RING_SIZE_KEYS = {
+    fob: 'halfSide'
+};
+
+function getRingConfig(kind) {
+
+    const fallback =
+        DEFAULT_APP_CONFIG.map.rings[kind];
+
+    if (!fallback) {
+        return null;
+    }
+
+    const sizeKey =
+        RING_SIZE_KEYS[kind];
+
+    const configured =
+        APP_CONFIG
+            ?.map
+            ?.rings
+            ?.[kind];
+
+    const size =
+        Number(
+            configured?.[sizeKey]
+        );
+
+    const color =
+        typeof configured?.color === 'string' &&
+        /^#[0-9a-fA-F]{6}$/.test(configured.color)
+            ? configured.color
+            : fallback.color;
+
+    return {
+        size:
+            Number.isFinite(size) &&
+            size > 0
+                ? size
+                : fallback[sizeKey],
+        color
+    };
 }
 
 function getCameraPanSpeed() {

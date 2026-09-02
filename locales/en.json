@@ -71,6 +71,7 @@
   "mapLayerPresetMarkers": "Map markers",
   "mapLayerDrawings": "Drawings",
   "mapLayerUserMarkers": "User markers",
+  "mapLayerFobAreas": "FOB build areas",
   "mapLayerArtillery": "Artillery overlay",
   "mapToolUndo": "Undo",
   "mapToolRedo": "Redo",

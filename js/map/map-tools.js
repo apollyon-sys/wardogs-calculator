@@ -47,6 +47,10 @@ const MAP_TOOL_STATE = {
     hoverDeletePoint: null,
     hoverMarkerId: null,
 
+    rotationDrag: null,
+    wheelRotation: null,
+    moveDrag: null,
+
     searchPoint: null,
 
     undoStack: [],
@@ -65,6 +69,7 @@ const MAP_TOOL_STATE = {
         presetMarkers: true,
         drawings: true,
         userMarkers: true,
+        fobAreas: true,
         artillery: true,
         cursorCoords: true
     }
@@ -80,6 +85,23 @@ function mapToolId() {
 
 function currentMapToolMapId() {
     return S.map || 'custom';
+}
+
+/*
+ * Marker rotation is degrees clockwise, wrapped into [0, 360). Anything
+ * unusable — a missing field on an older marker, a hand-edited import —
+ * becomes 0, which is the axis-aligned square markers had before.
+ */
+function normalizeMarkerRotation(value) {
+    const degrees = Number(value);
+
+    if (!Number.isFinite(degrees)) {
+        return 0;
+    }
+
+    return (
+        (degrees % 360) + 360
+    ) % 360;
 }
 
 function snapshotMapToolContent() {
@@ -160,6 +182,8 @@ function restoreMapToolContent(snapshot) {
     MAP_TOOL_STATE.hoverPathId = null;
     MAP_TOOL_STATE.hoverDeletePoint = null;
     MAP_TOOL_STATE.hoverMarkerId = null;
+    MAP_TOOL_STATE.rotationDrag = null;
+    MAP_TOOL_STATE.moveDrag = null;
 
     saveMapToolState();
     inputs();
@@ -189,6 +213,13 @@ function resetMapToolHistory() {
 }
 
 function undoMapToolAction() {
+    /*
+     * A wheel burst only lands when it goes quiet, so close any burst
+     * still in flight before undoing — otherwise the undo targets a
+     * rotation that has not been recorded yet.
+     */
+    flushMarkerWheelRotation();
+
     if (!MAP_TOOL_STATE.undoStack.length) {
         return false;
     }
@@ -205,6 +236,8 @@ function undoMapToolAction() {
 }
 
 function redoMapToolAction() {
+    flushMarkerWheelRotation();
+
     if (!MAP_TOOL_STATE.redoStack.length) {
         return false;
     }
@@ -399,7 +432,8 @@ function normalizeImportedMapToolMarker(marker) {
         mapId: importedMapId(marker.mapId),
         icon: marker.icon,
         x: Number(marker.x),
-        y: Number(marker.y)
+        y: Number(marker.y),
+        rotation: normalizeMarkerRotation(marker.rotation)
     };
 }
 
@@ -511,6 +545,11 @@ async function importMapToolChanges() {
 }
 
 function setMapTool(tool) {
+    /* Leaving the marker tool ends any gesture still in progress. */
+    flushMarkerWheelRotation();
+    finishMarkerRotationDrag();
+    finishMarkerMoveDrag();
+
     MAP_TOOL_STATE.tool =
         MAP_TOOL_STATE.tool === tool
             ? null
@@ -1014,6 +1053,7 @@ function buildMapLayers() {
                 ['zones', 'mapLayerZones'],
                 ['polygons', 'mapLayerPolygons'],
                 ['presetMarkers', 'mapLayerPresetMarkers'],
+                ['fobAreas', 'mapLayerFobAreas'],
                 ['artillery', 'mapLayerArtillery']
             ]
         },
@@ -1059,6 +1099,10 @@ function buildMapLayers() {
         userMarkers: `
             <path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/>
             <path d="m12 7 .9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3Z"/>
+        `,
+        fobAreas: `
+            <path d="M5 19V9l7-4 7 4v10Z"/>
+            <path d="M9.5 19v-5h5v5"/>
         `,
         artillery: `
             <circle cx="12" cy="12" r="6"/>
@@ -2075,6 +2119,49 @@ function placeMapToolMarker(point) {
     draw();
 }
 
+/* =========================
+   FOB BUILD AREAS
+   ========================= */
+
+/*
+ * A FOB's build area is a square around the icon rather than a circle,
+ * and it belongs to the marker rather than being its own object: place
+ * the FOB icon and the area comes with it. Its one adjustable property,
+ * `rotation`, lives on that marker too, so persistence, undo and export
+ * all come for free from the marker it hangs off.
+ */
+function drawFobBuildAreas() {
+
+    const config =
+        getRingConfig('fob');
+
+    if (!config) {
+        return;
+    }
+
+    MAP_TOOL_STATE.markers
+        .filter(
+            marker =>
+                marker.icon === 'fob' &&
+                marker.mapId ===
+                currentMapToolMapId()
+        )
+        .forEach(
+            marker => {
+
+                drawRadiusSquare(
+                    marker.x,
+                    marker.y,
+                    config.size,
+                    config.color,
+                    normalizeMarkerRotation(
+                        marker.rotation
+                    )
+                );
+            }
+        );
+}
+
 function findPencilPathAtCanvasPoint(
     canvasX,
     canvasY
@@ -2311,8 +2398,42 @@ function getMapToolMarkerScreenGeometry(item) {
         right: left + width,
         bottom: top + height,
         deleteX: left + width + 3,
-        deleteY: top - 3
+        deleteY: top - 3,
+        rotateX: left - 3,
+        rotateY: top - 3
     };
+}
+
+/*
+ * Only the FOB's square turns, so only a FOB gets a grip. Anything else
+ * would offer a control with nothing to show for it.
+ */
+function markerSupportsRotation(item) {
+    return Boolean(item) && item.icon === 'fob';
+}
+
+function getRotatableMarkerAtCanvasPoint(
+    canvasX,
+    canvasY
+) {
+    const hit =
+        findMapToolMarkerAtCanvasPoint(
+            canvasX,
+            canvasY
+        );
+
+    if (!hit) {
+        return null;
+    }
+
+    const item =
+        MAP_TOOL_STATE.markers.find(
+            marker => marker.id === hit.id
+        );
+
+    return markerSupportsRotation(item)
+        ? item
+        : null;
 }
 
 function findMapToolMarkerAtCanvasPoint(
@@ -2396,6 +2517,435 @@ function updateMapToolMarkerHover(event) {
     }
 }
 
+/* =========================
+   MARKER ROTATION
+   ========================= */
+
+/*
+ * Rotating is deliberately hard to trigger by accident: it only works
+ * while the marker tool is active, and only on the FOB under the cursor.
+ * In every other mode the wheel keeps zooming the way it always has.
+ *
+ * A gesture — one wheel burst, one drag of the grip — pushes history once
+ * at its start and saves once at its end, so spinning a square does not
+ * fill the undo stack.
+ */
+const MARKER_ROTATION_WHEEL_STEP = 1;
+const MARKER_ROTATION_SNAP_STEP = 15;
+const MARKER_ROTATION_COMMIT_DELAY_MS = 400;
+
+function getMarkerRotation(item) {
+    return normalizeMarkerRotation(item?.rotation);
+}
+
+function setMarkerRotation(item, degrees) {
+    const next =
+        normalizeMarkerRotation(degrees);
+
+    if (getMarkerRotation(item) === next) {
+        return false;
+    }
+
+    item.rotation = next;
+
+    return true;
+}
+
+/*
+ * `startRotation` is the angle the gesture began at: a gesture that ends
+ * back where it started — a click on the grip that never moved — saves
+ * nothing.
+ */
+function commitMarkerRotation(item, startRotation) {
+    if (
+        !item ||
+        getMarkerRotation(item) === startRotation
+    ) {
+        return;
+    }
+
+    saveMapToolState();
+}
+
+/*
+ * The grip sits above the icon, so a pointer straight up from the centre
+ * reads as 0° — the same zero the square uses.
+ */
+function pointerAngleDegrees(center, canvasX, canvasY) {
+    return normalizeMarkerRotation(
+        Math.atan2(
+            canvasY - center.y,
+            canvasX - center.x
+        ) *
+        180 /
+        Math.PI +
+        90
+    );
+}
+
+function snapMarkerRotation(degrees) {
+    return normalizeMarkerRotation(
+        Math.round(
+            degrees / MARKER_ROTATION_SNAP_STEP
+        ) *
+        MARKER_ROTATION_SNAP_STEP
+    );
+}
+
+function findMarkerRotationGripAtCanvasPoint(
+    canvasX,
+    canvasY
+) {
+    if (
+        MAP_TOOL_STATE.tool !== 'marker' ||
+        !MAP_TOOL_STATE.hoverMarkerId
+    ) {
+        return null;
+    }
+
+    const item =
+        getHoveredMapToolMarker();
+
+    if (!markerSupportsRotation(item)) {
+        return null;
+    }
+
+    const geometry =
+        getMapToolMarkerScreenGeometry(item);
+
+    if (!geometry) {
+        return null;
+    }
+
+    return Math.hypot(
+        canvasX - geometry.rotateX,
+        canvasY - geometry.rotateY
+    ) <= 12
+        ? { item, geometry }
+        : null;
+}
+
+function findMarkerById(id) {
+    return (
+        MAP_TOOL_STATE.markers.find(
+            marker => marker.id === id
+        ) || null
+    );
+}
+
+/*
+ * History is taken on the first tick that actually moves the square, not
+ * when the gesture opens: grabbing the grip and letting go without turning
+ * anything should leave the undo stack alone.
+ */
+function rotateMarkerDuringGesture(gesture, item, degrees) {
+    if (
+        getMarkerRotation(item) ===
+        normalizeMarkerRotation(degrees)
+    ) {
+        return;
+    }
+
+    if (!gesture.historyPushed) {
+        gesture.historyPushed = true;
+        pushMapToolHistory();
+    }
+
+    setMarkerRotation(item, degrees);
+    draw();
+}
+
+function beginMarkerRotationDrag(hit, canvasX, canvasY) {
+    MAP_TOOL_STATE.rotationDrag = {
+        id: hit.item.id,
+        start: getMarkerRotation(hit.item),
+        historyPushed: false,
+        offset:
+            getMarkerRotation(hit.item) -
+            pointerAngleDegrees(
+                hit.geometry.center,
+                canvasX,
+                canvasY
+            )
+    };
+
+    draw();
+}
+
+function updateMarkerRotationDrag(event) {
+    const gesture =
+        MAP_TOOL_STATE.rotationDrag;
+
+    if (!gesture) {
+        return false;
+    }
+
+    const item =
+        findMarkerById(gesture.id);
+
+    if (!item) {
+        MAP_TOOL_STATE.rotationDrag = null;
+        return false;
+    }
+
+    const geometry =
+        getMapToolMarkerScreenGeometry(item);
+
+    if (!geometry) {
+        return true;
+    }
+
+    const rect =
+        c.getBoundingClientRect();
+
+    const next =
+        pointerAngleDegrees(
+            geometry.center,
+            event.clientX - rect.left,
+            event.clientY - rect.top
+        ) +
+        gesture.offset;
+
+    rotateMarkerDuringGesture(
+        gesture,
+        item,
+        event.shiftKey
+            ? snapMarkerRotation(next)
+            : next
+    );
+
+    return true;
+}
+
+function finishMarkerRotationDrag() {
+    const gesture =
+        MAP_TOOL_STATE.rotationDrag;
+
+    if (!gesture) {
+        return false;
+    }
+
+    MAP_TOOL_STATE.rotationDrag = null;
+
+    commitMarkerRotation(
+        findMarkerById(gesture.id),
+        gesture.start
+    );
+
+    draw();
+
+    return true;
+}
+
+function resetMarkerRotation(item) {
+    if (getMarkerRotation(item) === 0) {
+        return;
+    }
+
+    const start =
+        getMarkerRotation(item);
+
+    pushMapToolHistory();
+    setMarkerRotation(item, 0);
+    commitMarkerRotation(item, start);
+    draw();
+}
+
+/* =========================
+   MARKER MOVING
+   ========================= */
+
+/*
+ * Pressing on a marker that is already on the map picks it up instead of
+ * dropping a second one at the same spot. Like rotation, a move is one
+ * gesture: history is taken on the first pixel that actually moves it,
+ * and the save happens once on release. A press that never moves
+ * therefore changes nothing at all.
+ */
+function beginMarkerMoveDrag(item, world) {
+    MAP_TOOL_STATE.moveDrag = {
+        id: item.id,
+        start: {
+            x: item.x,
+            y: item.y
+        },
+        offset: {
+            x: item.x - world.x,
+            y: item.y - world.y
+        },
+        historyPushed: false
+    };
+
+    draw();
+}
+
+function updateMarkerMoveDrag(world) {
+    const gesture =
+        MAP_TOOL_STATE.moveDrag;
+
+    if (!gesture) {
+        return false;
+    }
+
+    const item =
+        findMarkerById(gesture.id);
+
+    if (!item) {
+        MAP_TOOL_STATE.moveDrag = null;
+        return false;
+    }
+
+    const next = {
+        x: world.x + gesture.offset.x,
+        y: world.y + gesture.offset.y
+    };
+
+    /*
+     * Dragging past the edge leaves the marker at the last good spot
+     * rather than following the cursor off the map.
+     */
+    if (
+        !isWorldPointInsideMap(next) ||
+        (
+            next.x === item.x &&
+            next.y === item.y
+        )
+    ) {
+        return true;
+    }
+
+    if (!gesture.historyPushed) {
+        gesture.historyPushed = true;
+        pushMapToolHistory();
+    }
+
+    item.x = next.x;
+    item.y = next.y;
+
+    draw();
+
+    return true;
+}
+
+function finishMarkerMoveDrag() {
+    const gesture =
+        MAP_TOOL_STATE.moveDrag;
+
+    if (!gesture) {
+        return false;
+    }
+
+    MAP_TOOL_STATE.moveDrag = null;
+
+    const item =
+        findMarkerById(gesture.id);
+
+    if (
+        item &&
+        (
+            item.x !== gesture.start.x ||
+            item.y !== gesture.start.y
+        )
+    ) {
+        saveMapToolState();
+    }
+
+    draw();
+
+    return true;
+}
+
+/*
+ * Wheel ticks arrive one at a time, so a burst is stitched into a single
+ * gesture: the first tick takes the history snapshot, and a short idle
+ * afterwards saves the result.
+ */
+function flushMarkerWheelRotation() {
+    const gesture =
+        MAP_TOOL_STATE.wheelRotation;
+
+    if (!gesture) {
+        return;
+    }
+
+    clearTimeout(gesture.timer);
+
+    MAP_TOOL_STATE.wheelRotation = null;
+
+    commitMarkerRotation(
+        findMarkerById(gesture.id),
+        gesture.start
+    );
+}
+
+function handleMapToolWheel(event) {
+    if (MAP_TOOL_STATE.tool !== 'marker') {
+        return false;
+    }
+
+    const rect =
+        c.getBoundingClientRect();
+
+    const item =
+        getRotatableMarkerAtCanvasPoint(
+            event.clientX - rect.left,
+            event.clientY - rect.top
+        );
+
+    if (!item) {
+        return false;
+    }
+
+    /*
+     * Moving on to a different FOB ends the previous burst rather than
+     * folding two markers into one gesture.
+     */
+    if (
+        MAP_TOOL_STATE.wheelRotation &&
+        MAP_TOOL_STATE.wheelRotation.id !== item.id
+    ) {
+        flushMarkerWheelRotation();
+    }
+
+    const gesture =
+        MAP_TOOL_STATE.wheelRotation || {
+            id: item.id,
+            start: getMarkerRotation(item),
+            historyPushed: false,
+            timer: null
+        };
+
+    const direction =
+        event.deltaY < 0
+            ? 1
+            : -1;
+
+    const current =
+        getMarkerRotation(item);
+
+    rotateMarkerDuringGesture(
+        gesture,
+        item,
+        event.shiftKey
+            ? snapMarkerRotation(current) +
+              direction * MARKER_ROTATION_SNAP_STEP
+            : current +
+              direction * MARKER_ROTATION_WHEEL_STEP
+    );
+
+    clearTimeout(gesture.timer);
+
+    gesture.timer =
+        setTimeout(
+            flushMarkerWheelRotation,
+            MARKER_ROTATION_COMMIT_DELAY_MS
+        );
+
+    MAP_TOOL_STATE.wheelRotation = gesture;
+
+    return true;
+}
+
 function handleMapToolMouseDown(
     event,
     world
@@ -2450,6 +3000,48 @@ function handleMapToolMouseDown(
                 ) <= 12
             ) {
                 deleteHoveredMapToolMarker();
+                return true;
+            }
+
+            const gripHit =
+                findMarkerRotationGripAtCanvasPoint(
+                    mouseX,
+                    mouseY
+                );
+
+            if (gripHit) {
+                /*
+                 * Second click of a double-click on the grip snaps the
+                 * square back to straight.
+                 */
+                if (event.detail >= 2) {
+                    resetMarkerRotation(gripHit.item);
+                } else {
+                    beginMarkerRotationDrag(
+                        gripHit,
+                        mouseX,
+                        mouseY
+                    );
+                }
+
+                return true;
+            }
+
+            const bodyHit =
+                findMapToolMarkerAtCanvasPoint(
+                    mouseX,
+                    mouseY
+                );
+
+            if (
+                bodyHit &&
+                bodyHit.id === item.id
+            ) {
+                beginMarkerMoveDrag(
+                    item,
+                    world
+                );
+
                 return true;
             }
         }
@@ -2511,6 +3103,14 @@ function handleMapToolMouseMove(
 ) {
     if (!MAP_TOOL_STATE.tool) {
         return false;
+    }
+
+    if (MAP_TOOL_STATE.rotationDrag) {
+        return updateMarkerRotationDrag(event);
+    }
+
+    if (MAP_TOOL_STATE.moveDrag) {
+        return updateMarkerMoveDrag(world);
     }
 
     if (
@@ -2602,6 +3202,14 @@ function handleMapToolMouseMove(
 }
 
 function handleMapToolMouseUp() {
+    if (finishMarkerRotationDrag()) {
+        return true;
+    }
+
+    if (finishMarkerMoveDrag()) {
+        return true;
+    }
+
     if (
         MAP_TOOL_STATE.rulerDragging
     ) {
@@ -3143,6 +3751,131 @@ function drawMarkerDeleteAffordance() {
     ctx.restore();
 }
 
+/*
+ * The rotate grip mirrors the delete badge on the other top corner, and
+ * only appears with the marker tool active — the same gate the wheel uses,
+ * so what you can see is exactly what you can do.
+ */
+function drawMarkerRotateAffordance() {
+    const dragging =
+        MAP_TOOL_STATE.rotationDrag;
+
+    const item =
+        dragging
+            ? findMarkerById(dragging.id)
+            : MAP_TOOL_STATE.tool === 'marker'
+                ? getHoveredMapToolMarker()
+                : null;
+
+    if (!markerSupportsRotation(item)) {
+        return;
+    }
+
+    const geometry =
+        getMapToolMarkerScreenGeometry(item);
+
+    if (!geometry) {
+        return;
+    }
+
+    const v = view();
+
+    const point = {
+        x: geometry.rotateX - v.left,
+        y: geometry.rotateY - v.top
+    };
+
+    const color =
+        getRingConfig('fob')?.color ||
+        '#5fa8d3';
+
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.arc(
+        point.x,
+        point.y,
+        10,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle =
+        'rgba(16, 19, 22, .95)';
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.75;
+    ctx.lineCap = 'round';
+
+    /* An open circle with an arrowhead: the usual "turn this" glyph. */
+    ctx.beginPath();
+    ctx.arc(
+        point.x,
+        point.y,
+        4.5,
+        Math.PI * 0.35,
+        Math.PI * 2
+    );
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(
+        point.x + 1.5,
+        point.y - 6.5
+    );
+    ctx.lineTo(
+        point.x + 4.5,
+        point.y - 4.5
+    );
+    ctx.lineTo(
+        point.x + 6.5,
+        point.y - 7.5
+    );
+    ctx.stroke();
+
+    ctx.restore();
+
+    if (
+        !dragging &&
+        getMarkerRotation(item) === 0
+    ) {
+        return;
+    }
+
+    ctx.save();
+
+    ctx.font =
+        '600 11px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    const label =
+        `${Math.round(
+            getMarkerRotation(item)
+        )}°`;
+
+    ctx.lineWidth = 3;
+    ctx.strokeStyle =
+        'rgba(0, 0, 0, 0.75)';
+    ctx.strokeText(
+        label,
+        point.x,
+        point.y + 12
+    );
+
+    ctx.fillStyle = color;
+    ctx.fillText(
+        label,
+        point.x,
+        point.y + 12
+    );
+
+    ctx.restore();
+}
+
 function drawCoordinateSearchPoint() {
     const point = MAP_TOOL_STATE.searchPoint;
 
@@ -3174,4 +3907,5 @@ function drawMapToolTransient() {
     drawRulerOverlay();
     drawEraserAffordance();
     drawMarkerDeleteAffordance();
+    drawMarkerRotateAffordance();
 }
