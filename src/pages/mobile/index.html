@@ -56,6 +56,10 @@
                         <small aria-hidden="true">&nbsp;</small>
                     </div>
                 </div>
+                <div class="mobile-solution-flight" id="flightTimes" hidden>
+                    <span class="mobile-solution-flight-label" data-i18n="flightTime">Time of flight</span>
+                    <div class="mobile-solution-flight-badges" id="flightTimeBadges"></div>
+                </div>
                 <div class="mobile-range-status" id="rangeStatus">In range</div>
             </div>
 
@@ -261,13 +265,17 @@
 <script src="js/map/maps.js"></script>
 <script src="js/map/map-view.js"></script>
 <script src="js/map/tiles.js"></script>
+<script src="js/map/heightfield.js"></script>
 <script src="js/map/contours.js"></script>
 <script src="js/map/overlays.js"></script>
+<script src="js/map/range-ring.js"></script>
+<script src="js/map/dead-ground.js"></script>
 <script src="js/map/map-tools.js"></script>
 <script src="js/map/grid.js"></script>
 <script src="js/map/renderer.js"></script>
 <script src="js/features/coordinates.js"></script>
 <script src="js/features/point-locks.js"></script>
+<script src="js/features/flight-time.js"></script>
 <script src="js/features/results.js"></script>
 <script src="js/ui/inputs.js"></script>
 <script src="js/ui/cursor.js"></script>

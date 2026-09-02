@@ -210,6 +210,42 @@
     line-height: 1.05;
 }
 
+/* Flight time. Same badge row as desktop, sized for the HUD. */
+.mobile-solution-flight {
+    margin-top: 5px;
+}
+
+.mobile-solution-flight-label {
+    display: block;
+    margin-bottom: 3px;
+
+    color: var(--muted);
+    font-size: 7px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.mobile-solution-flight-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.mobile-solution-flight .flight-badge {
+    padding: 4px 7px;
+    gap: 5px;
+}
+
+.mobile-solution-flight .flight-badge-arc {
+    font-size: 8px;
+}
+
+.mobile-solution-flight .flight-badge-value {
+    font-size: 12px;
+}
+
 .mobile-range-status {
     margin-top: 4px;
     padding: 4px 2px 0;

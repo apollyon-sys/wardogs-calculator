@@ -161,6 +161,19 @@ function draw() {
     }
 
     if (
+        isMapLayerVisible('deadGround') &&
+        currentWeapon
+    ) {
+        drawDeadGround(
+            worldToLocalScreen(
+                S.origin.x,
+                S.origin.y
+            ),
+            v.scale
+        );
+    }
+
+    if (
         isMapLayerVisible('artillery') &&
         currentWeapon
     ) {
@@ -196,35 +209,11 @@ function draw() {
          * Layer 6:
          * artillery range.
          */
-        ctx.beginPath();
-
-        ctx.arc(
-            a.x,
-            a.y,
+        drawMaxRangeRing(
+            a,
             rangePx,
-            0,
-            Math.PI * 2
+            v.scale
         );
-
-        ctx.fillStyle =
-            'rgba(215,164,82,.08)';
-
-        ctx.fill();
-
-        ctx.strokeStyle =
-            '#d7a452';
-
-        ctx.lineWidth =
-            2;
-
-        ctx.setLineDash([
-            7,
-            5
-        ]);
-
-        ctx.stroke();
-
-        ctx.setLineDash([]);
 
         if (minRangePx > 0) {
             ctx.beginPath();

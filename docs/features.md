@@ -172,6 +172,28 @@ SPH-2 accuracy is also affected by vehicle attitude. A visible warning is shown 
 
 See [Terrain Elevation & SPH-2 Setup](terrain.md) for data layout, runtime behavior, fallback rules, and validation details.
 
+### Terrain-aware max range
+
+On maps with elevation data the max range ring is not a circle. Height
+changes how far a shell carries — roughly a metre of range per metre of
+height — so the ring is solved per bearing against the ground the shell
+flies over.
+
+Two outlines are drawn:
+
+- **The solid ring** is the reachable area, never drawn past the weapon's
+  table max range.
+- **A tinted band with a dashed outline** appears outside it when terrain
+  buys range the firing table does not cover. It is context, like the ΔZ
+  readout — the app will not print a MIL for a target out there.
+
+A bearing that outreaches the edge of the elevation data samples the nearest
+point on the boundary rather than stopping there, so the outline is never cut
+off square along the map edge.
+
+On maps without elevation data, and until the heightfield finishes loading,
+the ring is the plain circle it has always been.
+
 
 ## Coordinate copy / paste
 

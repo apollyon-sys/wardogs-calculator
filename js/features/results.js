@@ -75,6 +75,55 @@ function formatTerrainBallisticDetail(meta) {
     return formatTerrainBallisticsStatus(meta);
 }
 
+/*
+ * One badge per arc, below the metric grid rather than inside the MIL card:
+ * at the sub-line's 8 px the seconds were unreadable, and this is a value in
+ * its own right rather than a footnote to the MIL.
+ *
+ * Built with the DOM rather than innerHTML — the arc labels are translated
+ * strings and the numbers are computed, but the row is rebuilt on every
+ * pointer move, so there is no reason to parse markup that often either.
+ */
+function renderFlightTime(weapon, solutions, terrainMeta) {
+    const row = $('flightTimes');
+    const host = $('flightTimeBadges');
+
+    if (!row || !host) {
+        return;
+    }
+
+    const badges =
+        typeof flightTimeBadges === 'function'
+            ? flightTimeBadges(
+                weapon,
+                solutions,
+                Number(terrainMeta?.deltaZ) || 0
+            )
+            : [];
+
+    row.hidden = !badges.length;
+    host.textContent = '';
+
+    badges.forEach(badge => {
+        const pill = document.createElement('span');
+        pill.className = 'flight-badge';
+
+        if (badge.labelKey) {
+            const label = document.createElement('span');
+            label.className = 'flight-badge-arc';
+            label.textContent = tr(badge.labelKey);
+            pill.appendChild(label);
+        }
+
+        const value = document.createElement('strong');
+        value.className = 'flight-badge-value';
+        value.textContent = formatFlightTime(badge.seconds);
+        pill.appendChild(value);
+
+        host.appendChild(pill);
+    });
+}
+
 function renderElevationResult(weapon, distanceMeters) {
     const value = $('mil');
     const detail = $('milAlt');
@@ -129,6 +178,12 @@ function renderElevationResult(weapon, distanceMeters) {
             ? `${secondary} · ${terrainDetail}`
             : terrainDetail;
     }
+
+    renderFlightTime(
+        weapon,
+        solutions,
+        resolved.terrainMeta
+    );
 
     setText(
         value,
