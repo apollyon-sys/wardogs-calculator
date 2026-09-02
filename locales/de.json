@@ -76,6 +76,7 @@
   "mapLayerDrawings": "Zeichnungen",
   "mapLayerUserMarkers": "Benutzermarkierungen",
   "mapLayerArtillery": "Artillerie-Ebene",
+  "mapLayerDeadGround": "Toter Raum",
   "mapToolUndo": "Rückgängig",
   "mapToolRedo": "Wiederholen",
   "mapToolUndoRedoHint": "Rückgängig: {undo} · Wiederholen: {redo}",

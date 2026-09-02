@@ -72,6 +72,7 @@
   "mapLayerDrawings": "Drawings",
   "mapLayerUserMarkers": "User markers",
   "mapLayerArtillery": "Artillery overlay",
+  "mapLayerDeadGround": "Dead ground",
   "mapToolUndo": "Undo",
   "mapToolRedo": "Redo",
   "mapToolUndoRedoHint": "Undo: {undo} · Redo: {redo}",

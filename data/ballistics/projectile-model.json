@@ -1,0 +1,34 @@
+{
+    "schema": "wardogs-projectile-model-v1",
+    "source": "vacuum-fit",
+    "sourceNote": "Least-squares vacuum fit to data/weapons.json. Superseded by pak extraction; see docs/superpowers/specs/2026-08-26-elevation-correction-design.md section 8.",
+    "generatedAt": "2026-08-26",
+    "gravity": 9.81,
+    "weapons": {
+        "mortar": {
+            "single": {
+                "branch": "high",
+                "muzzleVelocity": 86.7,
+                "angleOffsetDeg": 52.5,
+                "anglePerMilDeg": 0.0375,
+                "rmsMeters": 8.11
+            }
+        },
+        "spg": {
+            "low": {
+                "branch": "low",
+                "muzzleVelocity": 160.1,
+                "angleOffsetDeg": 12.75,
+                "anglePerMilDeg": 0.058,
+                "rmsMeters": 14.11
+            },
+            "high": {
+                "branch": "high",
+                "muzzleVelocity": 160.4,
+                "angleOffsetDeg": 14.5,
+                "anglePerMilDeg": 0.048,
+                "rmsMeters": 8.11
+            }
+        }
+    }
+}

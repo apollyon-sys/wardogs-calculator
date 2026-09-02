@@ -76,6 +76,7 @@
   "mapLayerDrawings": "Dessins",
   "mapLayerUserMarkers": "Marqueurs utilisateur",
   "mapLayerArtillery": "Couche artillerie",
+  "mapLayerDeadGround": "Angle mort",
   "mapToolUndo": "Annuler",
   "mapToolRedo": "Rétablir",
   "mapToolUndoRedoHint": "Annuler : {undo} · Rétablir : {redo}",

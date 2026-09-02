@@ -1,0 +1,19 @@
+{
+    "format": "wardogs-heightfield-u16-v1",
+    "mapId": "bakurani",
+    "generatedFrom": "data/terrain/bakurani/manifest.json",
+    "generatedAt": "2026-08-26",
+    "spacingMeters": 32,
+    "grid": {
+        "width": 346,
+        "height": 346,
+        "originX": 23.35,
+        "originY": 19.34,
+        "stepGameUnits": 0.32
+    },
+    "minZMeters": -1006.5179810883496,
+    "maxZMeters": 70.66457659790574,
+    "file": "heightfield.bin",
+    "bytes": 239432,
+    "sha256": "39d13012660cad783de3d9612d8bb22a88ea70cae3209d382dc612cc97888671"
+}

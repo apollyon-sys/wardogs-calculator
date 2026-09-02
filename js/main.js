@@ -197,6 +197,8 @@ async function init() {
 
         await loadWeapons();
 
+        loadProjectileModel();
+
         await loadMapAssets();
 
         await loadMaps();

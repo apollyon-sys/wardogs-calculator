@@ -1,0 +1,19 @@
+{
+    "format": "wardogs-heightfield-u16-v1",
+    "mapId": "ozeti",
+    "generatedFrom": "data/terrain/ozeti/manifest.json",
+    "generatedAt": "2026-08-26",
+    "spacingMeters": 32,
+    "grid": {
+        "width": 269,
+        "height": 244,
+        "originX": 57.58,
+        "originY": 21.81,
+        "stepGameUnits": 0.32
+    },
+    "minZMeters": -1007.8907603999771,
+    "maxZMeters": -625.497736037995,
+    "file": "heightfield.bin",
+    "bytes": 131272,
+    "sha256": "8acec42cc765e55b2eceb725ff3c380f1a5d7b345996e77d88f8e6354dc2e8d1"
+}

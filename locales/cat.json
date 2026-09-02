@@ -82,6 +82,7 @@
   "mapLayerDrawings": "PAW DRAWINGS",
   "mapLayerUserMarkers": "YOUR PAWKERS",
   "mapLayerArtillery": "MEOWTILLERY OVERLAY",
+  "mapLayerDeadGround": "UNPOUNCEABLE GROUND",
   "mapToolUndo": "UNMEOW",
   "mapToolRedo": "REMEOW",
   "mapToolUndoRedoHint": "UNMEOW: {undo} · REMEOW: {redo}",

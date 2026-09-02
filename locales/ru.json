@@ -72,6 +72,7 @@
   "mapLayerDrawings": "Рисунки",
   "mapLayerUserMarkers": "Пользовательские метки",
   "mapLayerArtillery": "Артиллерийский слой",
+  "mapLayerDeadGround": "Мёртвое пространство",
   "mapToolUndo": "Отменить",
   "mapToolRedo": "Повторить",
   "mapToolUndoRedoHint": "Отменить: {undo} · Повторить: {redo}",

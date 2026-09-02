@@ -76,6 +76,7 @@
   "mapLayerDrawings": "Desenhos",
   "mapLayerUserMarkers": "Marcadores do utilizador",
   "mapLayerArtillery": "Camada de artilharia",
+  "mapLayerDeadGround": "Zona morta",
   "mapToolUndo": "Desfazer",
   "mapToolRedo": "Refazer",
   "mapToolUndoRedoHint": "Desfazer: {undo} · Refazer: {redo}",
