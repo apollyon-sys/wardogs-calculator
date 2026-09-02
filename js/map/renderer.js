@@ -5,8 +5,7 @@
 function resize() {
 
     const d =
-        window.devicePixelRatio ||
-        1;
+        renderScale();
 
     c.width =
         wrap.clientWidth *
@@ -25,7 +24,7 @@ function resize() {
         0
     );
 
-    draw();
+    drawNow();
 }
 
 
@@ -33,11 +32,44 @@ function resize() {
    DRAW
    ========================= */
 
+let pendingDrawFrame =
+    0;
+
 function draw() {
+
+    if (pendingDrawFrame) {
+        return;
+    }
+
+    pendingDrawFrame =
+        requestAnimationFrame(
+            () => {
+
+                pendingDrawFrame =
+                    0;
+
+                drawNow();
+            }
+        );
+}
+
+function drawNow() {
+
+    if (pendingDrawFrame) {
+
+        cancelAnimationFrame(
+            pendingDrawFrame
+        );
+
+        pendingDrawFrame =
+            0;
+    }
 
     if (!wrap) {
         return;
     }
+
+    beginTileFrame();
 
     const W =
         wrap.clientWidth;
@@ -55,18 +87,11 @@ function draw() {
         H
     );
 
-    const styles =
-        getComputedStyle(
-            document.documentElement
-        );
-
     ctx.fillStyle =
-        styles
-            .getPropertyValue(
-                '--map-bg'
-            )
-            .trim() ||
-        '#0d1012';
+        cssVar(
+            '--map-bg',
+            '#0d1012'
+        );
 
     ctx.fillRect(
         0,
@@ -83,12 +108,10 @@ function draw() {
     );
 
     ctx.fillStyle =
-        styles
-            .getPropertyValue(
-                '--panel-bg'
-            )
-            .trim() ||
-        '#151a1d';
+        cssVar(
+            '--panel-bg',
+            '#151a1d'
+        );
 
     ctx.fillRect(
         0,

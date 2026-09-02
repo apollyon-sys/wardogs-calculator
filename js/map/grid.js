@@ -178,18 +178,11 @@ function drawCoordinateLabels() {
     const v =
         view();
 
-    const styles =
-        getComputedStyle(
-            document.documentElement
-        );
-
     ctx.fillStyle =
-        styles
-            .getPropertyValue(
-                '--muted'
-            )
-            .trim() ||
-        '#89959e';
+        cssVar(
+            '--muted',
+            '#89959e'
+        );
 
     ctx.font =
         '10px system-ui';

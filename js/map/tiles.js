@@ -140,6 +140,108 @@ function getTileURL(
     );
 }
 
+function decodeTileElement(url) {
+
+    return new Promise(
+        (
+            resolve,
+            reject
+        ) => {
+
+            const image =
+                new Image();
+
+            image.decoding =
+                'async';
+
+            image.onload =
+                () => {
+
+                    if (
+                        typeof image.decode !== 'function'
+                    ) {
+
+                        resolve(image);
+
+                        return;
+                    }
+
+                    image
+                        .decode()
+                        .then(
+                            () => resolve(image),
+                            () => resolve(image)
+                        );
+                };
+
+            image.onerror =
+                () => reject(
+                    new Error(url)
+                );
+
+            image.src =
+                url;
+        }
+    );
+}
+
+function tileIsSameOrigin(url) {
+
+    try {
+
+        return new URL(
+            url,
+            location.href
+        ).origin === location.origin;
+
+    } catch (error) {
+
+        return false;
+    }
+}
+
+
+async function decodeTile(url) {
+
+    if (
+        typeof createImageBitmap !== 'function' ||
+        typeof fetch !== 'function' ||
+        !tileIsSameOrigin(url)
+    ) {
+        return decodeTileElement(url);
+    }
+
+    let response =
+        null;
+
+    try {
+
+        response =
+            await fetch(url);
+
+    } catch (error) {
+
+        return decodeTileElement(url);
+    }
+
+    if (!response.ok) {
+        throw new Error(
+            `${url}: ${response.status}`
+        );
+    }
+
+    try {
+
+        return await createImageBitmap(
+            await response.blob()
+        );
+
+    } catch (error) {
+
+        return decodeTileElement(url);
+    }
+}
+
 function loadTile(
     map,
     zoom,
@@ -155,52 +257,14 @@ function loadTile(
             y
         );
 
-    if (
-        TILE_CACHE.has(key)
-    ) {
-        return TILE_CACHE.get(key);
+    const cached =
+        getCachedTile(key);
+
+    if (cached) {
+        return cached;
     }
 
-    const image =
-        new Image();
-
-    image.decoding =
-        'async';
-
-    const tile = {
-        image,
-        loaded: false,
-        failed: false
-    };
-
-    image.onload =
-        () => {
-
-            tile.loaded =
-                true;
-
-            draw();
-        };
-
-    image.onerror =
-        () => {
-
-            tile.failed =
-                true;
-
-            console.warn(
-                `Failed to load tile: ${getTileURL(
-                    map,
-                    zoom,
-                    x,
-                    y
-                )}`
-            );
-
-            draw();
-        };
-
-    image.src =
+    const url =
         getTileURL(
             map,
             zoom,
@@ -208,10 +272,50 @@ function loadTile(
             y
         );
 
-    TILE_CACHE.set(
+    const tile = {
+        image: null,
+        loaded: false,
+        failed: false
+    };
+
+    setCachedTile(
         key,
         tile
     );
+
+    decodeTile(url)
+        .then(
+            image => {
+
+                if (
+                    TILE_CACHE.get(key) !== tile
+                ) {
+
+                    closeTileImage(image);
+
+                    return;
+                }
+
+                tile.image =
+                    image;
+
+                tile.loaded =
+                    true;
+
+                draw();
+            },
+            () => {
+
+                tile.failed =
+                    true;
+
+                console.warn(
+                    `Failed to load tile: ${url}`
+                );
+
+                draw();
+            }
+        );
 
     return tile;
 }
@@ -247,7 +351,7 @@ function findCachedTileAncestor(
         }
 
         const ancestor =
-            TILE_CACHE.get(
+            getCachedTile(
                 tileKey(
                     map.id,
                     zoom - levels,

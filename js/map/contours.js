@@ -549,7 +549,7 @@ function drawContours(currentMap) {
     const visibleWidth = wrap.clientWidth;
     const visibleHeight = wrap.clientHeight;
 
-    const ratio = window.devicePixelRatio || 1;
+    const ratio = renderScale();
 
     const width = visibleWidth + CONTOUR_RASTER_MARGIN * 2;
     const height = visibleHeight + CONTOUR_RASTER_MARGIN * 2;

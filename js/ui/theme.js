@@ -48,6 +48,7 @@ function applyTheme(theme) {
     );
 
     updateThemeButton();
+    invalidateCssVarCache();
     draw();
 }
 

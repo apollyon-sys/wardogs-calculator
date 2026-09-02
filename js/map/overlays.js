@@ -1197,14 +1197,10 @@ function drawPresetMarkerSelection(
     ctx.fill();
 
     ctx.strokeStyle =
-        getComputedStyle(
-            document.documentElement
-        )
-            .getPropertyValue(
-                '--accent'
-            )
-            .trim() ||
-        '#d7a452';
+        cssVar(
+            '--accent',
+            '#d7a452'
+        );
 
     ctx.lineWidth =
         2;
