@@ -25,6 +25,19 @@ function inputs() {
         S.h;
 
     /*
+     * Origin and target are written from six different places (map drags,
+     * the coordinate inputs, saved-target restore, undo, coordinate
+     * search). They all land here, so one throttled write covers them all
+     * instead of a hook at each site.
+     */
+    if (
+        typeof persistMapPoints ===
+        'function'
+    ) {
+        persistMapPoints();
+    }
+
+    /*
      * The saved-target highlight is derived from where the target sits,
      * so every writer of S.target refreshes it by arriving here.
      */
@@ -33,6 +46,14 @@ function inputs() {
         'function'
     ) {
         refreshSavedTargetHighlight();
+    }
+
+    /*
+     * The row shows each gun's own coordinates, so it has to follow the
+     * same writes the ox/oy fields do.
+     */
+    if (typeof renderGuns === 'function') {
+        renderGuns();
     }
 
     result();

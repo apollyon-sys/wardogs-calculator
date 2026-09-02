@@ -338,8 +338,16 @@ function bindEvents() {
 
             pushMapToolHistory();
 
-            const oldOrigin =
-                S.origin;
+            /*
+             * S.origin is a live reference to the active gun's position, so
+             * capturing it directly would alias the gun: the setter below
+             * would overwrite the very object we are about to hand to
+             * S.target. Copy at capture.
+             */
+            const oldOrigin = {
+                x: S.origin.x,
+                y: S.origin.y
+            };
 
             S.origin =
                 S.target;
@@ -487,14 +495,40 @@ function bindEvents() {
                 return;
             }
 
-            const d1 =
-                Math.hypot(
-                    p.x -
-                    S.origin.x,
+            const pointHitThreshold =
+                metersToWorldDistance(300);
 
-                    p.y -
-                    S.origin.y
-                );
+            /*
+             * Any drawn gun is grabbable, not just the selected one:
+             * clicking a neighbour picks that gun up rather than
+             * teleporting the current one onto it.
+             */
+            const gunPicking =
+                typeof gunAtPoint === 'function';
+
+            const hitGun =
+                gunPicking
+                    ? gunAtPoint(
+                        p,
+                        pointHitThreshold
+                    )
+                    : null;
+
+            const originPoint =
+                gunPicking
+                    ? hitGun?.position || null
+                    : S.origin;
+
+            const d1 =
+                originPoint
+                    ? Math.hypot(
+                        p.x -
+                        originPoint.x,
+
+                        p.y -
+                        originPoint.y
+                    )
+                    : Infinity;
 
             const d2 =
                 Math.hypot(
@@ -504,9 +538,6 @@ function bindEvents() {
                     p.y -
                     S.target.y
                 );
-
-            const pointHitThreshold =
-                metersToWorldDistance(300);
 
             if (
                 Math.min(d1, d2) <
@@ -525,6 +556,19 @@ function bindEvents() {
                     drag = null;
                     updateCursor(e);
                     return;
+                }
+
+                /*
+                 * Select before the write below: S.origin resolves through
+                 * the active gun, so the selection has to move first or
+                 * the drag would edit the gun you just clicked away from.
+                 */
+                if (
+                    nearestPoint === 'origin' &&
+                    hitGun &&
+                    hitGun.id !== S.activeGunId
+                ) {
+                    selectGun(hitGun.id);
                 }
 
                 drag = nearestPoint;
@@ -714,6 +758,15 @@ function bindEvents() {
         e => {
 
             e.preventDefault();
+
+            /*
+             * With the marker tool active, the wheel turns the FOB build
+             * area under the cursor instead of zooming. Everywhere else —
+             * every other tool, every other spot on the map — it zooms.
+             */
+            if (handleMapToolWheel(e)) {
+                return;
+            }
 
             const rect =
                 c.getBoundingClientRect();

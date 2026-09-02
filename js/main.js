@@ -197,6 +197,8 @@ async function init() {
 
         await loadWeapons();
 
+        loadProjectileModel();
+
         await loadMapAssets();
 
         await loadMaps();
@@ -206,6 +208,12 @@ async function init() {
         initMapTools();
 
         initLayout();
+
+        /*
+         * Before the clamp below, so points restored from a previous
+         * visit are pulled inside the map's bounds like any other.
+         */
+        loadMapPoints();
 
         /*
          * Sync initial state with the
@@ -253,6 +261,10 @@ async function init() {
         resize();
 
         renderSavedTargets();
+
+        if (typeof initGunsUI === 'function') {
+            initGunsUI();
+        }
 
     } catch (error) {
 

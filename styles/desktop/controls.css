@@ -278,6 +278,80 @@ button:disabled {
     line-height: 1.15;
 }
 
+/*
+ * Flight time. A row of badges under the metric grid rather than a line
+ * inside the MIL card: at the sub-line's 8 px the seconds could not be read,
+ * and the arc labels are long enough in some locales to need real width.
+ *
+ * The badges wrap, so a locale whose arc names run to "Trayectoria baja"
+ * stacks them instead of truncating either one.
+ */
+.solution-flight {
+    margin-top: 8px;
+}
+
+.solution-flight-label {
+    display: block;
+    margin-bottom: 4px;
+
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.solution-flight-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.flight-badge {
+    flex: 1 1 auto;
+    min-width: 0;
+
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 6px;
+
+    padding: 5px 9px;
+
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background:
+        color-mix(
+            in srgb,
+            var(--input-bg) 42%,
+            transparent
+        );
+}
+
+.flight-badge-arc {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.flight-badge-value {
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -.015em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
 .solution-secondary-grid {
     margin-top: 7px;
 

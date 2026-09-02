@@ -47,13 +47,43 @@ function mobilePointerMidpoint(a, b) {
 }
 
 function getMobileUserMarkerAt(x, y) {
-    const origin = toScreen(S.origin.x, S.origin.y);
+    /*
+     * Any drawn gun is grabbable, not just the selected one, so tapping a
+     * neighbour picks that gun up rather than teleporting the current one
+     * onto it.
+     */
+    const gunPicking =
+        typeof gunAtScreen === 'function';
+
+    const hitGun =
+        gunPicking
+            ? gunAtScreen(
+                x,
+                y,
+                MOBILE_POINT_HIT_RADIUS
+            )
+            : null;
+
+    const originPoint =
+        gunPicking
+            ? hitGun?.position || null
+            : S.origin;
+
     const target = toScreen(S.target.x, S.target.y);
 
-    const originDistance = Math.hypot(
-        x - origin.x,
-        y - origin.y
-    );
+    const origin = originPoint
+        ? toScreen(
+            originPoint.x,
+            originPoint.y
+        )
+        : null;
+
+    const originDistance = origin
+        ? Math.hypot(
+            x - origin.x,
+            y - origin.y
+        )
+        : Infinity;
 
     const targetDistance = Math.hypot(
         x - target.x,
@@ -69,9 +99,23 @@ function getMobileUserMarkerAt(x, y) {
         return null;
     }
 
-    return originDistance <= targetDistance
-        ? 'origin'
-        : 'target';
+    if (originDistance <= targetDistance) {
+        /*
+         * Select before returning: S.origin resolves through the active
+         * gun, so the drag that follows has to be pointed at the gun that
+         * was actually tapped.
+         */
+        if (
+            hitGun &&
+            hitGun.id !== S.activeGunId
+        ) {
+            selectGun(hitGun.id);
+        }
+
+        return 'origin';
+    }
+
+    return 'target';
 }
 
 function setMobileMode(type) {

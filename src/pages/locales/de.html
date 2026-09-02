@@ -134,6 +134,10 @@
 <span class="solution-metric-sub solution-metric-spacer" aria-hidden="true">&nbsp;</span>
 </div>
 </div>
+<div class="solution-flight" id="flightTimes" hidden>
+<span class="solution-flight-label" data-i18n="flightTime">Time of flight</span>
+<div class="solution-flight-badges" id="flightTimeBadges"></div>
+</div>
 <div class="solution-secondary-grid">
 <div class="solution-secondary-item"><span>ΔX</span><b id="dx">+500 m</b></div>
 <div class="solution-secondary-item"><span>ΔY</span><b id="dy">+500 m</b></div>
@@ -176,6 +180,17 @@
 <span class="cursor-x">
           x0.00
         </span>
+</div>
+<!-- GUNS -->
+<div class="saved-targets guns-panel">
+<div class="saved-targets-header">
+<span data-i18n="gunsPanel">Guns</span>
+<span class="saved-targets-count" id="gunsCount">1</span>
+</div>
+<div class="saved-targets-list" id="gunsList"></div>
+<div class="saved-target-actions">
+<button class="save-target-button" data-i18n="addGun" id="addGun" type="button">Add gun</button>
+</div>
 </div>
 <!-- SAVED TARGETS -->
 <div class="saved-targets">
@@ -268,6 +283,7 @@
 </main>
 <footer id="siteFooter"></footer>
 <script src="js/core/core.js"></script>
+<script src="js/features/guns.js"></script>
 <script src="js/core/resources.js"></script>
 <script src="js/core/config.js"></script>
 <script src="js/core/analytics.js"></script>
@@ -284,12 +300,16 @@
 <script src="js/map/camera-keys.js"></script>
 <script src="js/map/tiles.js"></script>
 <script src="js/map/contours.js"></script>
+<script src="js/map/heightfield.js"></script>
 <script src="js/map/overlays.js"></script>
+<script src="js/map/guns-overlay.js"></script>
+<script src="js/map/range-ring.js"></script>
 <script src="js/map/map-tools.js"></script>
 <script src="js/map/grid.js"></script>
 <script src="js/map/renderer.js"></script>
 <script src="js/features/coordinates.js"></script>
 <script src="js/features/point-locks.js"></script>
+<script src="js/features/flight-time.js"></script>
 <script src="js/features/results.js"></script>
 <script src="js/ui/inputs.js"></script>
 <script src="js/ui/cursor.js"></script>

@@ -653,3 +653,72 @@
             1 / -1;
     }
 }
+
+
+/* =========================
+   GUNS PANEL
+   ========================= */
+
+/*
+ * The gun list floats over the top-left of the map, opposite the saved
+ * targets, and borrows their whole vocabulary — panel chrome, rows and
+ * buttons. On mobile it stays a card in the sheet, which is what the
+ * .guns-header rules below are still for.
+ */
+
+.guns-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 8px;
+
+    margin-bottom: 10px;
+}
+
+.guns-header h2 {
+    margin: 0;
+}
+
+.saved-targets.guns-panel {
+    left: 14px;
+    right: auto;
+
+    width: 310px;
+}
+
+.guns-panel .saved-targets-list {
+    max-height: 200px;
+}
+
+.guns-panel .saved-target {
+    min-height: 44px;
+
+    padding: 7px 9px;
+}
+
+.guns-panel .saved-target-actions-inline {
+    min-width: 0;
+}
+
+.guns-panel .gun-visibility {
+    font-size: 12px;
+
+    line-height: 1;
+}
+
+/*
+ * Hidden guns still list, so the row itself has to say so — otherwise the
+ * only signal is a small glyph in the corner.
+ */
+.guns-panel .gun-row.hidden .saved-target-info {
+    opacity: .45;
+}
+
+.guns-panel .save-target-button:disabled {
+    opacity: .45;
+
+    cursor: not-allowed;
+}

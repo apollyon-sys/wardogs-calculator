@@ -151,6 +151,18 @@ function draw() {
         drawPresetPolygons(currentMap);
     }
 
+    if (isMapLayerVisible('mainZone')) {
+        drawMainZone(currentMap);
+    }
+
+    /*
+     * Build areas sit under the drawings and markers, so the FOB icon
+     * they belong to stays legible on top of its own square.
+     */
+    if (isMapLayerVisible('fobAreas')) {
+        drawFobBuildAreas();
+    }
+
     /*
      * User pencil drawings are persistent
      * map annotations and live below the
@@ -160,143 +172,16 @@ function draw() {
         drawMapToolDrawings();
     }
 
+    /*
+     * Layers 6-8:
+     * every gun's range rings and target line, then the markers.
+     * The per-gun loop lives in js/map/guns-overlay.js.
+     */
     if (
         isMapLayerVisible('artillery') &&
         currentWeapon
     ) {
-        const a =
-            worldToLocalScreen(
-                S.origin.x,
-                S.origin.y
-            );
-
-        const b =
-            worldToLocalScreen(
-                S.target.x,
-                S.target.y
-            );
-
-        const maxRange =
-            currentWeapon.maxRange ??
-            currentWeapon.range;
-
-        const minRange =
-            currentWeapon.minRange ??
-            0;
-
-        const rangePx =
-            kilometersToWorldDistance(maxRange) *
-            v.scale;
-
-        const minRangePx =
-            kilometersToWorldDistance(minRange) *
-            v.scale;
-
-        /*
-         * Layer 6:
-         * artillery range.
-         */
-        ctx.beginPath();
-
-        ctx.arc(
-            a.x,
-            a.y,
-            rangePx,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fillStyle =
-            'rgba(215,164,82,.08)';
-
-        ctx.fill();
-
-        ctx.strokeStyle =
-            '#d7a452';
-
-        ctx.lineWidth =
-            2;
-
-        ctx.setLineDash([
-            7,
-            5
-        ]);
-
-        ctx.stroke();
-
-        ctx.setLineDash([]);
-
-        if (minRangePx > 0) {
-            ctx.beginPath();
-
-            ctx.arc(
-                a.x,
-                a.y,
-                minRangePx,
-                0,
-                Math.PI * 2
-            );
-
-            ctx.strokeStyle =
-                '#d86666';
-
-            ctx.lineWidth =
-                1.5;
-
-            ctx.setLineDash([
-                4,
-                4
-            ]);
-
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
-
-        /*
-         * Layer 7:
-         * origin -> target line.
-         */
-        ctx.strokeStyle =
-            '#d7a452';
-
-        ctx.lineWidth =
-            2;
-
-        ctx.setLineDash([
-            8,
-            6
-        ]);
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            a.x,
-            a.y
-        );
-
-        ctx.lineTo(
-            b.x,
-            b.y
-        );
-
-        ctx.stroke();
-
-        ctx.setLineDash([]);
-
-        /*
-         * Layer 8:
-         * artillery / target markers.
-         */
-        marker(
-            S.origin,
-            'O'
-        );
-
-        marker(
-            S.target,
-            'T'
-        );
-
+        drawGuns();
     }
 
     /*

@@ -155,6 +155,11 @@
     }
   ],
   "zones": [],
+  "mainZone": {
+    "x": 7991,
+    "y": 7183,
+    "radius": 500
+  },
   "polygons": [
     {
       "color": "#d86666",

@@ -212,6 +212,7 @@
     },
     "tank": {
       "path": "assets/map-markers/tank.webp",
+      "labelKey": "markerLabelTank",
       "width": 32,
       "height": 32,
       "anchorX": 0.5,
@@ -236,6 +237,7 @@
     },
     "spawn_vehicle": {
       "path": "assets/map-markers/spawn_vehicle.webp",
+      "labelKey": "markerLabelSpawnVehicle",
       "width": 32,
       "height": 32,
       "anchorX": 0.5,

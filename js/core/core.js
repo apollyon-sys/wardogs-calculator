@@ -46,6 +46,9 @@ const SAVED_TARGETS_KEY =
 const SAVE_ARTILLERY_KEY =
     'wardogs-save-artillery-position';
 
+const MAP_POINTS_KEY =
+    'wardogs-map-points';
+
 
 /* =========================
    ZOOM

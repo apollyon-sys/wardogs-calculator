@@ -56,6 +56,10 @@
                         <small aria-hidden="true">&nbsp;</small>
                     </div>
                 </div>
+                <div class="mobile-solution-flight" id="flightTimes" hidden>
+                    <span class="mobile-solution-flight-label" data-i18n="flightTime">Time of flight</span>
+                    <div class="mobile-solution-flight-badges" id="flightTimeBadges"></div>
+                </div>
                 <div class="mobile-range-status" id="rangeStatus">In range</div>
             </div>
 
@@ -126,6 +130,18 @@
 
         <div class="mobile-sheet-content">
             <section class="mobile-panel active" data-mobile-panel="solution">
+                <!-- GUNS -->
+                <div class="mobile-card guns-panel">
+                    <div class="guns-header">
+                        <h2 data-i18n="gunsPanel">Guns</h2>
+                        <span class="saved-targets-count" id="gunsCount">1</span>
+                    </div>
+                    <div class="saved-targets-list" id="gunsList"></div>
+                    <div class="saved-target-actions">
+                        <button class="save-target-button" data-i18n="addGun" id="addGun" type="button">Add gun</button>
+                    </div>
+                </div>
+
                 <div class="mobile-card">
                     <h2 data-i18n="weapon">Weapon</h2>
                     <label data-i18n="weaponType" for="weapon">Weapon type</label>
@@ -246,6 +262,7 @@
 <footer id="siteFooter"></footer>
 
 <script src="js/core/core.js"></script>
+<script src="js/features/guns.js"></script>
 <script src="js/core/resources.js"></script>
 <script src="js/core/config.js"></script>
 <script src="js/core/analytics.js"></script>
@@ -262,12 +279,16 @@
 <script src="js/map/map-view.js"></script>
 <script src="js/map/tiles.js"></script>
 <script src="js/map/contours.js"></script>
+<script src="js/map/heightfield.js"></script>
 <script src="js/map/overlays.js"></script>
+<script src="js/map/guns-overlay.js"></script>
+<script src="js/map/range-ring.js"></script>
 <script src="js/map/map-tools.js"></script>
 <script src="js/map/grid.js"></script>
 <script src="js/map/renderer.js"></script>
 <script src="js/features/coordinates.js"></script>
 <script src="js/features/point-locks.js"></script>
+<script src="js/features/flight-time.js"></script>
 <script src="js/features/results.js"></script>
 <script src="js/ui/inputs.js"></script>
 <script src="js/ui/cursor.js"></script>
