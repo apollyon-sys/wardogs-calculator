@@ -135,4 +135,14 @@
     <changefreq>weekly</changefreq>
     <lastmod>2026-08-26</lastmod>
   </url>
+  <url>
+    <loc>https://wardogs-artillery.com/ja/</loc>
+    <changefreq>weekly</changefreq>
+    <lastmod>2026-08-26</lastmod>
+  </url>
+  <url>
+    <loc>https://wardogs-artillery.com/ko/</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+  </url>
 </urlset>

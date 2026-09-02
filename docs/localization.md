@@ -10,8 +10,9 @@ The application currently supports:
 - Spanish
 - Polish
 - Portuguese
-- Simplified Chinese (`zh-CN`)
-- Korean (`ko`)
+- Simplified Chinese
+- Korean
+- Japanese
 - Cat 🐈
 
 Translation data is stored once under:
@@ -25,22 +26,6 @@ The **same locale JSON files are used by both desktop and mobile interfaces**. M
 The application automatically selects a language based on the user's browser/system locale. If the user manually selects another language, that preference is stored under the shared `wardogs-language` localStorage key and takes priority on future visits.
 
 Because desktop and mobile are served from the same origin, a language selected in one interface is immediately available to the other.
-
-### Simplified Chinese
-
-The internal route/locale id is:
-
-```text
-zh-cn
-```
-
-The published language tag is:
-
-```text
-zh-CN
-```
-
-A browser reporting `zh-CN` is detected automatically by the normal locale matcher. The official Chinese translation is maintained in this repository and must be reviewed independently; do not copy wording from downstream forks or mirrors without review.
 
 ## Localized URLs
 
@@ -57,6 +42,7 @@ Desktop pages:
 ├── pt/
 ├── zh-cn/
 ├── ko/
+├── ja/
 └── cat/
 ```
 
@@ -73,6 +59,7 @@ Mobile pages:
 ├── pt/
 ├── zh-cn/
 ├── ko/
+├── ja/
 └── cat/
 ```
 
