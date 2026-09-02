@@ -46,6 +46,13 @@ function bindEvents() {
                     'custom';
             }
 
+            if (
+                typeof loadMapPoints ===
+                'function'
+            ) {
+                loadMapPoints();
+            }
+
             clamp(
                 S.origin
             );

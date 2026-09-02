@@ -208,6 +208,12 @@ async function init() {
         initLayout();
 
         /*
+         * Before the clamp below, so points restored from a previous
+         * visit are pulled inside the map's bounds like any other.
+         */
+        loadMapPoints();
+
+        /*
          * Sync initial state with the
          * selected preset map after the
          * map JSON files are available.
