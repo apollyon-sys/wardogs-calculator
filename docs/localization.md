@@ -150,19 +150,3 @@ Language-specific mobile routes are generated automatically from `locales/index.
 Map Tools use the shared locale JSON just like the rest of the application. Localized tool labels include **Ruler**, **Pencil**, **Eraser**, **Markers**, **Coordinate search**, **Layers**, import/export actions and the cursor-coordinate layer toggle.
 
 Any new user-visible UI string should be added to every supported locale or intentionally fall back to English. Chinese-specific runtime strings that live outside normal `data-i18n` nodes are centralized through `js/ui/locale-overrides.js` and `locales/zh-cn.json`.
-
-## Simplified Chinese QA checklist
-
-Before release, verify both `/zh-cn/` and `/mobile/zh-cn/` for:
-
-- automatic `zh-CN` detection;
-- language picker and China flag;
-- Mortar / SPH-2 naming;
-- firing-solution labels and LOW/HIGH arc text;
-- Map Tools and saved targets;
-- mobile side menu, partner link, credits and legal copy;
-- Terrain3D ΔZ status and SPH-2 leveling warning;
-- canonical / `hreflang` / Open Graph locale metadata;
-- Chinese FAQ structured data;
-- sitemap entry;
-- no change to firing tables or automatic-correction safety flags.
