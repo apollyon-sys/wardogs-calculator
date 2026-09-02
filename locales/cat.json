@@ -124,5 +124,7 @@
   "unlockPosition": "UNLOCK IT",
   "lockPositionHint": "CAT-PROOF THIS POSITION AGAINST MAP ACCIDENTS",
   "unlockPositionHint": "LET THE HUMANS MOVE THIS POSITION AGAIN",
+  "forcePlacementHint": "FORCE CLICKS HERE",
+  "forcePlacementHintActive": "FORCED — CLICK TO RELEASE",
   "mil": "MIL"
 }

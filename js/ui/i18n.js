@@ -760,6 +760,13 @@ function applyLanguage() {
     }
 
     if (
+        typeof updateForcePlacementUI ===
+        'function'
+    ) {
+        updateForcePlacementUI();
+    }
+
+    if (
         typeof updateLayoutLocalization ===
         'function'
     ) {

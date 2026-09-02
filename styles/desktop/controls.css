@@ -383,3 +383,50 @@ button:disabled {
     content: "  🔒";
     font-size: 10px;
 }
+
+/* =========================
+   FORCE PLACEMENT
+   ========================= */
+
+.mode-option {
+    position: relative;
+}
+
+.mode-option > button:not(.mode-force-pin) {
+    width: 100%;
+}
+
+.mode-force-pin {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+
+    width: 21px;
+    min-height: 0;
+    height: 21px;
+    padding: 0;
+
+    border: 0;
+    border-radius: 3px;
+
+    background: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--text);
+
+    opacity: .3;
+    cursor: pointer;
+}
+
+.mode-force-pin:hover {
+    border: 0;
+    opacity: .75;
+}
+
+.mode-force-pin.active {
+    color: var(--accent);
+    opacity: 1;
+}

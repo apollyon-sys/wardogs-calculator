@@ -111,8 +111,14 @@
 <div class="section">
 <h2 data-i18n="pointSelection">Point selection</h2>
 <div class="mode">
+<div class="mode-option">
 <button class="active" data-i18n="artillery" id="originMode">Artillery</button>
+<button aria-pressed="false" class="mode-force-pin" id="originForcePin" type="button"><svg aria-hidden="true" height="15" viewBox="0 0 24 24" width="15"><path d="M17 9V7a5 5 0 0 0-10 0v2H6a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10a1 1 0 0 0-1-1h-1ZM9 7a3 3 0 0 1 6 0v2H9V7Zm4 9.7V18a1 1 0 0 1-2 0v-1.3a2 2 0 1 1 2 0Z" fill="currentColor"/></svg></button>
+</div>
+<div class="mode-option">
 <button data-i18n="target" id="targetMode">Target</button>
+<button aria-pressed="false" class="mode-force-pin" id="targetForcePin" type="button"><svg aria-hidden="true" height="15" viewBox="0 0 24 24" width="15"><path d="M17 9V7a5 5 0 0 0-10 0v2H6a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10a1 1 0 0 0-1-1h-1ZM9 7a3 3 0 0 1 6 0v2H9V7Zm4 9.7V18a1 1 0 0 1-2 0v-1.3a2 2 0 1 1 2 0Z" fill="currentColor"/></svg></button>
+</div>
 </div>
 <label data-i18n="artilleryXY">Artillery X / Y</label>
 <div class="grid2">
@@ -324,6 +330,7 @@
 <script src="js/map/renderer.js"></script>
 <script src="js/features/coordinates.js"></script>
 <script src="js/features/point-locks.js"></script>
+<script src="js/features/force-placement.js"></script>
 <script src="js/features/results.js"></script>
 <script src="js/ui/inputs.js"></script>
 <script src="js/ui/cursor.js"></script>

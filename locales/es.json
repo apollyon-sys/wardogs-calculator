@@ -118,5 +118,7 @@
   "unlockPosition": "Desbloquear",
   "lockPositionHint": "Bloquear esta posición frente a clics y arrastres en el mapa",
   "unlockPositionHint": "Permitir volver a cambiar esta posición en el mapa",
+  "forcePlacementHint": "Forzar clics aquí",
+  "forcePlacementHintActive": "Forzado — clic para soltar",
   "mil": "MIL"
 }

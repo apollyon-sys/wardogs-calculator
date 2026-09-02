@@ -114,5 +114,7 @@
   "unlockPosition": "Unlock",
   "lockPositionHint": "Lock this position against map clicks and dragging",
   "unlockPositionHint": "Allow this position to be changed on the map",
+  "forcePlacementHint": "Force clicks here",
+  "forcePlacementHintActive": "Forced — click to release",
   "mil": "MIL"
 }

@@ -39,6 +39,38 @@ function inputs() {
     draw();
 }
 
+function setPointMode(type) {
+
+    if (
+        type !== 'origin' &&
+        type !== 'target'
+    ) {
+        return;
+    }
+
+    S.mode =
+        type;
+
+    $('originMode')
+        ?.classList.toggle(
+            'active',
+            type === 'origin'
+        );
+
+    $('targetMode')
+        ?.classList.toggle(
+            'active',
+            type === 'target'
+        );
+
+    if (
+        typeof updateForcePlacementUI ===
+        'function'
+    ) {
+        updateForcePlacementUI();
+    }
+}
+
 function inputPoint(type) {
 
     const p =

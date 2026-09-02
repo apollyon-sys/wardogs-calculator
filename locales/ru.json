@@ -114,5 +114,7 @@
   "unlockPosition": "Открепить",
   "lockPositionHint": "Запретить изменение этой позиции кликами и перетаскиванием по карте",
   "unlockPositionHint": "Разрешить изменение этой позиции на карте",
+  "forcePlacementHint": "Всегда ставить сюда",
+  "forcePlacementHintActive": "Закреплено — нажмите, чтобы снять",
   "mil": "MIL"
 }
