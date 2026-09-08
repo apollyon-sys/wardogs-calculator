@@ -12,7 +12,7 @@
   "devDependencies": {
     "wrangler": "^4.129.0",
     "miniflare": "^4.20260730.0",
-    "esbuild": "^0.28.1",
+    "esbuild": "^0.28.2",
     "happy-dom": "^20.0.0"
   },
   "overrides": {
