@@ -39,6 +39,15 @@ for (const path of htmlFiles) {
 assert.equal(artifactFiles.some(path => path.endsWith('.bin')), false, 'terrain binaries entered the Pages artifact');
 assert.equal(artifactFiles.some(path => path.includes(`${join('maps', 'tiles')}`)), false, 'map tiles entered the Pages artifact');
 
+for (const mapId of ['bakurani', 'ozeti', 'zestafona']) {
+    const contourPath = join(dist, 'data', 'terrain', mapId, 'contours.json');
+    assert.ok(artifactFiles.includes(contourPath), `${mapId} contours are missing from the Pages artifact`);
+
+    const contours = JSON.parse(await readFile(contourPath, 'utf8'));
+    assert.equal(contours.format, 'wardogs-contours-v1', `${mapId} contours have an unsupported format`);
+    assert.equal(contours.mapId, mapId, `${mapId} contours have the wrong map id`);
+}
+
 const sitemap = await readFile(join(dist, 'sitemap.xml'), 'utf8');
 const robots = await readFile(join(dist, 'robots.txt'), 'utf8');
 const homepage = await readFile(join(dist, 'index.html'), 'utf8');

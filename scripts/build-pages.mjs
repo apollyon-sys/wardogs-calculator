@@ -14,6 +14,26 @@ const dist = join(root, 'dist');
 const localTilesDirectory = join(root, 'maps', 'tiles');
 const localTerrainPrefix = join(root, 'data', 'terrain') + sep;
 
+function includeSharedSource(sourcePath) {
+    if (sourcePath === localTilesDirectory) return false;
+    if (!sourcePath.startsWith(localTerrainPrefix)) return true;
+
+    const terrainParts = sourcePath
+        .slice(localTerrainPrefix.length)
+        .split(sep)
+        .filter(Boolean);
+
+    /*
+     * Keep map directories traversable and publish only the precomputed,
+     * lightweight contour overlay. Terrain manifests and binary chunks are
+     * loaded from R2 and must not enter the Pages artifact.
+     */
+    return terrainParts.length === 1 || (
+        terrainParts.length === 2 &&
+        terrainParts[1] === 'contours.json'
+    );
+}
+
 const NON_INDEXABLE_PAGE_LANGUAGES =
     new Set(['cat']);
 
@@ -120,12 +140,7 @@ async function copyIfExists(source, target) {
     if (!(await exists(source))) return;
     await cp(source, target, {
         recursive: true,
-        filter: (sourcePath) => (
-            sourcePath !== localTilesDirectory &&
-            !(
-                sourcePath.startsWith(localTerrainPrefix)
-            )
-        )
+        filter: includeSharedSource
     });
 }
 
