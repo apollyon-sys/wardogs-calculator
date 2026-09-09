@@ -169,10 +169,6 @@ footer a:hover {
         transform .15s ease;
 }
 
-.donation-link-buy-me-a-coffee {
-    --donation-tone: #d7a452;
-}
-
 .donation-link-ko-fi {
     --donation-tone: #72a4f2;
 }

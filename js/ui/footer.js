@@ -13,26 +13,6 @@ const FOOTER_PARTNERS = [
 
 const DONATION_LINKS = [
     {
-        id: 'buy-me-a-coffee',
-        label: 'Buy me a coffee',
-        url: 'https://www.buymeacoffee.com/apollyonsys',
-        icon: `
-            <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <path d="M5 8h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V8Z"></path>
-                <path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16"></path>
-                <path d="M7 5h7"></path>
-            </svg>
-        `
-    },
-    {
         id: 'ko-fi',
         label: 'Support me on Ko-fi',
         url: 'https://ko-fi.com/D3J32528AD',
