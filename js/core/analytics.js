@@ -138,13 +138,23 @@ function getAnalyticsContextKey(
             typeof data?.code === 'string'
                 ? data.code
                 : '';
+        const resource =
+            typeof data?.resource === 'string'
+                ? data.resource
+                : '';
+        const origin =
+            typeof data?.origin === 'string'
+                ? data.origin
+                : '';
 
         return [
             name,
             map,
             area,
             type,
-            code
+            code,
+            resource,
+            origin
         ].join('|');
     }
 
@@ -415,9 +425,131 @@ function trackOperationalFailure(
             code:
                 typeof data?.code === 'string'
                     ? data.code
+                    : '',
+            resource:
+                typeof data?.resource === 'string'
+                    ? data.resource
+                    : '',
+            origin:
+                typeof data?.origin === 'string'
+                    ? data.origin
                     : ''
         }
     );
+}
+
+function classifyOperationalResource(target) {
+    const tag =
+        String(target?.tagName || '')
+            .toLowerCase();
+    const rawUrl =
+        typeof target?.src === 'string' &&
+        target.src
+            ? target.src
+            : typeof target?.href === 'string'
+                ? target.href
+                : '';
+
+    if (!rawUrl) {
+        return {
+            resource:
+                tag || 'unknown-resource',
+            origin: 'unknown'
+        };
+    }
+
+    try {
+        const url =
+            new URL(
+                rawUrl,
+                window.location.href
+            );
+        const host =
+            url.hostname.toLowerCase();
+        const path =
+            url.pathname.toLowerCase();
+        const sameOrigin =
+            url.origin ===
+            window.location.origin;
+
+        let origin = 'external';
+        if (sameOrigin) {
+            origin = 'site';
+        } else if (
+            host ===
+            'assets.wardogs-artillery.com'
+        ) {
+            origin = 'assets-cdn';
+        } else if (
+            host.includes('umami')
+        ) {
+            origin = 'umami';
+        } else if (
+            host.includes('cloudflare') ||
+            host.includes('challenges.cloudflare.com')
+        ) {
+            origin = 'cloudflare';
+        }
+
+        let resource =
+            `${tag || 'unknown'}-resource`;
+
+        if (tag === 'script') {
+            if (
+                path.includes(
+                    '/js/features/terrain-ballistics.js'
+                )
+            ) {
+                resource = 'terrain-runtime';
+            } else if (
+                sameOrigin &&
+                path.includes('/js/')
+            ) {
+                resource = 'app-script';
+            } else if (
+                origin === 'umami'
+            ) {
+                resource = 'analytics';
+            } else if (
+                origin === 'cloudflare' ||
+                path.includes('turnstile')
+            ) {
+                resource = 'turnstile';
+            } else {
+                resource = 'external-script';
+            }
+        } else if (tag === 'link') {
+            resource =
+                path.endsWith('.css')
+                    ? 'stylesheet'
+                    : 'document-link';
+        } else if (tag === 'img') {
+            if (
+                path.includes('/maps/tiles/')
+            ) {
+                resource = 'map-tile';
+            } else if (
+                path.includes(
+                    '/assets/map-markers/'
+                )
+            ) {
+                resource = 'map-marker';
+            } else {
+                resource = 'image';
+            }
+        }
+
+        return {
+            resource,
+            origin
+        };
+    } catch {
+        return {
+            resource:
+                `${tag || 'unknown'}-resource`,
+            origin: 'unknown'
+        };
+    }
 }
 
 function installOperationalErrorTelemetry() {
@@ -432,6 +564,11 @@ function installOperationalErrorTelemetry() {
                 target !== window &&
                 target.tagName
             ) {
+                const classification =
+                    classifyOperationalResource(
+                        target
+                    );
+
                 trackOperationalFailure(
                     'asset-load-failed',
                     {
@@ -439,7 +576,11 @@ function installOperationalErrorTelemetry() {
                         type: String(
                             target.tagName
                         ).toLowerCase(),
-                        code: 'resource-error'
+                        code: 'resource-error',
+                        resource:
+                            classification.resource,
+                        origin:
+                            classification.origin
                     }
                 );
                 return;
