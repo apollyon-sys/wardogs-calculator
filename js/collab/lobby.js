@@ -386,26 +386,47 @@ async function initLobby() {
             window.turnstile.reset(turnstileWidget);
         }
     }
-    async function getAdmission() {
-        if (!challengeRequired) return '';
-        if (admission && admissionExpiresAt > Date.now() + 5000) return admission;
-        await prepareChallenge();
-        if (!challengeToken) return null;
+    async function requestAdmission(token = '') {
         const response = await fetch(`${base}/admission`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: challengeToken }),
+            body: JSON.stringify({ token }),
             credentials: 'omit',
             referrerPolicy: 'no-referrer',
             signal: AbortSignal.timeout(10000)
         });
         const data = await response.json();
-        resetChallenge();
         if (!response.ok) throw new Error(data.error);
         admission = parseInvite(data.admission);
         admissionExpiresAt = Number(data.expiresAt) || 0;
         q('.lobby-turnstile').hidden = true;
+        if (data.mode === 'restricted') {
+            trackLobby('lobby-admission-fallback', { mode: 'restricted' });
+        }
         return admission;
+    }
+    async function getAdmission() {
+        if (!challengeRequired) return '';
+        if (admission && admissionExpiresAt > Date.now() + 5000) return admission;
+        try {
+            await prepareChallenge();
+        } catch (challengeError) {
+            try {
+                // Mainland China can receive a tightly rate-limited signed admission
+                // when Cloudflare's Turnstile script itself is unreachable. The Worker
+                // rejects this tokenless request everywhere else.
+                return await requestAdmission('');
+            } catch (fallbackError) {
+                if (fallbackError.message === 'challenge-required') throw challengeError;
+                throw fallbackError;
+            }
+        }
+        if (!challengeToken) return null;
+        try {
+            return await requestAdmission(challengeToken);
+        } finally {
+            resetChallenge();
+        }
     }
     function connect(method = 'join') {
         clearTimers();

@@ -471,9 +471,35 @@ function classifyOperationalResource(target) {
         const sameOrigin =
             url.origin ===
             window.location.origin;
+        const cloudflareHost =
+            host === 'cloudflare.com' ||
+            host.endsWith('.cloudflare.com') ||
+            host === 'cloudflareinsights.com' ||
+            host.endsWith('.cloudflareinsights.com');
+        const turnstileResource =
+            host === 'challenges.cloudflare.com' &&
+            path.includes('/turnstile/');
+        const cloudflareInsightsResource =
+            host === 'static.cloudflareinsights.com' ||
+            host.endsWith('.cloudflareinsights.com');
+        const cloudflareChallengeResource =
+            !turnstileResource &&
+            (
+                host === 'challenges.cloudflare.com' ||
+                path.includes(
+                    '/cdn-cgi/challenge-platform/'
+                )
+            );
 
         let origin = 'external';
-        if (sameOrigin) {
+        if (
+            turnstileResource ||
+            cloudflareInsightsResource ||
+            cloudflareChallengeResource ||
+            cloudflareHost
+        ) {
+            origin = 'cloudflare';
+        } else if (sameOrigin) {
             origin = 'site';
         } else if (
             host ===
@@ -484,11 +510,6 @@ function classifyOperationalResource(target) {
             host.includes('umami')
         ) {
             origin = 'umami';
-        } else if (
-            host.includes('cloudflare') ||
-            host.includes('challenges.cloudflare.com')
-        ) {
-            origin = 'cloudflare';
         }
 
         let resource =
@@ -510,11 +531,14 @@ function classifyOperationalResource(target) {
                 origin === 'umami'
             ) {
                 resource = 'analytics';
-            } else if (
-                origin === 'cloudflare' ||
-                path.includes('turnstile')
-            ) {
+            } else if (turnstileResource) {
                 resource = 'turnstile';
+            } else if (cloudflareInsightsResource) {
+                resource = 'cloudflare-insights';
+            } else if (cloudflareChallengeResource) {
+                resource = 'cloudflare-challenge';
+            } else if (origin === 'cloudflare') {
+                resource = 'cloudflare-other';
             } else {
                 resource = 'external-script';
             }
