@@ -119,6 +119,16 @@ for (const page of MAP_LANDING_PAGES) {
     assert.ok(html.includes(`href="?map=${page.id}"`), `${route}: CTA does not select its map`);
     assert.ok(html.includes(`Open ${page.name} Interactive Map`), `${route}: primary CTA is missing`);
     assert.ok(html.includes('href="./"'), `${route}: calculator backlink is missing`);
+    assert.ok(html.includes(`<h2 id="map-facts-heading">${page.name} battlefield facts</h2>`), `${route}: factual map summary is missing`);
+
+    for (const fact of page.facts) {
+        assert.ok(html.includes(`<dt>${fact.label}</dt>`), `${route}: missing ${fact.label} fact label`);
+        assert.ok(html.includes(`<dd>${fact.value}</dd>`), `${route}: missing ${fact.label} fact value`);
+    }
+
+    for (const source of page.sources) {
+        assert.ok(html.includes(`href="${source.url}" rel="external"`), `${route}: missing crawlable source link`);
+    }
 
     for (const related of MAP_LANDING_PAGES.filter(item => item.id !== page.id)) {
         assert.ok(html.includes(`href="maps/${related.id}/"`), `${route}: missing ${related.id} link`);
@@ -130,6 +140,7 @@ for (const page of MAP_LANDING_PAGES) {
     assert.equal(schema['@context'], 'https://schema.org', `${route}: incorrect schema context`);
     const webPage = schema['@graph'].find(item => item['@type'] === 'WebPage' && item.url === url);
     assert.ok(webPage, `${route}: WebPage schema is missing`);
+    assert.deepEqual(webPage.citation, page.sources.map(source => source.url), `${route}: schema citations are incorrect`);
     assert.equal(webPage.primaryImageOfPage?.url, imageUrl, `${route}: schema image URL is incorrect`);
     assert.equal(webPage.primaryImageOfPage?.width, 1280, `${route}: schema image width is incorrect`);
     assert.equal(webPage.primaryImageOfPage?.height, 720, `${route}: schema image height is incorrect`);

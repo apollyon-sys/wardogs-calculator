@@ -75,6 +75,17 @@
 </div>
 </section>
 
+<section aria-labelledby="map-facts-heading" class="map-facts">
+<div class="map-facts-intro">
+<p class="eyebrow">PUBLISHED MAP DATA</p>
+<h2 id="map-facts-heading">{{MAP_NAME}} battlefield facts</h2>
+<p>Published information about the game map, kept separate from calculator features.</p>
+</div>
+<dl>
+{{FACTS}}
+</dl>
+</section>
+
 <div class="map-page-grid" id="map-guide">
 <article class="map-guide">
 {{SECTIONS}}
@@ -82,6 +93,14 @@
 <section aria-labelledby="map-faq-heading" class="map-guide-section map-faq">
 <h2 id="map-faq-heading">{{MAP_NAME}} Map FAQ</h2>
 {{FAQ}}
+</section>
+
+<section aria-labelledby="map-sources-heading" class="map-guide-section map-sources">
+<h2 id="map-sources-heading">Sources and verification</h2>
+<p>Game rules and map descriptions above are limited to published material. Calculator-specific sections describe this site’s implementation; unpublished POI names and tactical claims are intentionally omitted.</p>
+<ul>
+{{SOURCES}}
+</ul>
 </section>
 </article>
 

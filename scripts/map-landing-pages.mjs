@@ -14,13 +14,20 @@ export const MAP_LANDING_PAGES = [
             'Optional Terrain3D context and terrain contours',
             'Live lobby planning with separate player firing solutions'
         ],
+        facts: [
+            { label: 'Published setting', value: 'Eastern European mountains' },
+            { label: 'Known district', value: 'Factory district' },
+            { label: 'Battlefield size', value: '256 km²' },
+            { label: 'Core objective', value: 'Randomised 2 × 2 km Control Zone' }
+        ],
         sections: [
             {
-                id: 'bakurani-tactical-map',
-                heading: 'Bakurani Interactive Tactical Map',
+                id: 'bakurani-map-profile',
+                heading: 'Bakurani: Mountains, Industry and a Moving Objective',
                 paragraphs: [
-                    'The Bakurani page opens the existing WARDOGS calculator with Bakurani already selected. Its tiled map is calibrated to the application\'s game-coordinate space, so artillery points, targets, coordinate search, saved targets and map annotations use the same reference.',
-                    'Use the direct map link when you need a clean Bakurani starting point. The landing page itself stays lightweight; map tiles and calculation code load only after you open the calculator.'
+                    'Published WARDOGS map coverage identifies Bakurani by a factory district surrounded by Eastern European mountains. Those two features distinguish the battlefield more clearly than a generic tactical-map label: industrial structures occupy part of a much wider mountain setting.',
+                    'Team17 describes a WARDOGS match as up to 100 players divided between three teams. The full battlefield covers 256 km², but the scoring objective is a randomised 2 × 2 km Control Zone; the team with the most players inside earns points, and the first team to 100 wins.',
+                    'The calculator aligns its Bakurani tiles, coordinate search, artillery point, target and annotations to one game-coordinate reference. The landing page does not load those tiles or the canvas engine until you open the interactive map.'
                 ]
             },
             {
@@ -81,6 +88,16 @@ export const MAP_LANDING_PAGES = [
                 question: 'Is Terrain3D required for Bakurani calculations?',
                 answer: 'No. Terrain3D correction is experimental, optional and off by default. The standard firing table remains available and is used as the fallback.'
             }
+        ],
+        sources: [
+            {
+                label: 'Official WARDOGS game and match overview — Team17',
+                url: 'https://www.team17.com/games/wardogs'
+            },
+            {
+                label: 'WARDOGS maps overview — GameWatcher',
+                url: 'https://www.gamewatcher.com/wardogs/maps'
+            }
         ]
     },
     {
@@ -98,13 +115,20 @@ export const MAP_LANDING_PAGES = [
             'Terrain contours and opt-in Terrain3D support',
             'Shared annotations in live team lobbies'
         ],
+        facts: [
+            { label: 'Published setting', value: 'Western Europe' },
+            { label: 'Known landmark', value: 'Football stadium' },
+            { label: 'Battlefield size', value: '256 km²' },
+            { label: 'Core objective', value: 'Randomised 2 × 2 km Control Zone' }
+        ],
         sections: [
             {
-                id: 'ozeti-tactical-map',
-                heading: 'Ozeti Tactical Map with Calibrated Coordinates',
+                id: 'ozeti-map-profile',
+                heading: 'Ozeti: Western Europe and the Stadium',
                 paragraphs: [
-                    'The Ozeti map uses calibrated WARDOGS coordinates and corrected playable-area alignment. The image, grid, coordinate search and point placement therefore operate in one consistent space rather than as an unreferenced map image.',
-                    'Opening this page\'s CTA selects Ozeti in the main calculator. The guide does not preload map imagery or the canvas engine, which keeps the search page fast before you begin planning.'
+                    'Published coverage places Ozeti in Western Europe and identifies a football stadium as its defining landmark. That gives players a concrete visual reference without this guide inventing unofficial location names or claiming fixed tactical value for individual positions.',
+                    'Ozeti follows the wider WARDOGS match structure: up to 100 players fight across three teams, while a randomised 2 × 2 km Control Zone selects the part of the 256 km² battlefield that matters for scoring in that match. The first team to reach 100 points wins.',
+                    'Inside the calculator, Ozeti uses calibrated coordinates and corrected playable-area alignment. The image, grid, coordinate search and point placement therefore operate in one reference system, while this landing page remains a lightweight HTML guide.'
                 ]
             },
             {
@@ -165,6 +189,16 @@ export const MAP_LANDING_PAGES = [
                 question: 'Does Ozeti include terrain elevation support?',
                 answer: 'Yes. Ozeti provides terrain contours and Terrain3D coverage, but experimental SPH-2 correction is opt-in and falls back to the normal firing table unless a candidate is SAFE.'
             }
+        ],
+        sources: [
+            {
+                label: 'Official WARDOGS game and match overview — Team17',
+                url: 'https://www.team17.com/games/wardogs'
+            },
+            {
+                label: 'WARDOGS maps overview — GameWatcher',
+                url: 'https://www.gamewatcher.com/wardogs/maps'
+            }
         ]
     },
     {
@@ -182,13 +216,20 @@ export const MAP_LANDING_PAGES = [
             'SPH-2 Terrain3D preview with safe fallback',
             'Labelled teammate positions in shared lobbies'
         ],
+        facts: [
+            { label: 'Map status', value: 'Third map revealed ahead of Early Access' },
+            { label: 'Visual focus', value: 'Factory, cranes and container yard' },
+            { label: 'Battlefield size', value: '256 km²' },
+            { label: 'Core objective', value: 'Randomised 2 × 2 km Control Zone' }
+        ],
         sections: [
             {
-                id: 'zestafona-interactive-map',
-                heading: 'Zestafona Interactive Map',
+                id: 'zestafona-map-profile',
+                heading: 'Zestafona: The Industrial Map Reveal',
                 paragraphs: [
-                    'Zestafona is available as a calibrated preset in WARDOGS Artillery Calculator. Its multi-resolution tile set supports close inspection while the grid, point inputs and coordinate search continue to use the configured game-coordinate mapping.',
-                    'The Open Zestafona Interactive Map action loads the established calculator with this preset selected. Until that action, this HTML page loads neither tiles nor the map engine.'
+                    'Zestafona was revealed as the third WARDOGS map ahead of Early Access. The reveal footage focuses on a derelict industrial complex with factory buildings, overhead cranes and stacks of shipping containers rather than presenting it as an unnamed generic battlefield.',
+                    'A detailed authoritative list of Zestafona points of interest was not published with the reveal. This guide therefore avoids inventing location names, permanent objectives or tactical claims and limits the map profile to visible and published information.',
+                    'Published coverage describes the launch battlefields as 256 km² maps using a randomised 2 × 2 km Control Zone. The calculator adds a calibrated Zestafona coordinate reference and multi-resolution tiles, but loads neither the tiles nor the map engine on this guide page.'
                 ]
             },
             {
@@ -249,6 +290,20 @@ export const MAP_LANDING_PAGES = [
                 question: 'Is the Zestafona live map connected to a game server?',
                 answer: 'No. “Live” describes synchronisation between calculator lobby participants. The application does not claim to receive live match or game-server telemetry.'
             }
+        ],
+        sources: [
+            {
+                label: 'Official WARDOGS game and match overview — Team17',
+                url: 'https://www.team17.com/games/wardogs'
+            },
+            {
+                label: 'WARDOGS maps overview — GameWatcher',
+                url: 'https://www.gamewatcher.com/wardogs/maps'
+            },
+            {
+                label: 'Zestafona map reveal — WARDOGS video',
+                url: 'https://www.youtube.com/watch?v=8sgSjweihnw'
+            }
         ]
     }
 ];
@@ -297,6 +352,25 @@ function renderHighlights(items) {
         .join('\n');
 }
 
+function renderFacts(items) {
+    return items
+        .map(item => [
+            '<div>',
+            `<dt>${escapeHtml(item.label)}</dt>`,
+            `<dd>${escapeHtml(item.value)}</dd>`,
+            '</div>'
+        ].join('\n'))
+        .join('\n');
+}
+
+function renderSources(items) {
+    return items
+        .map(source => (
+            `<li><a href="${escapeHtml(source.url)}" rel="external">${escapeHtml(source.label)}</a></li>`
+        ))
+        .join('\n');
+}
+
 function renderFaq(items) {
     return items
         .map(item => [
@@ -330,6 +404,7 @@ function structuredData(page) {
                 name: page.title,
                 description: page.description,
                 inLanguage: 'en',
+                citation: page.sources.map(source => source.url),
                 primaryImageOfPage: {
                     '@type': 'ImageObject',
                     url: `${SITE_ORIGIN}/${page.imagePath}`,
@@ -379,8 +454,10 @@ export function renderMapLandingPage(template, page) {
         '{{H1}}': escapeHtml(page.heading),
         '{{LEAD}}': escapeHtml(page.lead),
         '{{HIGHLIGHTS}}': renderHighlights(page.highlights),
+        '{{FACTS}}': renderFacts(page.facts),
         '{{SECTIONS}}': renderSections(page.sections),
         '{{FAQ}}': renderFaq(page.faq),
+        '{{SOURCES}}': renderSources(page.sources),
         '{{RELATED_MAPS}}': renderRelatedMaps(page.id),
         '{{JSON_LD}}': structuredData(page)
     };
