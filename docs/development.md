@@ -19,6 +19,7 @@ wardogs-calculator/
 │   ├── features/
 │   ├── map/
 │   ├── mobile/
+│   ├── map-landing-language.js
 │   └── ui/
 ├── locales/
 │   ├── index.json
@@ -30,6 +31,7 @@ wardogs-calculator/
 │   ├── sync-locales.mjs
 │   ├── seo-content.mjs
 │   ├── map-landing-pages.mjs
+│   ├── map-landing-locales.mjs
 │   ├── version-assets.mjs
 │   └── dev-server.mjs
 ├── src/pages/
@@ -69,7 +71,7 @@ See [Tile hosting](maps.md#tile-hosting) and
 
 Production analytics are disabled by default in the development server. Set `WARDOGS_DISABLE_ANALYTICS=false` only when explicitly testing the Umami integration. See [Analytics](analytics.md#development-analytics-switch) for the full local-testing behavior.
 
-The lightweight English map guides are available from the source server at `/maps/bakurani/`, `/maps/ozeti/` and `/maps/zestafona/`. Restart the server after editing `scripts/map-landing-pages.mjs`; template and CSS edits continue to use live reload.
+The lightweight map landing pages are available from the source server at `/maps/bakurani/`, `/maps/ozeti/` and `/maps/zestafona/`, with translated variants such as `/ru/maps/bakurani/` and `/zh-cn/maps/zestafona/`. Restart the server after editing `scripts/map-landing-pages.mjs` or `scripts/map-landing-locales.mjs`; template, selector JavaScript and CSS edits continue to use live reload.
 
 To test on another device:
 
@@ -107,7 +109,7 @@ Responsibilities:
    - keeps local terrain manifests and generated contours;
    - bundles desktop/mobile CSS;
    - creates the normal desktop routes;
-   - creates lightweight English map landing routes from the shared template and content registry;
+   - creates lightweight English and localized map landing routes from the shared template and reviewed content registries;
    - creates mobile locale routes from `locales/index.json`.
 2. `sync-locales.mjs`
    - creates or synchronizes generated locale routes from the canonical page shells and locale registry;
@@ -126,6 +128,10 @@ dist/
 ├── <locale>/
 │   └── index.html
 ├── maps/
+│   ├── bakurani/index.html
+│   ├── ozeti/index.html
+│   └── zestafona/index.html
+├── <locale>/maps/
 │   ├── bakurani/index.html
 │   ├── ozeti/index.html
 │   └── zestafona/index.html
@@ -158,6 +164,7 @@ After `npm run build`, serve `dist/` and verify:
 ```text
 http://localhost:8000/<locale>/
 http://localhost:8000/mobile/<locale>/
+http://localhost:8000/<locale>/maps/<map-id>/
 ```
 
 Repeat the check for every supported locale. Check the UI, language selector, flag, weapon naming, mobile menu, footer/legal copy, Terrain3D status and SPH-2 warning. Inspect generated HTML to confirm:
@@ -172,7 +179,7 @@ locale-specific JSON-LD is present when configured
 
 Also confirm `dist/sitemap.xml` contains every indexable desktop locale and that each indexable route advertises all registered alternates.
 
-For map landing pages, `npm run test:build` checks unique metadata, canonical URLs, crawlable copy, internal links, sitemap entries, indexability, structured data, lightweight resource loading and the validated `?map=` calculator handoff.
+For map landing pages, `npm run test:build` checks every language/map combination, unique metadata, self-referencing canonical URLs, reciprocal `hreflang`, crawlable translated copy, language navigation, internal links, sitemap inclusion or exclusion, structured data, lightweight resource loading and the validated localized `?map=` calculator handoff.
 
 ## Terrain3D verification
 

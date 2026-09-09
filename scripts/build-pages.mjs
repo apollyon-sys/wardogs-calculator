@@ -3,6 +3,8 @@ import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
     MAP_LANDING_PAGES,
+    hasMapLandingLanguage,
+    mapLandingPagesForLanguage,
     mapLandingUrl,
     renderMapLandingPage
 } from './map-landing-pages.mjs';
@@ -79,6 +81,25 @@ async function exists(path) {
     } catch {
         return false;
     }
+}
+
+async function getLanguageDefinitions() {
+    const index = JSON.parse(
+        await readFile(join(root, 'locales', 'index.json'), 'utf8')
+    );
+    const languages = Array.isArray(index.languages)
+        ? index.languages
+        : [];
+
+    return languages
+        .filter(item => item?.id && item?.file)
+        .map(item => ({
+            ...item,
+            id: String(item.id).toLowerCase(),
+            hreflang: item.hreflang || item.id,
+            ogLocale: item.ogLocale || null,
+            indexable: item.indexable !== false
+        }));
 }
 
 function addProductionSecurityMeta(html, appConfig) {
@@ -737,50 +758,36 @@ async function buildMapLandingPages() {
         'utf8'
     );
     const appConfig = await readAppConfig();
+    const languages = await getLanguageDefinitions();
 
-    for (const page of MAP_LANDING_PAGES) {
-        const targetDir = join(dist, 'maps', page.id);
-        const html = addProductionSecurityMeta(
-            renderMapLandingPage(template, page),
-            appConfig
-        );
+    for (const language of languages) {
+        if (!hasMapLandingLanguage(language.id)) {
+            throw new Error(
+                `Missing map landing localization for ${language.id}`
+            );
+        }
 
-        await mkdir(targetDir, { recursive: true });
-        await writeFile(join(targetDir, 'index.html'), html, 'utf8');
+        for (const page of mapLandingPagesForLanguage(language.id)) {
+            const targetDir = language.id === 'en'
+                ? join(dist, 'maps', page.id)
+                : join(dist, language.id, 'maps', page.id);
+            const html = addProductionSecurityMeta(
+                renderMapLandingPage(template, page, {
+                    languageDefinition: language,
+                    languages
+                }),
+                appConfig
+            );
+
+            await mkdir(targetDir, { recursive: true });
+            await writeFile(join(targetDir, 'index.html'), html, 'utf8');
+        }
     }
 }
 
 async function readAppConfig() {
     const path = join(root, 'config', 'app.json');
     return JSON.parse(await readFile(path, 'utf8'));
-}
-
-async function getDesktopLanguages() {
-    const localizedDir = join(
-        root,
-        'src',
-        'pages',
-        'locales'
-    );
-
-    if (!(await exists(localizedDir))) {
-        return ['en'];
-    }
-
-    const files = await readdir(localizedDir);
-    const localized = files
-        .filter(file => file.endsWith('.html'))
-        .map(file => file.slice(0, -5))
-        .filter(Boolean)
-        .filter(
-            language =>
-                !NON_INDEXABLE_PAGE_LANGUAGES.has(
-                    language
-                )
-        )
-        .sort();
-
-    return ['en', ...localized];
 }
 
 function escapeXml(value) {
@@ -800,23 +807,24 @@ function desktopUrlForLanguage(language) {
 
 async function buildSitemap() {
     const appConfig = await readAppConfig();
-    const languages = await getDesktopLanguages();
+    const definitions = (await getLanguageDefinitions())
+        .filter(definition => definition.indexable);
     const lastModified = appConfig?.site?.lastModified
         || new Date().toISOString().slice(0, 10);
 
-    const alternateLinks = languages
-        .map(language => (
-            `    <xhtml:link rel="alternate" hreflang="${escapeXml(language)}" href="${escapeXml(desktopUrlForLanguage(language))}" />`
+    const alternateLinks = definitions
+        .map(definition => (
+            `    <xhtml:link rel="alternate" hreflang="${escapeXml(definition.hreflang)}" href="${escapeXml(desktopUrlForLanguage(definition.id))}" />`
         ))
         .concat(
             '    <xhtml:link rel="alternate" hreflang="x-default" href="https://wardogs-artillery.com/" />'
         )
         .join('\n');
 
-    const localeUrls = languages
-        .map(language => [
+    const localeUrls = definitions
+        .map(definition => [
             '  <url>',
-            `    <loc>${escapeXml(desktopUrlForLanguage(language))}</loc>`,
+            `    <loc>${escapeXml(desktopUrlForLanguage(definition.id))}</loc>`,
             alternateLinks,
             '    <changefreq>weekly</changefreq>',
             `    <lastmod>${escapeXml(lastModified)}</lastmod>`,
@@ -824,14 +832,25 @@ async function buildSitemap() {
         ].join('\n'))
         .join('\n');
 
-    const mapUrls = MAP_LANDING_PAGES
-        .map(page => [
+    const mapUrls = MAP_LANDING_PAGES.flatMap(page => {
+        const mapAlternates = definitions
+            .map(definition => (
+                `    <xhtml:link rel="alternate" hreflang="${escapeXml(definition.hreflang)}" href="${escapeXml(mapLandingUrl(page.id, definition.id))}" />`
+            ))
+            .concat(
+                `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(mapLandingUrl(page.id))}" />`
+            )
+            .join('\n');
+
+        return definitions.map(definition => [
             '  <url>',
-            `    <loc>${escapeXml(mapLandingUrl(page.id))}</loc>`,
+            `    <loc>${escapeXml(mapLandingUrl(page.id, definition.id))}</loc>`,
+            mapAlternates,
             '    <changefreq>weekly</changefreq>',
             `    <lastmod>${escapeXml(lastModified)}</lastmod>`,
             '  </url>'
-        ].join('\n'))
+        ].join('\n'));
+    })
         .join('\n');
 
     const urls = [localeUrls, mapUrls]

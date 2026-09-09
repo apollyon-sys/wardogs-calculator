@@ -1,3 +1,5 @@
+import { MAP_LANDING_LOCALIZATIONS } from './map-landing-locales.mjs';
+
 export const MAP_LANDING_PAGES = [
     {
         id: 'bakurani',
@@ -308,16 +310,171 @@ export const MAP_LANDING_PAGES = [
     }
 ];
 
-export const MAP_LANDING_PAGES_BY_ID =
-    Object.fromEntries(
-        MAP_LANDING_PAGES.map(page => [page.id, page])
-    );
+export const MAP_LANDING_PAGES_BY_ID = Object.fromEntries(
+    MAP_LANDING_PAGES.map(page => [page.id, page])
+);
 
-export const SITE_ORIGIN =
-    'https://wardogs-artillery.com';
+export const SITE_ORIGIN = 'https://wardogs-artillery.com';
+export const DEFAULT_MAP_LANDING_LANGUAGE = 'en';
 
-export function mapLandingUrl(id) {
-    return `${SITE_ORIGIN}/maps/${id}/`;
+const ENGLISH_UI = {
+    skip: 'Skip to map content',
+    brandHome: 'WARDOGS Artillery Calculator home',
+    calculator: 'Calculator',
+    language: 'Language',
+    breadcrumbAria: 'Breadcrumb',
+    footerAria: 'Footer navigation',
+    breadcrumb: '{map} map',
+    eyebrow: 'WARDOGS MAP',
+    imageCaption: '{map} in WARDOGS',
+    capabilities: '{map} map capabilities',
+    workspace: '{map} workspace',
+    factsEyebrow: 'PUBLISHED MAP DATA',
+    factsHeading: '{map} battlefield facts',
+    factsIntro: 'Published information about the game map, kept separate from calculator features.',
+    faqHeading: '{map} Map FAQ',
+    sourcesHeading: 'Sources and verification',
+    sourcesIntro: 'Game rules and map descriptions above are limited to published material. Calculator-specific sections describe this site’s implementation; unpublished POI names and tactical claims are intentionally omitted.',
+    openCalculator: 'Open the calculator',
+    openCalculatorBody: 'Continue in the full desktop or mobile interface with {map} selected.',
+    openMap: 'Open {map} Interactive Map',
+    otherMaps: 'Other WARDOGS maps',
+    otherMapsAria: 'Other WARDOGS maps',
+    relatedMap: '{map} Interactive Map',
+    footerDisclaimer: 'Unofficial community project. Not affiliated with or endorsed by BULKHEAD or the WARDOGS development team.',
+    sourceCode: 'Source code'
+};
+
+const DEFAULT_LANGUAGE_DEFINITION = {
+    id: DEFAULT_MAP_LANDING_LANGUAGE,
+    hreflang: 'en',
+    ogLocale: 'en_GB',
+    nativeName: 'English',
+    flag: '🇬🇧',
+    indexable: true
+};
+
+function formatCopy(value, variables) {
+    return String(value).replace(/\{([a-z]+)\}/gi, (match, key) => (
+        Object.hasOwn(variables, key) ? String(variables[key]) : match
+    ));
+}
+
+function sourceKey(source) {
+    if (source.url.includes('team17.com')) return 'team17';
+    if (source.url.includes('youtube.com')) return 'reveal';
+    return 'maps';
+}
+
+function localizePage(page, localization) {
+    const common = localization.content;
+    const map = localization.maps[page.id];
+
+    if (!map) {
+        throw new Error(`Missing localized map content for ${page.id}`);
+    }
+
+    const variables = { map: page.name, detail: map.detail };
+    const fact = ([key, value]) => ({
+        label: common.factLabels[key],
+        value
+    });
+
+    return {
+        ...page,
+        title: formatCopy(common.title, variables),
+        description: formatCopy(common.description, variables),
+        imageAlt: map.imageAlt,
+        heading: formatCopy(common.heading, variables),
+        lead: map.lead,
+        highlights: [
+            map.mapHighlight,
+            common.highlightWeapons,
+            common.highlightTerrain,
+            common.highlightLobby
+        ],
+        facts: [
+            ...map.facts.map(fact),
+            fact(['battlefield', common.battlefieldValue]),
+            fact(['objective', common.objectiveValue])
+        ],
+        sections: [
+            {
+                id: `${page.id}-map-profile`,
+                heading: map.profileHeading,
+                paragraphs: map.profile
+            },
+            {
+                id: `${page.id}-artillery-planning`,
+                heading: map.planningHeading,
+                paragraphs: map.planning
+            },
+            {
+                id: `${page.id}-weapons`,
+                heading: formatCopy(common.weaponsHeading, variables),
+                paragraphs: common.weapons
+            },
+            {
+                id: `${page.id}-terrain3d`,
+                heading: map.terrainHeading,
+                paragraphs: [...map.terrain, common.terrainSafety]
+            },
+            {
+                id: `${page.id}-live-map`,
+                heading: formatCopy(common.lobbyHeading, variables),
+                paragraphs: common.lobby
+            },
+            {
+                id: `${page.id}-map-tools`,
+                heading: formatCopy(common.toolsHeading, variables),
+                paragraphs: common.tools
+            }
+        ],
+        faq: common.faq.map(item => ({
+            question: formatCopy(item.question, variables),
+            answer: formatCopy(item.answer, variables)
+        })),
+        sources: page.sources.map(source => ({
+            ...source,
+            label: common.sources[sourceKey(source)]
+        })),
+        ui: localization.ui
+    };
+}
+
+export function hasMapLandingLanguage(language) {
+    return language === DEFAULT_MAP_LANDING_LANGUAGE ||
+        Object.hasOwn(MAP_LANDING_LOCALIZATIONS, language);
+}
+
+export function mapLandingPagesForLanguage(language = DEFAULT_MAP_LANDING_LANGUAGE) {
+    if (language === DEFAULT_MAP_LANDING_LANGUAGE) {
+        return MAP_LANDING_PAGES.map(page => ({ ...page, ui: ENGLISH_UI }));
+    }
+
+    const localization = MAP_LANDING_LOCALIZATIONS[language];
+    if (!localization) throw new Error(`Missing map landing localization: ${language}`);
+    return MAP_LANDING_PAGES.map(page => localizePage(page, localization));
+}
+
+export function mapLandingPageById(id, language = DEFAULT_MAP_LANDING_LANGUAGE) {
+    return mapLandingPagesForLanguage(language).find(page => page.id === id) || null;
+}
+
+export function mapLandingRoute(id, language = DEFAULT_MAP_LANDING_LANGUAGE) {
+    return language === DEFAULT_MAP_LANDING_LANGUAGE
+        ? `maps/${id}/`
+        : `${language}/maps/${id}/`;
+}
+
+export function mapCalculatorRoute(id, language = DEFAULT_MAP_LANDING_LANGUAGE) {
+    return language === DEFAULT_MAP_LANDING_LANGUAGE
+        ? `?map=${id}`
+        : `${language}/?map=${id}`;
+}
+
+export function mapLandingUrl(id, language = DEFAULT_MAP_LANDING_LANGUAGE) {
+    return `${SITE_ORIGIN}/${mapLandingRoute(id, language)}`;
 }
 
 function escapeHtml(value) {
@@ -382,17 +539,21 @@ function renderFaq(items) {
         .join('\n');
 }
 
-function renderRelatedMaps(currentId) {
-    return MAP_LANDING_PAGES
+function renderRelatedMaps(currentId, pages, language, ui) {
+    return pages
         .filter(page => page.id !== currentId)
         .map(page => (
-            `<a href="maps/${escapeHtml(page.id)}/">${escapeHtml(page.name)} Interactive Map</a>`
+            `<a href="${escapeHtml(mapLandingRoute(page.id, language))}">${escapeHtml(formatCopy(ui.relatedMap, { map: page.name }))}</a>`
         ))
         .join('\n');
 }
 
-function structuredData(page) {
-    const url = mapLandingUrl(page.id);
+function structuredData(page, languageDefinition, ui) {
+    const language = languageDefinition.id;
+    const url = mapLandingUrl(page.id, language);
+    const calculatorUrl = language === DEFAULT_MAP_LANDING_LANGUAGE
+        ? `${SITE_ORIGIN}/`
+        : `${SITE_ORIGIN}/${language}/`;
 
     return JSON.stringify({
         '@context': 'https://schema.org',
@@ -403,7 +564,7 @@ function structuredData(page) {
                 url,
                 name: page.title,
                 description: page.description,
-                inLanguage: 'en',
+                inLanguage: languageDefinition.hreflang,
                 citation: page.sources.map(source => source.url),
                 primaryImageOfPage: {
                     '@type': 'ImageObject',
@@ -415,7 +576,7 @@ function structuredData(page) {
                 isPartOf: {
                     '@type': 'WebApplication',
                     name: 'WARDOGS Artillery Calculator',
-                    url: `${SITE_ORIGIN}/`,
+                    url: calculatorUrl,
                     applicationCategory: 'GameApplication',
                     operatingSystem: 'Any'
                 }
@@ -427,12 +588,12 @@ function structuredData(page) {
                         '@type': 'ListItem',
                         position: 1,
                         name: 'WARDOGS Artillery Calculator',
-                        item: `${SITE_ORIGIN}/`
+                        item: calculatorUrl
                     },
                     {
                         '@type': 'ListItem',
                         position: 2,
-                        name: `${page.name} Interactive Map`,
+                        name: formatCopy(ui.relatedMap, { map: page.name }),
                         item: url
                     }
                 ]
@@ -441,11 +602,65 @@ function structuredData(page) {
     }, null, 2).replaceAll('<', '\\u003c');
 }
 
-export function renderMapLandingPage(template, page) {
+function renderLanguageOptions(page, current, languages) {
+    return languages.map(definition => {
+        const label = [definition.flag, definition.nativeName || definition.name || definition.id]
+            .filter(Boolean)
+            .join(' ');
+        const selected = definition.id === current.id ? ' selected' : '';
+        return `<option data-language="${escapeHtml(definition.id)}" value="${escapeHtml(mapLandingRoute(page.id, definition.id))}"${selected}>${escapeHtml(label)}</option>`;
+    }).join('\n');
+}
+
+function renderHreflangLinks(page, current, languages) {
+    if (current.indexable === false) return '';
+    return languages
+        .filter(definition => definition.indexable !== false)
+        .map(definition => (
+            `<link href="${escapeHtml(mapLandingUrl(page.id, definition.id))}" hreflang="${escapeHtml(definition.hreflang)}" rel="alternate"/>`
+        ))
+        .concat(
+            `<link href="${escapeHtml(mapLandingUrl(page.id))}" hreflang="x-default" rel="alternate"/>`
+        )
+        .join('\n');
+}
+
+function renderOgLocales(current, languages) {
+    const currentLocale = current.ogLocale || DEFAULT_LANGUAGE_DEFINITION.ogLocale;
+    return [
+        `<meta content="${escapeHtml(currentLocale)}" property="og:locale"/>`,
+        ...languages
+            .filter(definition => definition.indexable !== false && definition.id !== current.id && definition.ogLocale)
+            .map(definition => (
+                `<meta content="${escapeHtml(definition.ogLocale)}" property="og:locale:alternate"/>`
+            ))
+    ].join('\n');
+}
+
+export function renderMapLandingPage(template, page, options = {}) {
+    const languageDefinition = {
+        ...DEFAULT_LANGUAGE_DEFINITION,
+        ...(options.languageDefinition || {})
+    };
+    const language = languageDefinition.id;
+    const languages = options.languages?.length
+        ? options.languages
+        : [languageDefinition];
+    const ui = page.ui || ENGLISH_UI;
+    const variables = { map: page.name };
+    const calculatorRoute = language === DEFAULT_MAP_LANDING_LANGUAGE ? './' : `${language}/`;
     const replacements = {
+        '{{LANG_ID}}': escapeHtml(language),
+        '{{HTML_LANG}}': escapeHtml(languageDefinition.hreflang),
+        '{{BASE_HREF}}': language === DEFAULT_MAP_LANDING_LANGUAGE ? '../../' : '../../../',
+        '{{ROBOTS}}': languageDefinition.indexable === false
+            ? 'noindex, follow'
+            : 'index, follow, max-image-preview:large',
         '{{TITLE}}': escapeHtml(page.title),
         '{{DESCRIPTION}}': escapeHtml(page.description),
-        '{{CANONICAL}}': escapeHtml(mapLandingUrl(page.id)),
+        '{{CANONICAL}}': escapeHtml(mapLandingUrl(page.id, language)),
+        '{{HREFLANG_LINKS}}': renderHreflangLinks(page, languageDefinition, languages),
+        '{{OG_LOCALES}}': renderOgLocales(languageDefinition, languages),
         '{{IMAGE_PATH}}': escapeHtml(page.imagePath),
         '{{IMAGE_URL}}': escapeHtml(`${SITE_ORIGIN}/${page.imagePath}`),
         '{{IMAGE_ALT}}': escapeHtml(page.imageAlt),
@@ -458,14 +673,45 @@ export function renderMapLandingPage(template, page) {
         '{{SECTIONS}}': renderSections(page.sections),
         '{{FAQ}}': renderFaq(page.faq),
         '{{SOURCES}}': renderSources(page.sources),
-        '{{RELATED_MAPS}}': renderRelatedMaps(page.id),
-        '{{JSON_LD}}': structuredData(page)
+        '{{RELATED_MAPS}}': renderRelatedMaps(page.id, mapLandingPagesForLanguage(language), language, ui),
+        '{{LANGUAGE_OPTIONS}}': renderLanguageOptions(page, languageDefinition, languages),
+        '{{CALCULATOR_ROUTE}}': escapeHtml(calculatorRoute),
+        '{{CALCULATOR_WITH_MAP}}': escapeHtml(mapCalculatorRoute(page.id, language)),
+        '{{SKIP}}': escapeHtml(ui.skip),
+        '{{BRAND_HOME}}': escapeHtml(ui.brandHome),
+        '{{CALCULATOR}}': escapeHtml(ui.calculator),
+        '{{LANGUAGE}}': escapeHtml(ui.language),
+        '{{BREADCRUMB_ARIA}}': escapeHtml(ui.breadcrumbAria),
+        '{{FOOTER_ARIA}}': escapeHtml(ui.footerAria),
+        '{{BREADCRUMB}}': escapeHtml(formatCopy(ui.breadcrumb, variables)),
+        '{{EYEBROW}}': escapeHtml(ui.eyebrow),
+        '{{IMAGE_CAPTION}}': escapeHtml(formatCopy(ui.imageCaption, variables)),
+        '{{CAPABILITIES}}': escapeHtml(formatCopy(ui.capabilities, variables)),
+        '{{WORKSPACE}}': escapeHtml(formatCopy(ui.workspace, variables)),
+        '{{FACTS_EYEBROW}}': escapeHtml(ui.factsEyebrow),
+        '{{FACTS_HEADING}}': escapeHtml(formatCopy(ui.factsHeading, variables)),
+        '{{FACTS_INTRO}}': escapeHtml(ui.factsIntro),
+        '{{FAQ_HEADING}}': escapeHtml(formatCopy(ui.faqHeading, variables)),
+        '{{SOURCES_HEADING}}': escapeHtml(ui.sourcesHeading),
+        '{{SOURCES_INTRO}}': escapeHtml(ui.sourcesIntro),
+        '{{OPEN_CALCULATOR}}': escapeHtml(ui.openCalculator),
+        '{{OPEN_CALCULATOR_BODY}}': escapeHtml(formatCopy(ui.openCalculatorBody, variables)),
+        '{{OPEN_MAP}}': escapeHtml(formatCopy(ui.openMap, variables)),
+        '{{OTHER_MAPS}}': escapeHtml(ui.otherMaps),
+        '{{OTHER_MAPS_ARIA}}': escapeHtml(ui.otherMapsAria),
+        '{{FOOTER_DISCLAIMER}}': escapeHtml(ui.footerDisclaimer),
+        '{{SOURCE_CODE}}': escapeHtml(ui.sourceCode),
+        '{{JSON_LD}}': structuredData(page, languageDefinition, ui)
     };
 
     let html = template;
 
     for (const [placeholder, value] of Object.entries(replacements)) {
         html = html.replaceAll(placeholder, value);
+    }
+
+    if (/\{\{[A-Z0-9_]+\}\}/.test(html)) {
+        throw new Error(`Unresolved map landing placeholder for ${language}/${page.id}`);
     }
 
     return html;

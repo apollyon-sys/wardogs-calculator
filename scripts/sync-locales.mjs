@@ -193,14 +193,25 @@ async function buildSitemap(indexableLanguages, lastModified) {
         ].join('\n'))
         .join('\n');
 
-    const mapUrls = MAP_LANDING_PAGES
-        .map(page => [
+    const mapUrls = MAP_LANDING_PAGES.flatMap(page => {
+        const mapAlternates = indexableLanguages
+            .map(definition => (
+                `    <xhtml:link rel="alternate" hreflang="${escapeXml(definition.hreflang)}" href="${escapeXml(mapLandingUrl(page.id, definition.id))}" />`
+            ))
+            .concat(
+                `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(mapLandingUrl(page.id))}" />`
+            )
+            .join('\n');
+
+        return indexableLanguages.map(definition => [
             '  <url>',
-            `    <loc>${escapeXml(mapLandingUrl(page.id))}</loc>`,
+            `    <loc>${escapeXml(mapLandingUrl(page.id, definition.id))}</loc>`,
+            mapAlternates,
             '    <changefreq>weekly</changefreq>',
             `    <lastmod>${escapeXml(lastModified)}</lastmod>`,
             '  </url>'
-        ].join('\n'))
+        ].join('\n'));
+    })
         .join('\n');
 
     const urls = [localeUrls, mapUrls]

@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 
-<html data-page-language="en" lang="en">
+<html data-page-language="{{LANG_ID}}" lang="{{HTML_LANG}}">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<base href="../../"/>
+<base href="{{BASE_HREF}}"/>
 <title>{{TITLE}}</title>
 <meta content="{{DESCRIPTION}}" name="description"/>
-<meta content="index, follow, max-image-preview:large" name="robots"/>
+<meta content="{{ROBOTS}}" name="robots"/>
 <meta content="#101316" name="theme-color"/>
 <link href="{{CANONICAL}}" rel="canonical"/>
+{{HREFLANG_LINKS}}
 <link href="assets/favicon.png" rel="icon"/>
 <link href="styles/map-landing.css" rel="stylesheet"/>
 <meta content="website" property="og:type"/>
@@ -22,52 +23,57 @@
 <meta content="1280" property="og:image:width"/>
 <meta content="720" property="og:image:height"/>
 <meta content="{{IMAGE_ALT}}" property="og:image:alt"/>
-<meta content="en_GB" property="og:locale"/>
+{{OG_LOCALES}}
 <meta content="summary_large_image" name="twitter:card"/>
 <meta content="{{TITLE}}" name="twitter:title"/>
 <meta content="{{DESCRIPTION}}" name="twitter:description"/>
 <meta content="{{IMAGE_URL}}" name="twitter:image"/>
 <meta content="{{IMAGE_ALT}}" name="twitter:image:alt"/>
 <script data-website-id="5bf09dda-86d4-43fb-a730-3a8e32351463" defer="" src="https://cloud.umami.is/script.js"></script>
+<script defer="" src="js/map-landing-language.js"></script>
 <script type="application/ld+json">{{JSON_LD}}</script>
 </head>
 <body>
-<a class="skip-link" href="#main-content">Skip to map guide</a>
+<a class="skip-link" href="#main-content">{{SKIP}}</a>
 <header class="site-header">
-<a aria-label="WARDOGS Artillery Calculator home" class="brand" href="./">
+<a aria-label="{{BRAND_HOME}}" class="brand" href="{{CALCULATOR_ROUTE}}">
 <img alt="" aria-hidden="true" height="32" src="assets/favicon.png" width="32"/>
 <span><strong>WARDOGS</strong><small>// ARTILLERY CALCULATOR</small></span>
 </a>
-<nav aria-label="Primary">
-<a href="./">Calculator</a>
-<a aria-current="page" href="maps/{{MAP_ID}}/">Map guide</a>
-</nav>
+<div class="header-actions">
+<a class="calculator-link" href="{{CALCULATOR_ROUTE}}">{{CALCULATOR}}</a>
+<label class="language-picker">
+<span>{{LANGUAGE}}</span>
+<select aria-label="{{LANGUAGE}}" data-map-language-select>
+{{LANGUAGE_OPTIONS}}
+</select>
+</label>
+</div>
 </header>
 
 <main id="main-content">
-<nav aria-label="Breadcrumb" class="breadcrumbs">
-<a href="./">WARDOGS Artillery Calculator</a>
+<nav aria-label="{{BREADCRUMB_ARIA}}" class="breadcrumbs">
+<a href="{{CALCULATOR_ROUTE}}">WARDOGS Artillery Calculator</a>
 <span aria-hidden="true">/</span>
-<span>{{MAP_NAME}} map</span>
+<span>{{BREADCRUMB}}</span>
 </nav>
 
 <section class="map-hero">
 <div class="map-hero-copy">
-<p class="eyebrow">WARDOGS MAP GUIDE</p>
+<p class="eyebrow">{{EYEBROW}}</p>
 <h1>{{H1}}</h1>
 <p class="map-hero-lead">{{LEAD}}</p>
 <div class="map-hero-actions">
-<a class="primary-cta" href="?map={{MAP_ID}}">Open {{MAP_NAME}} Interactive Map</a>
-<a class="secondary-cta" href="#map-guide">Read the map guide</a>
+<a class="primary-cta" href="{{CALCULATOR_WITH_MAP}}">{{OPEN_MAP}}</a>
 </div>
 </div>
 <div class="map-hero-side">
 <figure class="map-hero-media">
 <img alt="{{IMAGE_ALT}}" decoding="async" fetchpriority="high" height="720" src="{{IMAGE_PATH}}" width="1280"/>
-<figcaption>{{MAP_NAME}} in WARDOGS</figcaption>
+<figcaption>{{IMAGE_CAPTION}}</figcaption>
 </figure>
-<aside aria-label="{{MAP_NAME}} map capabilities" class="map-highlights">
-<p>{{MAP_NAME}} workspace</p>
+<aside aria-label="{{CAPABILITIES}}" class="map-highlights">
+<p>{{WORKSPACE}}</p>
 <ul>
 {{HIGHLIGHTS}}
 </ul>
@@ -77,27 +83,27 @@
 
 <section aria-labelledby="map-facts-heading" class="map-facts">
 <div class="map-facts-intro">
-<p class="eyebrow">PUBLISHED MAP DATA</p>
-<h2 id="map-facts-heading">{{MAP_NAME}} battlefield facts</h2>
-<p>Published information about the game map, kept separate from calculator features.</p>
+<p class="eyebrow">{{FACTS_EYEBROW}}</p>
+<h2 id="map-facts-heading">{{FACTS_HEADING}}</h2>
+<p>{{FACTS_INTRO}}</p>
 </div>
 <dl>
 {{FACTS}}
 </dl>
 </section>
 
-<div class="map-page-grid" id="map-guide">
+<div class="map-page-grid">
 <article class="map-guide">
 {{SECTIONS}}
 
 <section aria-labelledby="map-faq-heading" class="map-guide-section map-faq">
-<h2 id="map-faq-heading">{{MAP_NAME}} Map FAQ</h2>
+<h2 id="map-faq-heading">{{FAQ_HEADING}}</h2>
 {{FAQ}}
 </section>
 
 <section aria-labelledby="map-sources-heading" class="map-guide-section map-sources">
-<h2 id="map-sources-heading">Sources and verification</h2>
-<p>Game rules and map descriptions above are limited to published material. Calculator-specific sections describe this site’s implementation; unpublished POI names and tactical claims are intentionally omitted.</p>
+<h2 id="map-sources-heading">{{SOURCES_HEADING}}</h2>
+<p>{{SOURCES_INTRO}}</p>
 <ul>
 {{SOURCES}}
 </ul>
@@ -106,13 +112,13 @@
 
 <aside class="map-page-aside">
 <section>
-<h2>Open the calculator</h2>
-<p>Continue in the full desktop or mobile interface with {{MAP_NAME}} selected.</p>
-<a class="primary-cta compact" href="?map={{MAP_ID}}">Open {{MAP_NAME}} Map</a>
+<h2>{{OPEN_CALCULATOR}}</h2>
+<p>{{OPEN_CALCULATOR_BODY}}</p>
+<a class="primary-cta compact" href="{{CALCULATOR_WITH_MAP}}">{{OPEN_MAP}}</a>
 </section>
 <section>
-<h2>Other WARDOGS maps</h2>
-<nav aria-label="Other WARDOGS map guides" class="related-maps">
+<h2>{{OTHER_MAPS}}</h2>
+<nav aria-label="{{OTHER_MAPS_ARIA}}" class="related-maps">
 {{RELATED_MAPS}}
 </nav>
 </section>
@@ -123,11 +129,11 @@
 <footer class="site-footer">
 <div>
 <strong>WARDOGS Artillery Calculator</strong>
-<p>Unofficial community project. Not affiliated with or endorsed by BULKHEAD or the WARDOGS development team.</p>
+<p>{{FOOTER_DISCLAIMER}}</p>
 </div>
-<nav aria-label="Footer">
-<a href="./">Calculator</a>
-<a href="https://github.com/apollyon-sys/wardogs-calculator">Source code</a>
+<nav aria-label="{{FOOTER_ARIA}}">
+<a href="{{CALCULATOR_ROUTE}}">{{CALCULATOR}}</a>
+<a href="https://github.com/apollyon-sys/wardogs-calculator">{{SOURCE_CODE}}</a>
 </nav>
 </footer>
 </body>

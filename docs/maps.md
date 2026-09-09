@@ -25,11 +25,17 @@ Bakurani, Ozeti and Zestafona each have a lightweight English search document:
 /maps/zestafona/
 ```
 
-These routes are generated as real `dist/maps/<map-id>/index.html` files. They are guides and entry points, not duplicate calculators: they load only the shared landing stylesheet and deferred analytics, then link to the main application with a validated `?map=<map-id>` parameter. The application consumes that parameter once, selects the registered map and stores it through normal selection persistence.
+Every supported language also has a complete localized document:
 
-Shared markup lives in `src/pages/maps/template.html`. Unique metadata, body copy and FAQ content live in `scripts/map-landing-pages.mjs`. `scripts/build-pages.mjs` creates the routes, both sitemap stages include them, and `scripts/verify-build.mjs` enforces their SEO and lightweight-loading contract.
+```text
+/<locale>/maps/<map-id>/
+```
 
-The template uses `<base href="../../">` so relative links work on the custom domain and below a GitHub project path. Production canonical and sitemap URLs always use `https://wardogs-artillery.com/maps/<map-id>/` with a trailing slash.
+These routes are generated as real HTML files. They are useful map summaries and entry points, not duplicate calculators: they load only the shared landing stylesheet, the small language-route selector and deferred analytics, then link to the main application with a validated `?map=<map-id>` parameter. The application consumes that parameter once, selects the registered map and stores it through normal selection persistence.
+
+Shared markup lives in `src/pages/maps/template.html`. English map-specific source material lives in `scripts/map-landing-pages.mjs`; reviewed translated copy lives in `scripts/map-landing-locales.mjs`. `scripts/build-pages.mjs` creates the routes, both sitemap stages include every indexable translation, and `scripts/verify-build.mjs` enforces the SEO, localization and lightweight-loading contract.
+
+English pages use `<base href="../../">`; localized pages use `<base href="../../../">`. Production canonical and sitemap URLs are self-referencing, absolute and consistently use a trailing slash. The Cat locale is generated for navigation but remains `noindex` and excluded from sitemap and `hreflang` clusters.
 
 ### Bakurani
 
@@ -234,7 +240,7 @@ maps/tiles/my-map/
    `tiles.path` to its full public HTTPS URL. Local tiles are excluded from the
    production build.
 
-5. If the map needs an indexable guide, add a unique, fact-checked definition to `scripts/map-landing-pages.mjs`, link it from the relevant English homepage SEO section, then run the build and SEO smoke test. Do not publish mechanical translations or copy another map's text with only the name changed.
+5. If the map needs an indexable landing page, add a unique, fact-checked English definition to `scripts/map-landing-pages.mjs`, add reviewed translations to `scripts/map-landing-locales.mjs`, link it from the relevant English homepage SEO section, then run the build and SEO smoke test. Do not publish mechanical translations or copy another map's text with only the name changed.
 
 5. Configure the coordinate bounds.
 

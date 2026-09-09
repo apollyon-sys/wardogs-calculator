@@ -26,7 +26,8 @@ import {
     fileURLToPath
 } from 'node:url';
 import {
-    MAP_LANDING_PAGES_BY_ID,
+    hasMapLandingLanguage,
+    mapLandingPageById,
     renderMapLandingPage
 } from './map-landing-pages.mjs';
 
@@ -259,7 +260,7 @@ function renderMobileLocale(
         );
 }
 
-async function getLanguages() {
+async function getLanguageDefinitions() {
     const index =
         JSON.parse(
             await readFile(
@@ -277,18 +278,23 @@ async function getLanguages() {
             index.languages
         )
             ? index.languages
-                .map(
-                    item =>
-                        item?.id
-                )
-                .filter(Boolean)
+                .filter(item => item?.id && item?.file)
+                .map(item => ({
+                    ...item,
+                    id: String(item.id).toLowerCase(),
+                    hreflang: item.hreflang || item.id,
+                    ogLocale: item.ogLocale || null,
+                    indexable: item.indexable !== false
+                }))
             : [];
 
+    return configured;
+}
+
+async function getLanguages() {
     return new Set(
-        [
-            'en',
-            ...configured
-        ]
+        (await getLanguageDefinitions())
+            .map(definition => definition.id)
     );
 }
 
@@ -835,15 +841,18 @@ async function createRequestHandler() {
 
             const mapLandingMatch =
                 pathname.match(
-                    /^\/maps\/([a-z0-9-]+)(?:\/index\.html)?\/?$/i
+                    /^\/(?:(?<language>[a-z-]+)\/)?maps\/(?<map>[a-z0-9-]+)(?:\/index\.html)?\/?$/i
                 );
 
             if (mapLandingMatch) {
-                const mapId =
-                    mapLandingMatch[1]
-                        .toLowerCase();
-                const page =
-                    MAP_LANDING_PAGES_BY_ID[mapId];
+                const language = (mapLandingMatch.groups.language || 'en')
+                    .toLowerCase();
+                const mapId = mapLandingMatch.groups.map.toLowerCase();
+                const definitions = await getLanguageDefinitions();
+                const definition = definitions.find(item => item.id === language);
+                const page = definition && hasMapLandingLanguage(language)
+                    ? mapLandingPageById(mapId, language)
+                    : null;
 
                 if (page) {
                     await sendHTML(
@@ -852,7 +861,11 @@ async function createRequestHandler() {
                         template =>
                             renderMapLandingPage(
                                 template,
-                                page
+                                page,
+                                {
+                                    languageDefinition: definition,
+                                    languages: definitions
+                                }
                             )
                     );
 
