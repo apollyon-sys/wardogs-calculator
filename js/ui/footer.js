@@ -51,6 +51,24 @@ const DONATION_LINKS = [
                 <path d="M8 10.2c.8-.9 2.1-.4 2.5.4.4-.8 1.7-1.3 2.5-.4 1.2 1.3-.4 2.7-2.5 4.1-2.1-1.4-3.7-2.8-2.5-4.1Z"></path>
             </svg>
         `
+    },
+    {
+        id: 'boosty',
+        label: 'Donate via Boosty',
+        url: 'https://boosty.to/apollyonsys/donate',
+        icon: `
+            <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path d="M13.5 2 5 13h6l-1 9 9-12h-6l.5-8Z"></path>
+            </svg>
+        `
     }
 ];
 

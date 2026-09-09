@@ -177,6 +177,10 @@ footer a:hover {
     --donation-tone: #72a4f2;
 }
 
+.donation-link-boosty {
+    --donation-tone: #f15f2c;
+}
+
 .donation-link:hover,
 .donation-link:focus-visible {
     border-color: var(--donation-tone);
