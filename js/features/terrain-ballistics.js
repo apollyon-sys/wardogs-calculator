@@ -451,6 +451,21 @@
                         `chunks=${Object.keys(terrain.manifest.chunks).length}`
                     );
                 } else {
+                    if (
+                        typeof trackOperationalFailure ===
+                            'function'
+                    ) {
+                        trackOperationalFailure(
+                            'terrain-load-failed',
+                            {
+                                area: 'terrain',
+                                type: 'manifest',
+                                map: definition.mapId,
+                                code: 'load'
+                            }
+                        );
+                    }
+
                     terrainWarn(
                         `Failed to initialize Terrain3D for map ${definition.mapId}; that map will use flat-table fallback.`,
                         result.reason
@@ -481,6 +496,21 @@
             return true;
         } catch (error) {
             state.enabled = false;
+
+            if (
+                typeof trackOperationalFailure ===
+                    'function'
+            ) {
+                trackOperationalFailure(
+                    'terrain-load-failed',
+                    {
+                        area: 'terrain',
+                        type: 'runtime',
+                        code: 'init'
+                    }
+                );
+            }
+
             terrainWarn(
                 'Failed to initialize terrain ballistics; using flat-table fallback.',
                 error
@@ -694,6 +724,21 @@
         Promise.all(missing.map(key => loadChunk(terrain, key)))
             .then(queueResultRerender)
             .catch(error => {
+                if (
+                    typeof trackOperationalFailure ===
+                        'function'
+                ) {
+                    trackOperationalFailure(
+                        'terrain-load-failed',
+                        {
+                            area: 'terrain',
+                            type: 'chunk',
+                            map: terrain.mapId,
+                            code: 'load'
+                        }
+                    );
+                }
+
                 terrainWarn(
                     `Could not load required ${terrain.mapId} terrain payload; using flat-table fallback.`,
                     error

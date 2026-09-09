@@ -200,6 +200,21 @@ function loadTile(
                 )}`
             );
 
+            if (
+                typeof trackOperationalFailure ===
+                    'function'
+            ) {
+                trackOperationalFailure(
+                    'asset-load-failed',
+                    {
+                        area: 'map',
+                        type: 'tile',
+                        map: map.id,
+                        code: 'image-load'
+                    }
+                );
+            }
+
             draw();
         };
 

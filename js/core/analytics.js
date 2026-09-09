@@ -28,7 +28,11 @@ const ANALYTICS_CONTEXT_DEDUPED_EVENTS =
         'calculation',
         'origin-placed',
         'target-placed',
-        'preset-marker-selected'
+        'preset-marker-selected',
+        'client-error',
+        'map-load-failed',
+        'asset-load-failed',
+        'terrain-load-failed'
     ]);
 
 let analyticsFlushTimer = null;
@@ -113,6 +117,34 @@ function getAnalyticsContextKey(
             name,
             map,
             weapon
+        ].join('|');
+    }
+
+    if (
+        name === 'client-error' ||
+        name === 'map-load-failed' ||
+        name === 'asset-load-failed' ||
+        name === 'terrain-load-failed'
+    ) {
+        const area =
+            typeof data?.area === 'string'
+                ? data.area
+                : '';
+        const type =
+            typeof data?.type === 'string'
+                ? data.type
+                : '';
+        const code =
+            typeof data?.code === 'string'
+                ? data.code
+                : '';
+
+        return [
+            name,
+            map,
+            area,
+            type,
+            code
         ].join('|');
     }
 
@@ -344,6 +376,103 @@ function trackAnalytics(name, data = undefined) {
 
     scheduleAnalyticsFlush();
 }
+
+const ANALYTICS_OPERATIONAL_EVENTS =
+    new Set([
+        'client-error',
+        'map-load-failed',
+        'asset-load-failed',
+        'terrain-load-failed'
+    ]);
+
+function trackOperationalFailure(
+    name,
+    data = {}
+) {
+    if (
+        !ANALYTICS_OPERATIONAL_EVENTS.has(
+            name
+        )
+    ) {
+        return;
+    }
+
+    trackAnalytics(
+        name,
+        {
+            area:
+                typeof data?.area === 'string'
+                    ? data.area
+                    : '',
+            type:
+                typeof data?.type === 'string'
+                    ? data.type
+                    : '',
+            map:
+                typeof data?.map === 'string'
+                    ? data.map
+                    : '',
+            code:
+                typeof data?.code === 'string'
+                    ? data.code
+                    : ''
+        }
+    );
+}
+
+function installOperationalErrorTelemetry() {
+    window.addEventListener(
+        'error',
+        event => {
+            const target =
+                event?.target;
+
+            if (
+                target &&
+                target !== window &&
+                target.tagName
+            ) {
+                trackOperationalFailure(
+                    'asset-load-failed',
+                    {
+                        area: 'document',
+                        type: String(
+                            target.tagName
+                        ).toLowerCase(),
+                        code: 'resource-error'
+                    }
+                );
+                return;
+            }
+
+            trackOperationalFailure(
+                'client-error',
+                {
+                    area: 'window',
+                    type: 'runtime',
+                    code: 'uncaught-error'
+                }
+            );
+        },
+        true
+    );
+
+    window.addEventListener(
+        'unhandledrejection',
+        () => {
+            trackOperationalFailure(
+                'client-error',
+                {
+                    area: 'window',
+                    type: 'promise',
+                    code: 'unhandled-rejection'
+                }
+            );
+        }
+    );
+}
+
+installOperationalErrorTelemetry();
 
 function getCalculationFingerprint() {
     if (

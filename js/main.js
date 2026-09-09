@@ -170,6 +170,20 @@ async function loadTerrainBallisticsRuntime() {
         }
 
     } catch (error) {
+        if (
+            typeof trackOperationalFailure ===
+                'function'
+        ) {
+            trackOperationalFailure(
+                'terrain-load-failed',
+                {
+                    area: 'runtime',
+                    type: 'script',
+                    code: 'load'
+                }
+            );
+        }
+
         console.warn(
             '[terrain-ballistics] Runtime unavailable; flat-table fallback remains active.',
             error
@@ -282,11 +296,39 @@ async function init() {
                 });
                 await initLobby();
             } catch (error) {
+                if (
+                    typeof trackOperationalFailure ===
+                        'function'
+                ) {
+                    trackOperationalFailure(
+                        'client-error',
+                        {
+                            area: 'lobby',
+                            type: 'runtime',
+                            code: 'load'
+                        }
+                    );
+                }
+
                 console.warn('Optional lobby interface could not load:', error);
             }
         }
 
     } catch (error) {
+
+        if (
+            typeof trackOperationalFailure ===
+                'function'
+        ) {
+            trackOperationalFailure(
+                'client-error',
+                {
+                    area: 'app',
+                    type: 'init',
+                    code: 'failed'
+                }
+            );
+        }
 
         console.error(
             'Failed to initialize application:',

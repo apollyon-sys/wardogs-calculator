@@ -254,6 +254,21 @@ function loadContours(mapId) {
                 error
             );
 
+            if (
+                typeof trackOperationalFailure ===
+                    'function'
+            ) {
+                trackOperationalFailure(
+                    'asset-load-failed',
+                    {
+                        area: 'map',
+                        type: 'contours',
+                        map: mapId,
+                        code: 'load'
+                    }
+                );
+            }
+
             CONTOUR_CACHE.set(mapId, null);
 
             return null;
