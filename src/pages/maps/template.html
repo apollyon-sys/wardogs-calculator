@@ -17,16 +17,16 @@
 <meta content="{{TITLE}}" property="og:title"/>
 <meta content="{{DESCRIPTION}}" property="og:description"/>
 <meta content="{{CANONICAL}}" property="og:url"/>
-<meta content="https://wardogs-artillery.com/assets/preview.png" property="og:image"/>
-<meta content="image/png" property="og:image:type"/>
-<meta content="1200" property="og:image:width"/>
-<meta content="675" property="og:image:height"/>
+<meta content="{{IMAGE_URL}}" property="og:image"/>
+<meta content="image/webp" property="og:image:type"/>
+<meta content="1280" property="og:image:width"/>
+<meta content="720" property="og:image:height"/>
 <meta content="{{IMAGE_ALT}}" property="og:image:alt"/>
 <meta content="en_GB" property="og:locale"/>
 <meta content="summary_large_image" name="twitter:card"/>
 <meta content="{{TITLE}}" name="twitter:title"/>
 <meta content="{{DESCRIPTION}}" name="twitter:description"/>
-<meta content="https://wardogs-artillery.com/assets/preview.png" name="twitter:image"/>
+<meta content="{{IMAGE_URL}}" name="twitter:image"/>
 <meta content="{{IMAGE_ALT}}" name="twitter:image:alt"/>
 <script data-website-id="5bf09dda-86d4-43fb-a730-3a8e32351463" defer="" src="https://cloud.umami.is/script.js"></script>
 <script type="application/ld+json">{{JSON_LD}}</script>
@@ -61,12 +61,18 @@
 <a class="secondary-cta" href="#map-guide">Read the map guide</a>
 </div>
 </div>
+<div class="map-hero-side">
+<figure class="map-hero-media">
+<img alt="{{IMAGE_ALT}}" decoding="async" fetchpriority="high" height="720" src="{{IMAGE_PATH}}" width="1280"/>
+<figcaption>{{MAP_NAME}} in WARDOGS</figcaption>
+</figure>
 <aside aria-label="{{MAP_NAME}} map capabilities" class="map-highlights">
 <p>{{MAP_NAME}} workspace</p>
 <ul>
 {{HIGHLIGHTS}}
 </ul>
 </aside>
+</div>
 </section>
 
 <div class="map-page-grid" id="map-guide">

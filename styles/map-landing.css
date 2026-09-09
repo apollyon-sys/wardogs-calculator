@@ -84,11 +84,11 @@ main { padding: 30px 0 72px; }
 
 .map-hero {
     margin-top: 22px;
-    padding: clamp(24px, 5vw, 54px);
+    padding: clamp(24px, 4vw, 44px);
     display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(250px, .7fr);
+    grid-template-columns: minmax(0, .95fr) minmax(380px, 1.05fr);
     align-items: center;
-    gap: clamp(30px, 6vw, 70px);
+    gap: clamp(28px, 4vw, 48px);
     overflow: hidden;
     border: 1px solid var(--border-light);
     border-radius: 12px;
@@ -122,6 +122,32 @@ h1 { max-width: 760px; margin: 0; font-size: clamp(32px, 5vw, 55px); letter-spac
 .primary-cta.compact { width: 100%; }
 .secondary-cta { color: var(--text); }
 .secondary-cta:hover, .secondary-cta:focus-visible { border-color: var(--accent-border); color: var(--accent); }
+
+.map-hero-side { min-width: 0; display: grid; gap: 14px; }
+.map-hero-media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgb(215 164 82 / 42%);
+    border-radius: 8px;
+    background: var(--panel-deep);
+    box-shadow: 0 16px 34px rgb(0 0 0 / 28%);
+}
+.map-hero-media img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.map-hero-media figcaption {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    max-width: calc(100% - 16px);
+    padding: 4px 7px;
+    border-radius: 4px;
+    background: rgb(13 16 18 / 82%);
+    color: #d9e0e5;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.25;
+}
 
 .map-highlights { padding: 18px; border: 1px solid var(--border); border-radius: 8px; background: rgb(13 16 18 / 72%); }
 .map-highlights p { margin: 0 0 10px; color: var(--text); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }

@@ -56,11 +56,47 @@ function occurrences(text, value) {
     return text.split(value).length - 1;
 }
 
+function webpDimensions(image) {
+    assert.equal(image.subarray(0, 4).toString('ascii'), 'RIFF', 'invalid WebP RIFF header');
+    assert.equal(image.subarray(8, 12).toString('ascii'), 'WEBP', 'invalid WebP signature');
+
+    const chunk = image.subarray(12, 16).toString('ascii');
+
+    if (chunk === 'VP8 ') {
+        assert.equal(image.subarray(23, 26).toString('hex'), '9d012a', 'invalid lossy WebP frame');
+        return {
+            width: image.readUInt16LE(26) & 0x3fff,
+            height: image.readUInt16LE(28) & 0x3fff
+        };
+    }
+
+    if (chunk === 'VP8L') {
+        assert.equal(image[20], 0x2f, 'invalid lossless WebP frame');
+        const bits = image.readUInt32LE(21);
+        return {
+            width: (bits & 0x3fff) + 1,
+            height: ((bits >>> 14) & 0x3fff) + 1
+        };
+    }
+
+    if (chunk === 'VP8X') {
+        return {
+            width: image.readUIntLE(24, 3) + 1,
+            height: image.readUIntLE(27, 3) + 1
+        };
+    }
+
+    assert.fail(`unsupported WebP chunk: ${chunk}`);
+}
+
 for (const page of MAP_LANDING_PAGES) {
     const path = join(dist, 'maps', page.id, 'index.html');
     const route = `maps/${page.id}/`;
     const url = mapLandingUrl(page.id);
     const html = await readFile(path, 'utf8');
+    const imageUrl = `https://wardogs-artillery.com/${page.imagePath}`;
+    const image = await readFile(join(dist, ...page.imagePath.split('/')));
+    const dimensions = webpDimensions(image);
 
     assert.match(html, /<html\b[^>]*\blang="en"/i, `${route}: incorrect language`);
     assert.match(html, /<base href="\.\.\/\.\.\/"\/>/i, `${route}: missing project-safe base URL`);
@@ -74,7 +110,12 @@ for (const page of MAP_LANDING_PAGES) {
     assert.ok(html.includes(`<meta content="${url}" property="og:url"/>`), `${route}: incorrect Open Graph URL`);
     assert.ok(html.includes(`<meta content="${page.title}" property="og:title"/>`), `${route}: incorrect Open Graph title`);
     assert.ok(html.includes(`<meta content="${page.title}" name="twitter:title"/>`), `${route}: incorrect Twitter title`);
+    assert.ok(html.includes(`<meta content="${imageUrl}" property="og:image"/>`), `${route}: incorrect Open Graph image`);
+    assert.ok(html.includes(`<meta content="${imageUrl}" name="twitter:image"/>`), `${route}: incorrect Twitter image`);
     assert.ok(html.includes(`<h1>${page.heading}</h1>`), `${route}: incorrect H1`);
+    assert.ok(html.includes(`alt="${page.imageAlt}"`), `${route}: map image alt text is missing`);
+    assert.ok(html.includes(`height="720" src="${page.imagePath}?v=`), `${route}: map image is not sized or fingerprinted`);
+    assert.ok(html.includes('width="1280"'), `${route}: map image width is missing`);
     assert.ok(html.includes(`href="?map=${page.id}"`), `${route}: CTA does not select its map`);
     assert.ok(html.includes(`Open ${page.name} Interactive Map`), `${route}: primary CTA is missing`);
     assert.ok(html.includes('href="./"'), `${route}: calculator backlink is missing`);
@@ -87,12 +128,18 @@ for (const page of MAP_LANDING_PAGES) {
     assert.ok(structured, `${route}: structured data is missing`);
     const schema = JSON.parse(structured[1]);
     assert.equal(schema['@context'], 'https://schema.org', `${route}: incorrect schema context`);
-    assert.ok(schema['@graph'].some(item => item['@type'] === 'WebPage' && item.url === url), `${route}: WebPage schema is missing`);
+    const webPage = schema['@graph'].find(item => item['@type'] === 'WebPage' && item.url === url);
+    assert.ok(webPage, `${route}: WebPage schema is missing`);
+    assert.equal(webPage.primaryImageOfPage?.url, imageUrl, `${route}: schema image URL is incorrect`);
+    assert.equal(webPage.primaryImageOfPage?.width, 1280, `${route}: schema image width is incorrect`);
+    assert.equal(webPage.primaryImageOfPage?.height, 720, `${route}: schema image height is incorrect`);
     assert.ok(schema['@graph'].some(item => item['@type'] === 'BreadcrumbList'), `${route}: BreadcrumbList schema is missing`);
 
     assert.doesNotMatch(html, /\bsrc="(?:\.\.\/)*js\//i, `${route}: application JS loaded eagerly`);
     assert.doesNotMatch(html, /(?:\.bin|maps\/tiles|lobby\.js|<canvas\b)/i, `${route}: heavy resource leaked into landing HTML`);
     assert.match(html, /href="styles\/map-landing\.css\?v=[a-f0-9]{12}"/i, `${route}: CSS is not fingerprinted`);
+    assert.deepEqual(dimensions, { width: 1280, height: 720 }, `${route}: map image must be 1280x720`);
+    assert.ok(image.length <= 250 * 1024, `${route}: map image exceeds the 250 KiB budget`);
     assert.ok(html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').length > 2500, `${route}: body copy is too thin`);
     assert.equal(occurrences(sitemap, `<loc>${url}</loc>`), 1, `${route}: sitemap entry missing or duplicated`);
     assert.ok(homepage.includes(`href="maps/${page.id}/"`), `${route}: homepage link is missing`);

@@ -4,7 +4,8 @@ export const MAP_LANDING_PAGES = [
         name: 'Bakurani',
         title: 'WARDOGS Bakurani Map | Interactive Artillery Planner',
         description: 'Open the WARDOGS Bakurani interactive map for L81 Mortar and SPH-2 planning, calibrated coordinates, Terrain3D, contours, map tools and team lobbies.',
-        imageAlt: 'WARDOGS Bakurani interactive artillery map and firing planner',
+        imagePath: 'assets/map-pages/bakurani.webp',
+        imageAlt: 'Bakurani landscape in WARDOGS with a church and sunflower field',
         heading: 'WARDOGS Bakurani Interactive Map',
         lead: 'Plan artillery positions, targets and squad annotations on the calibrated Bakurani map in WARDOGS Artillery Calculator. The map, firing solution and tactical tools stay in one browser workspace.',
         highlights: [
@@ -87,7 +88,8 @@ export const MAP_LANDING_PAGES = [
         name: 'Ozeti',
         title: 'WARDOGS Ozeti Map | Tactical Artillery Calculator',
         description: 'Use the WARDOGS Ozeti interactive map for calibrated L81 Mortar and SPH-2 planning, coordinate search, Terrain3D, tactical tools and live team lobbies.',
-        imageAlt: 'WARDOGS Ozeti tactical map with artillery planning tools',
+        imagePath: 'assets/map-pages/ozeti.webp',
+        imageAlt: 'Ozeti stadium and surrounding landscape in WARDOGS',
         heading: 'WARDOGS Ozeti Interactive Map',
         lead: 'Work from Ozeti\'s calibrated coordinate alignment, calculate L81 Mortar or SPH-2 solutions, and keep tactical annotations connected to the same map reference.',
         highlights: [
@@ -170,7 +172,8 @@ export const MAP_LANDING_PAGES = [
         name: 'Zestafona',
         title: 'WARDOGS Zestafona Map | Live Tactical Map Planner',
         description: 'Open the WARDOGS Zestafona interactive map with calibrated artillery planning, L81 Mortar and SPH-2 solutions, Terrain3D, map tools and team lobbies.',
-        imageAlt: 'WARDOGS Zestafona live tactical map and artillery calculator',
+        imagePath: 'assets/map-pages/zestafona.webp',
+        imageAlt: 'Zestafona industrial area and container yard in WARDOGS',
         heading: 'WARDOGS Zestafona Interactive Map',
         lead: 'Start a Zestafona artillery plan from a direct URL, then combine calibrated point placement, firing calculations and collaborative map tools in the main WARDOGS calculator.',
         highlights: [
@@ -327,6 +330,13 @@ function structuredData(page) {
                 name: page.title,
                 description: page.description,
                 inLanguage: 'en',
+                primaryImageOfPage: {
+                    '@type': 'ImageObject',
+                    url: `${SITE_ORIGIN}/${page.imagePath}`,
+                    width: 1280,
+                    height: 720,
+                    caption: page.imageAlt
+                },
                 isPartOf: {
                     '@type': 'WebApplication',
                     name: 'WARDOGS Artillery Calculator',
@@ -361,6 +371,8 @@ export function renderMapLandingPage(template, page) {
         '{{TITLE}}': escapeHtml(page.title),
         '{{DESCRIPTION}}': escapeHtml(page.description),
         '{{CANONICAL}}': escapeHtml(mapLandingUrl(page.id)),
+        '{{IMAGE_PATH}}': escapeHtml(page.imagePath),
+        '{{IMAGE_URL}}': escapeHtml(`${SITE_ORIGIN}/${page.imagePath}`),
         '{{IMAGE_ALT}}': escapeHtml(page.imageAlt),
         '{{MAP_NAME}}': escapeHtml(page.name),
         '{{MAP_ID}}': escapeHtml(page.id),
