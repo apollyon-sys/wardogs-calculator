@@ -16,7 +16,7 @@ const publicChangeError = value => (
 
 /* A single small row for global admission and write-credit allocation. No polling. */
 export class LobbyBudget extends DurableObject {
-    async grant(kind, actor = '') {
+    async grant(kind, actor = '', actorLimit = null) {
         return this.ctx.blockConcurrencyWhile(async () => {
             const config = settings(this.env);
             const day = today();
@@ -32,7 +32,10 @@ export class LobbyBudget extends DurableObject {
             if (kind === 'create') {
                 const actorKey = `actor:${day}:${actor}`;
                 const actorRooms = Number(await this.ctx.storage.get(actorKey)) || 0;
-                if (!actor || actorRooms >= config.maxRoomsPerAdmission) {
+                const effectiveActorLimit = Number.isSafeInteger(actorLimit)
+                    ? Math.max(1, Math.min(config.maxRoomsPerDay, actorLimit))
+                    : config.maxRoomsPerAdmission;
+                if (!actor || actorRooms >= effectiveActorLimit) {
                     reason = 'admission-limit';
                 } else if (row.rooms >= config.maxRoomsPerDay) {
                     reason = 'daily-limit';

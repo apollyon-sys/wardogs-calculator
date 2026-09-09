@@ -115,6 +115,17 @@ test('daily creation cap and malformed input; random invitations fail before adm
     const bad = await mf.dispatchFetch('https://lobby.test/rooms', { method: 'POST', headers: { Origin: origin }, body: '{' });
     assert.equal(bad.status, 400);
 });
+test('budget accepts a stricter explicit actor cap for restricted admission', async t => {
+    const mf = await runtime(t, { maxRoomsPerAdmission: 3, maxRoomsPerDay: 20 });
+    const budgetNamespace = await mf.getDurableObjectNamespace('BUDGET');
+    const budget = budgetNamespace.get(budgetNamespace.idFromName('daily-budget'));
+    assert.equal((await budget.grant('create', 'restricted-test-actor', 2)).amount, 1);
+    assert.equal((await budget.grant('create', 'restricted-test-actor', 2)).amount, 1);
+    const limited = await budget.grant('create', 'restricted-test-actor', 2);
+    assert.equal(limited.amount, 0);
+    assert.equal(limited.reason, 'admission-limit');
+});
+
 test('one admission has its own room cap and catalog validation happens before allocation', async t => {
     const mf = await runtime(t, { maxRoomsPerAdmission: 1, maxRoomsPerDay: 20 });
     const hiddenMarker = { ...marker('hidden'), icon: 'tower' };

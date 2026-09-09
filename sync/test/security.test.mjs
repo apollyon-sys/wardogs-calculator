@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { settings } from '../src/config.mjs';
-import { validateTurnstile } from '../src/admission.mjs';
+import { validateTurnstile, usesRestrictedChinaAdmission } from '../src/admission.mjs';
 
 const production = {
     turnstileRequired: true,
     turnstileHostname: 'wardogs-artillery.com',
-    turnstileAction: 'create-lobby'
+    turnstileAction: 'create-lobby',
+    turnstileMainlandChinaFallback: true
 };
 
 test('production and local origins stay in separate trust sets', () => {
@@ -18,6 +19,21 @@ test('production and local origins stay in separate trust sets', () => {
     assert.equal(development.allowedOrigins.includes('http://localhost:8000'), true);
     assert.equal(development.allowedOrigins.includes('http://127.0.0.1:8000'), true);
     assert.equal(development.turnstileRequired, false);
+});
+
+test('Mainland China fallback is explicit and never inferred from locale', () => {
+    assert.equal(usesRestrictedChinaAdmission(production, 'CN'), true);
+    assert.equal(usesRestrictedChinaAdmission(production, 'cn'), true);
+    assert.equal(usesRestrictedChinaAdmission(production, 'HK'), false);
+    assert.equal(usesRestrictedChinaAdmission(production, 'US'), false);
+    assert.equal(usesRestrictedChinaAdmission(
+        { ...production, turnstileMainlandChinaFallback: false },
+        'CN'
+    ), false);
+    assert.equal(usesRestrictedChinaAdmission(
+        { ...production, turnstileRequired: false },
+        'CN'
+    ), false);
 });
 
 test('Turnstile fails closed when the secret or response is absent', async () => {

@@ -1,7 +1,7 @@
 import { settings } from './config.mjs';
 import { normalizeDocument } from '../../js/collab/protocol.mjs';
 import { validateCatalogDocument } from './catalog.mjs';
-import { validateTurnstile } from './admission.mjs';
+import { validateTurnstile, usesRestrictedChinaAdmission } from './admission.mjs';
 import {
     randomKey, hash, mintInvite, verifyInvite, mintAdmission, verifyAdmission
 } from './tokens.mjs';
@@ -59,6 +59,7 @@ export default {
         if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: headers(origin) });
         if (typeof env.ROOM_SECRET !== 'string' || env.ROOM_SECRET.length < 32) return json({ error: 'not-configured' }, 503, origin);
         const ip = request.headers.get('CF-Connecting-IP') || 'local';
+        const restrictedChinaAdmission = usesRestrictedChinaAdmission(config, request.cf?.country);
         const url = new URL(request.url);
         try {
             if (!await allowedBy(binding(env, 'ENTRY_RATE', config), ip)) {
@@ -70,13 +71,16 @@ export default {
                     return json({ error: 'rate-limited' }, 429, origin);
                 }
                 const raw = await limitedBody(request, 4 * 1024);
-                const challenge = await validateTurnstile(env, config, raw.token, ip);
-                if (!challenge.ok) return json({ error: challenge.error }, challenge.status, origin);
+                if (!restrictedChinaAdmission) {
+                    const challenge = await validateTurnstile(env, config, raw.token, ip);
+                    if (!challenge.ok) return json({ error: challenge.error }, challenge.status, origin);
+                }
                 const expiresAt = Date.now() + config.admissionLifetimeMinutes * 60000;
                 const admissionSubject = await hash(`admission:${ip}`);
                 return json({
                     admission: await mintAdmission(env.ROOM_SECRET, expiresAt, admissionSubject),
-                    expiresAt
+                    expiresAt,
+                    mode: restrictedChinaAdmission ? 'restricted' : 'turnstile'
                 }, 201, origin);
             }
             if (url.pathname === '/rooms' && request.method === 'POST') {
@@ -90,7 +94,14 @@ export default {
                     ? await verifyAdmission(env.ROOM_SECRET, raw.admission, Date.now(), admissionSubject)
                     : { id: admissionSubject.slice(0, 22) };
                 if (!admission) return json({ error: 'invalid-admission' }, 403, origin);
-                const budget = await env.BUDGET.getByName('daily-budget').grant('create', admission.id);
+                const budgetActor = restrictedChinaAdmission
+                    ? (await hash(`china-admission:${ip}`)).slice(0, 22)
+                    : admission.id;
+                const budget = await env.BUDGET.getByName('daily-budget').grant(
+                    'create',
+                    budgetActor,
+                    restrictedChinaAdmission ? config.maxRoomsPerChinaIpPerDay : undefined
+                );
                 if (!budget.amount) return json({
                     error: budget.reason === 'admission-limit'
                         ? 'admission-room-limit'

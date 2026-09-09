@@ -1,5 +1,11 @@
 const SITEVERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
+export function usesRestrictedChinaAdmission(config, country) {
+    return config.turnstileRequired === true &&
+        config.turnstileMainlandChinaFallback === true &&
+        String(country || '').toUpperCase() === 'CN';
+}
+
 export async function validateTurnstile(env, config, token, remoteip) {
     if (!config.turnstileRequired) return { ok: true };
     if (
