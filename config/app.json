@@ -25,6 +25,10 @@
       "action": "create-lobby"
     }
   },
+  "feedback": {
+    "enabled": true,
+    "serverUrl": "https://lobby.wardogs-artillery.com"
+  },
   "mapTools": {
     "shortcuts": {
       "ruler": "r",
