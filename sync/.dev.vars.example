@@ -1,3 +1,5 @@
 # Copy to .dev.vars for LOCAL development only. Never commit the real file.
 # Turnstile is intentionally bypassed only by `wrangler dev --var LOBBIES_DEV:true`.
 ROOM_SECRET=local-development-secret-not-for-production-change-me
+# Local feedback succeeds without contacting a real Discord webhook.
+FEEDBACK_DEV_SINK=true

@@ -25,6 +25,7 @@
     { "name": "ENTRY_RATE", "namespace_id": "73101", "simple": { "limit": 60, "period": 60 } },
     { "name": "CREATE_RATE", "namespace_id": "73102", "simple": { "limit": 3, "period": 60 } },
     { "name": "ADMISSION_RATE", "namespace_id": "73103", "simple": { "limit": 10, "period": 60 } },
-    { "name": "JOIN_RATE", "namespace_id": "73104", "simple": { "limit": 15, "period": 60 } }
+    { "name": "JOIN_RATE", "namespace_id": "73104", "simple": { "limit": 15, "period": 60 } },
+    { "name": "FEEDBACK_RATE", "namespace_id": "73105", "simple": { "limit": 5, "period": 60 } }
   ]
 }

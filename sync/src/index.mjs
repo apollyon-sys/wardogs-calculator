@@ -1,6 +1,7 @@
 import { settings } from './config.mjs';
 import { normalizeDocument } from '../../js/collab/protocol.mjs';
 import { validateCatalogDocument } from './catalog.mjs';
+import { normalizeFeedback, deliverFeedback } from './feedback.mjs';
 import { validateTurnstile, usesRestrictedChinaAdmission } from './admission.mjs';
 import {
     randomKey, hash, mintInvite, verifyInvite, mintAdmission, verifyAdmission
@@ -55,13 +56,49 @@ export default {
         const origin = request.headers.get('Origin') || '';
         // Browser-origin restriction is defence in depth, not authentication.
         if (!config.allowedOrigins.includes(origin)) return json({ error: 'forbidden-origin' }, 403, 'null');
-        if (!config.enabled) return json({ error: 'disabled' }, 503, origin);
-        if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: headers(origin) });
-        if (typeof env.ROOM_SECRET !== 'string' || env.ROOM_SECRET.length < 32) return json({ error: 'not-configured' }, 503, origin);
-        const ip = request.headers.get('CF-Connecting-IP') || 'local';
-        const restrictedChinaAdmission = usesRestrictedChinaAdmission(config, request.cf?.country);
+
         const url = new URL(request.url);
+        const feedbackRoute = url.pathname === '/feedback';
+
+        if (request.method === 'OPTIONS') {
+            return new Response(null, { status: 204, headers: headers(origin) });
+        }
+
+        const ip = request.headers.get('CF-Connecting-IP') || 'local';
+
         try {
+            if (feedbackRoute) {
+                if (request.method !== 'POST') return json({ error: 'not-found' }, 404, origin);
+                if (env.FEEDBACK_DISABLED === 'true') {
+                    return json({ error: 'feedback-disabled' }, 503, origin);
+                }
+                if (!await allowedBy(binding(env, 'FEEDBACK_RATE', config), ip)) {
+                    return json({ error: 'rate-limited' }, 429, origin);
+                }
+
+                const raw = await limitedBody(request, 20 * 1024);
+
+                // Honeypot submissions get a fake success and are never forwarded.
+                if (String(raw?.website || '').trim()) {
+                    return json({ ok: true }, 201, origin);
+                }
+
+                const feedback = normalizeFeedback(raw);
+
+                if (!await deliverFeedback(env, config, feedback)) {
+                    return json({ error: 'feedback-not-configured' }, 503, origin);
+                }
+
+                return json({ ok: true }, 201, origin);
+            }
+
+            if (!config.enabled) return json({ error: 'disabled' }, 503, origin);
+            if (typeof env.ROOM_SECRET !== 'string' || env.ROOM_SECRET.length < 32) {
+                return json({ error: 'not-configured' }, 503, origin);
+            }
+
+            const restrictedChinaAdmission = usesRestrictedChinaAdmission(config, request.cf?.country);
+
             if (!await allowedBy(binding(env, 'ENTRY_RATE', config), ip)) {
                 return json({ error: 'rate-limited' }, 429, origin);
             }

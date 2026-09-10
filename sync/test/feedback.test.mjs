@@ -1,0 +1,61 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+    normalizeFeedback,
+    validDiscordWebhook,
+    discordFeedbackPayload,
+    deliverFeedback
+} from '../src/feedback.mjs';
+
+test('feedback normalization keeps only bounded safe metadata', () => {
+    const result = normalizeFeedback({
+        type: 'bug',
+        message: '  map does not load\nplease check  ',
+        contact: ' user@example.test ',
+        page: '/ru/?secret=not-sent',
+        language: 'ru',
+        device: 'desktop-ui',
+        viewport: '1920x1080',
+        browser: 'Firefox',
+        os: 'Windows',
+        map: 'bakurani',
+        weapon: 'sph-2',
+        version: '1.8.0'
+    });
+    assert.equal(result.message, 'map does not load\nplease check');
+    assert.equal(result.contact, 'user@example.test');
+    assert.equal(result.page, '/ru/');
+    assert.equal(result.map, 'bakurani');
+    assert.equal(result.browser, 'Firefox');
+    assert.equal(result.os, 'Windows');
+});
+
+test('feedback rejects invalid types, empty messages and honeypot submissions', () => {
+    assert.throws(() => normalizeFeedback({ type: 'other', message: 'hello' }), /bad-feedback-type/);
+    assert.throws(() => normalizeFeedback({ type: 'bug', message: 'x' }), /bad-feedback-message/);
+    assert.throws(() => normalizeFeedback({ type: 'bug', message: 'valid message', website: 'spam.test' }), /spam/);
+});
+
+test('Discord webhook validation is strict and payload disables mentions', () => {
+    assert.equal(validDiscordWebhook('https://discord.com/api/webhooks/123/token'), true);
+    assert.equal(validDiscordWebhook('https://evil.test/api/webhooks/123/token'), false);
+    assert.equal(validDiscordWebhook('http://discord.com/api/webhooks/123/token'), false);
+
+    const payload = discordFeedbackPayload(normalizeFeedback({
+        type: 'feature',
+        message: '@everyone add a range preset',
+        page: '/',
+        language: 'en'
+    }));
+    assert.deepEqual(payload.allowed_mentions, { parse: [] });
+    assert.equal(payload.embeds[0].title, '💡 Feature request');
+    assert.equal(payload.embeds[0].description, '@everyone add a range preset');
+});
+
+test('development sink does not require a real Discord webhook', async () => {
+    const feedback = normalizeFeedback({ type: 'bug', message: 'valid message' });
+    assert.equal(
+        await deliverFeedback({ FEEDBACK_DEV_SINK: 'true' }, { development: true }, feedback),
+        true
+    );
+});
