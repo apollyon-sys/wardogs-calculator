@@ -29,29 +29,47 @@ async function loadLanguages() {
         );
     }
 
+    /*
+     * Pick the active language from the lightweight index first. The picker
+     * navigates to dedicated locale URLs, so startup only needs the active
+     * catalog plus the default fallback instead of downloading every locale.
+     */
+    LANG =
+        detectLanguage();
+
+    const startupLanguages =
+        new Set([
+            DEFAULT_LANG,
+            LANG
+        ]);
+
     await Promise.all(
-        LANGUAGES.map(
-            async language => {
+        LANGUAGES
+            .filter(
+                language =>
+                    startupLanguages.has(
+                        language.id
+                    )
+            )
+            .map(
+                async language => {
 
-                if (
-                    !language.id ||
-                    !language.file
-                ) {
-                    return;
+                    if (
+                        !language.id ||
+                        !language.file
+                    ) {
+                        return;
+                    }
+
+                    I18N[language.id] =
+                        await fetchJSON(
+                            `locales/${language.file}`
+                        );
                 }
-
-                I18N[language.id] =
-                    await fetchJSON(
-                        `locales/${language.file}`
-                    );
-            }
-        )
+            )
     );
 
     populateLanguageSelect();
-
-    LANG =
-        detectLanguage();
 
     $('language').value =
         LANG;
@@ -712,29 +730,44 @@ function switchLanguage(languageId) {
         );
 }
 
-function applyLanguage() {
-    lobby?.updateUI();
-
+function applyStaticLanguage() {
     document.documentElement.lang =
         LANG;
 
     document
         .querySelectorAll('[data-i18n]')
         .forEach(element => {
-
-            element.textContent =
+            const translated =
                 tr(
                     element.dataset.i18n
                 );
+
+            /*
+             * Avoid recreating identical text nodes during the later full UI
+             * sync. Rewriting visible text can create a fresh late LCP entry.
+             */
+            if (
+                element.textContent !==
+                translated
+            ) {
+                element.textContent =
+                    translated;
+            }
         });
 
     $('language').value =
         LANG;
 
     updateLanguagePicker();
+    updateThemeButton();
+}
+
+function applyLanguage() {
+    lobby?.updateUI();
+
+    applyStaticLanguage();
 
     updatePresetLock();
-    updateThemeButton();
 
     if (
         typeof populateWeaponSelect ===

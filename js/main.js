@@ -203,9 +203,23 @@ async function init() {
 
         loadSavedTargets();
 
+        /*
+         * App config is independent from locale discovery, so start it in
+         * parallel instead of making the visible shell wait for both requests.
+         */
+        const appConfigPromise =
+            loadAppConfig();
+
         await loadLanguages();
 
-        await loadAppConfig();
+        /*
+         * Localize the static shell before slower registry and Terrain3D
+         * startup work. The later applyLanguage() call still performs the full
+         * component sync once those registries are ready.
+         */
+        applyStaticLanguage();
+
+        await appConfigPromise;
 
         renderFooter();
 
