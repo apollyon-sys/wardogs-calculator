@@ -6,7 +6,8 @@ The website feedback form submits a small, bounded report to the existing Cloudf
 
 The report contains:
 
-- report type (`bug` or `feature`);
+- report type (`bug`, `feature` or `general`);
+- a 1–5 star rating for `general` feedback;
 - the text entered by the user;
 - optional contact text, only when the user fills it in;
 - page path, language, map, weapon and app version;
@@ -22,7 +23,7 @@ Umami receives only coarse lifecycle events:
 - `feedback-sent` with `type`;
 - `feedback-failed` with `type` and a bounded reason.
 
-The feedback message and optional contact are never sent to Umami.
+The feedback message, rating and optional contact are never sent to Umami.
 
 ## Production setup
 

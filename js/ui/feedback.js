@@ -111,8 +111,87 @@ const FEEDBACK_COPY = {
     }
 };
 
+const FEEDBACK_GENERAL_COPY = {
+    en: {
+        general: 'General feedback', rating: 'Overall rating',
+        generalPlaceholder: 'Tell me what you think about the calculator or site.',
+        generalRequired: 'Please write a short comment.',
+        ratingRequired: 'Please choose a rating from 1 to 5 stars.'
+    },
+    ru: {
+        general: 'Общий отзыв', rating: 'Общая оценка',
+        generalPlaceholder: 'Расскажите, что вы думаете о калькуляторе или сайте.',
+        generalRequired: 'Напишите хотя бы пару слов.',
+        ratingRequired: 'Поставьте оценку от 1 до 5 звёзд.'
+    },
+    uk: {
+        general: 'Загальний відгук', rating: 'Загальна оцінка',
+        generalPlaceholder: 'Розкажіть, що ви думаєте про калькулятор або сайт.',
+        generalRequired: 'Напишіть хоча б кілька слів.',
+        ratingRequired: 'Поставте оцінку від 1 до 5 зірок.'
+    },
+    de: {
+        general: 'Allgemeines Feedback', rating: 'Gesamtbewertung',
+        generalPlaceholder: 'Sag mir, was du über den Rechner oder die Website denkst.',
+        generalRequired: 'Bitte schreibe einen kurzen Kommentar.',
+        ratingRequired: 'Bitte wähle eine Bewertung von 1 bis 5 Sternen.'
+    },
+    fr: {
+        general: 'Avis général', rating: 'Note globale',
+        generalPlaceholder: 'Dites-moi ce que vous pensez du calculateur ou du site.',
+        generalRequired: 'Écrivez quelques mots.',
+        ratingRequired: 'Choisissez une note de 1 à 5 étoiles.'
+    },
+    es: {
+        general: 'Opinión general', rating: 'Valoración general',
+        generalPlaceholder: 'Cuéntame qué te parece la calculadora o el sitio.',
+        generalRequired: 'Escribe unas pocas palabras.',
+        ratingRequired: 'Elige una valoración de 1 a 5 estrellas.'
+    },
+    pl: {
+        general: 'Ogólna opinia', rating: 'Ogólna ocena',
+        generalPlaceholder: 'Napisz, co sądzisz o kalkulatorze lub stronie.',
+        generalRequired: 'Napisz kilka słów.',
+        ratingRequired: 'Wybierz ocenę od 1 do 5 gwiazdek.'
+    },
+    pt: {
+        general: 'Feedback geral', rating: 'Avaliação geral',
+        generalPlaceholder: 'Diz o que achas da calculadora ou do site.',
+        generalRequired: 'Escreve algumas palavras.',
+        ratingRequired: 'Escolhe uma avaliação de 1 a 5 estrelas.'
+    },
+    'zh-cn': {
+        general: '总体反馈', rating: '总体评分',
+        generalPlaceholder: '告诉我你对计算器或网站的看法。',
+        generalRequired: '请写几句话。',
+        ratingRequired: '请选择 1 到 5 星评分。'
+    },
+    ko: {
+        general: '일반 피드백', rating: '전체 평가',
+        generalPlaceholder: '계산기나 사이트에 대한 의견을 알려주세요.',
+        generalRequired: '짧게라도 의견을 적어 주세요.',
+        ratingRequired: '1점에서 5점 사이의 별점을 선택해 주세요.'
+    },
+    ja: {
+        general: '全般的なフィードバック', rating: '総合評価',
+        generalPlaceholder: '計算機やサイトについての感想を教えてください。',
+        generalRequired: '短いコメントを入力してください。',
+        ratingRequired: '1〜5つ星で評価してください。'
+    },
+    cat: {
+        general: 'General meowback 😸', rating: 'Paw rating',
+        generalPlaceholder: 'Tell this cat what you think, hooman.',
+        generalRequired: 'Please leave a tiny meowssage.',
+        ratingRequired: 'Pick from 1 to 5 shiny stars.'
+    }
+};
+
 function feedbackCopy() {
-    return FEEDBACK_COPY[typeof LANG === 'string' ? LANG : 'en'] || FEEDBACK_COPY.en;
+    const language = typeof LANG === 'string' ? LANG : 'en';
+    return {
+        ...(FEEDBACK_COPY[language] || FEEDBACK_COPY.en),
+        ...(FEEDBACK_GENERAL_COPY[language] || FEEDBACK_GENERAL_COPY.en)
+    };
 }
 
 function feedbackServerUrl() {
@@ -183,8 +262,14 @@ function makeFeedbackDialog() {
             <select name="type">
                 <option value="bug" data-feedback-copy="bug"></option>
                 <option value="feature" data-feedback-copy="feature"></option>
+                <option value="general" data-feedback-copy="general"></option>
             </select>
         </label>
+        <div class="feedback-field feedback-rating" hidden>
+            <span data-feedback-copy="rating"></span>
+            <div class="feedback-stars" role="group"></div>
+            <input name="rating" type="hidden" value="" />
+        </div>
         <label class="feedback-field">
             <span data-feedback-copy="description"></span>
             <textarea name="message" maxlength="3800" rows="7" required></textarea>
@@ -223,6 +308,44 @@ function makeFeedbackDialog() {
     text('[data-feedback-action="cancel"]', copy.cancel);
     text('[data-feedback-action="send"]', copy.send);
 
+    const typeSelect = form.elements.type;
+    const messageInput = form.elements.message;
+    const ratingInput = form.elements.rating;
+    const ratingField = form.querySelector('.feedback-rating');
+    const stars = form.querySelector('.feedback-stars');
+    stars.setAttribute('aria-label', copy.rating);
+
+    const setRating = value => {
+        const rating = Number(value) || 0;
+        ratingInput.value = rating >= 1 && rating <= 5 ? String(rating) : '';
+        stars.querySelectorAll('[data-feedback-rating]').forEach(button => {
+            const buttonRating = Number(button.dataset.feedbackRating);
+            button.classList.toggle('is-active', buttonRating <= rating);
+            button.setAttribute('aria-pressed', buttonRating === rating ? 'true' : 'false');
+        });
+    };
+
+    for (let value = 1; value <= 5; value += 1) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'feedback-star';
+        button.dataset.feedbackRating = String(value);
+        button.textContent = '★';
+        button.setAttribute('aria-label', `${value} / 5`);
+        button.setAttribute('aria-pressed', 'false');
+        button.addEventListener('click', () => setRating(value));
+        stars.appendChild(button);
+    }
+
+    const syncTypeUi = () => {
+        const isGeneral = typeSelect.value === 'general';
+        ratingField.hidden = !isGeneral;
+        messageInput.placeholder = isGeneral ? copy.generalPlaceholder : copy.placeholder;
+        if (!isGeneral) setRating(0);
+    };
+    typeSelect.addEventListener('change', syncTypeUi);
+    syncTypeUi();
+
     const close = () => {
         if (dialog.open) dialog.close();
     };
@@ -235,14 +358,23 @@ function makeFeedbackDialog() {
     form.addEventListener('submit', async event => {
         event.preventDefault();
         const copyNow = feedbackCopy();
+        const type = String(form.elements.type.value || '');
         const message = String(form.elements.message.value || '').trim();
+        const rating = type === 'general' ? Number(form.elements.rating.value) : null;
         const submit = form.querySelector('[data-feedback-action="send"]');
         const status = form.querySelector('.feedback-status');
 
         if (message.length < 5) {
             status.dataset.state = 'error';
-            status.textContent = copyNow.required;
+            status.textContent = type === 'general' ? copyNow.generalRequired : copyNow.required;
             form.elements.message.focus();
+            return;
+        }
+
+        if (type === 'general' && (!Number.isInteger(rating) || rating < 1 || rating > 5)) {
+            status.dataset.state = 'error';
+            status.textContent = copyNow.ratingRequired;
+            stars.querySelector('[data-feedback-rating="1"]')?.focus();
             return;
         }
 
@@ -268,7 +400,8 @@ function makeFeedbackDialog() {
                 referrerPolicy: 'no-referrer',
                 signal: controller.signal,
                 body: JSON.stringify({
-                    type: form.elements.type.value,
+                    type,
+                    rating,
                     message,
                     contact: String(form.elements.contact.value || '').trim(),
                     website: String(form.elements.website.value || ''),
@@ -284,16 +417,17 @@ function makeFeedbackDialog() {
             }
 
             if (typeof trackAnalytics === 'function') {
-                trackAnalytics('feedback-sent', { type: form.elements.type.value });
+                trackAnalytics('feedback-sent', { type });
             }
             status.dataset.state = 'success';
             status.textContent = copyNow.sent;
             form.elements.message.value = '';
+            setRating(0);
             window.setTimeout(close, 1100);
         } catch (error) {
             if (typeof trackAnalytics === 'function') {
                 trackAnalytics('feedback-failed', {
-                    type: form.elements.type.value,
+                    type,
                     reason: error?.message === 'rate-limited' ? 'rate-limited' : 'unavailable'
                 });
             }

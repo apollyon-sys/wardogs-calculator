@@ -19,15 +19,22 @@ export function normalizeFeedback(raw) {
     if (clean(raw.website, 64)) throw new Error('spam');
 
     const type = clean(raw.type, 16);
-    if (!['bug', 'feature'].includes(type)) throw new Error('bad-feedback-type');
+    if (!['bug', 'feature', 'general'].includes(type)) throw new Error('bad-feedback-type');
 
     const message = cleanMessage(raw.message);
     if (message.length < 5) throw new Error('bad-feedback-message');
     if (message.length > TEXT_LIMIT) throw new Error('too-long-feedback');
 
+    const rawRating = Number(raw.rating);
+    const rating = type === 'general' && Number.isInteger(rawRating) && rawRating >= 1 && rawRating <= 5
+        ? rawRating
+        : null;
+    if (type === 'general' && rating === null) throw new Error('bad-feedback-rating');
+
     const page = clean(raw.page, SMALL_LIMIT).split(/[?#]/, 1)[0];
     return {
         type,
+        rating,
         message,
         contact: clean(raw.contact, CONTACT_LIMIT),
         page: page.startsWith('/') ? page : '',
@@ -54,7 +61,12 @@ export function validDiscordWebhook(value) {
 }
 
 export function discordFeedbackPayload(feedback) {
+    const rating = Number.isInteger(feedback.rating)
+        ? `${'★'.repeat(feedback.rating)}${'☆'.repeat(5 - feedback.rating)} ${feedback.rating}/5`
+        : '';
+
     const fields = [
+        ['Rating', rating],
         ['Page', feedback.page],
         ['Language', feedback.language],
         ['UI', feedback.device],
@@ -69,11 +81,17 @@ export function discordFeedbackPayload(feedback) {
         .filter(([, value]) => value)
         .map(([name, value]) => ({ name, value, inline: true }));
 
+    const titles = {
+        bug: '🐛 Bug report',
+        feature: '💡 Feature request',
+        general: '⭐ General feedback'
+    };
+
     return {
         username: 'WARDOGS Feedback',
         allowed_mentions: { parse: [] },
         embeds: [{
-            title: feedback.type === 'bug' ? '🐛 Bug report' : '💡 Feature request',
+            title: titles[feedback.type] || 'Feedback',
             description: feedback.message,
             fields,
             timestamp: new Date().toISOString(),

@@ -28,12 +28,34 @@ test('feedback normalization keeps only bounded safe metadata', () => {
     assert.equal(result.map, 'bakurani');
     assert.equal(result.browser, 'Firefox');
     assert.equal(result.os, 'Windows');
+    assert.equal(result.rating, null);
 });
 
-test('feedback rejects invalid types, empty messages and honeypot submissions', () => {
+test('feedback rejects invalid types, empty messages, invalid ratings and honeypot submissions', () => {
     assert.throws(() => normalizeFeedback({ type: 'other', message: 'hello' }), /bad-feedback-type/);
     assert.throws(() => normalizeFeedback({ type: 'bug', message: 'x' }), /bad-feedback-message/);
+    assert.throws(() => normalizeFeedback({ type: 'general', message: 'valid message' }), /bad-feedback-rating/);
+    assert.throws(() => normalizeFeedback({ type: 'general', rating: 6, message: 'valid message' }), /bad-feedback-rating/);
     assert.throws(() => normalizeFeedback({ type: 'bug', message: 'valid message', website: 'spam.test' }), /spam/);
+});
+
+test('general feedback accepts a 1-5 rating and adds it to the Discord payload', () => {
+    const feedback = normalizeFeedback({
+        type: 'general',
+        rating: 4,
+        message: 'Really useful, but the mobile layout could be clearer.',
+        page: '/mobile/',
+        language: 'en'
+    });
+
+    assert.equal(feedback.rating, 4);
+
+    const payload = discordFeedbackPayload(feedback);
+    assert.equal(payload.embeds[0].title, '⭐ General feedback');
+    assert.deepEqual(
+        payload.embeds[0].fields.find(field => field.name === 'Rating'),
+        { name: 'Rating', value: '★★★★☆ 4/5', inline: true }
+    );
 });
 
 test('Discord webhook validation is strict and payload disables mentions', () => {

@@ -120,6 +120,56 @@
     margin-bottom: 5px;
 }
 
+.feedback-rating[hidden] {
+    display: none;
+}
+
+.feedback-stars {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    min-height: 34px;
+}
+
+.feedback-star {
+    width: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0;
+
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    opacity: .45;
+
+    font-size: 27px;
+    line-height: 1;
+    cursor: pointer;
+
+    transition:
+        color .12s ease,
+        opacity .12s ease,
+        transform .12s ease;
+}
+
+.feedback-star:hover,
+.feedback-star:focus-visible,
+.feedback-star.is-active {
+    color: var(--accent);
+    opacity: 1;
+}
+
+.feedback-star:hover,
+.feedback-star:focus-visible {
+    transform: translateY(-1px) scale(1.06);
+}
+
+.feedback-star:focus-visible {
+    outline: 1px solid var(--accent-border);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
 .feedback-field textarea {
     width: 100%;
     min-height: 132px;
