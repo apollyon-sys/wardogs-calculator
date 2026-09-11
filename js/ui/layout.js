@@ -1165,6 +1165,32 @@ function initMobileSideMenu() {
             'mobile-menu'
         );
 
+    if (
+        typeof feedbackFeatureEnabled === 'function' &&
+        feedbackFeatureEnabled() &&
+        typeof createFeedbackLauncher === 'function'
+    ) {
+        const feedbackButton =
+            createFeedbackLauncher();
+
+        feedbackButton.classList.add(
+            'mobile-feedback-button'
+        );
+
+        feedbackButton.addEventListener(
+            'click',
+            () => {
+                setMobileSideMenuOpen(
+                    false
+                );
+            }
+        );
+
+        supportSection.appendChild(
+            feedbackButton
+        );
+    }
+
     supportSection.appendChild(
         donationLinks
     );
