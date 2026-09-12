@@ -191,6 +191,93 @@ async function loadTerrainBallisticsRuntime() {
     }
 }
 
+
+/*
+ * Optional network runtimes must not delay the first useful calculator paint.
+ * The flat firing tables are immediately usable; Terrain3D, MOTD and lobby UI
+ * can arrive just after the first render. Staggering them also avoids opening
+ * every optional request at once on high-RTT routes.
+ */
+function scheduleAfterFirstPaint(
+    task,
+    {
+        delay = 0,
+        timeout = 1500,
+        label = 'deferred startup task'
+    } = {}
+) {
+    const run = () => {
+        Promise.resolve()
+            .then(task)
+            .catch(error => {
+                console.warn(
+                    `[startup] ${label} failed.`,
+                    error
+                );
+            });
+    };
+
+    requestAnimationFrame(() => {
+        window.setTimeout(() => {
+            if (
+                typeof window.requestIdleCallback ===
+                    'function'
+            ) {
+                window.requestIdleCallback(
+                    run,
+                    { timeout }
+                );
+                return;
+            }
+
+            run();
+        }, delay);
+    });
+}
+
+async function loadLobbyRuntime() {
+    if (
+        APP_CONFIG.collab?.enabled !== true ||
+        !APP_CONFIG.collab.serverUrl
+    ) {
+        return;
+    }
+
+    try {
+        await loadRuntimeScript({
+            selector: 'script[data-lobby-runtime]',
+            dataAttribute: 'lobbyRuntime',
+            url: new URL(
+                'js/collab/lobby.js',
+                BASE_PATH
+            ).href,
+            ready: () =>
+                typeof initLobby === 'function'
+        });
+
+        await initLobby();
+    } catch (error) {
+        if (
+            typeof trackOperationalFailure ===
+                'function'
+        ) {
+            trackOperationalFailure(
+                'client-error',
+                {
+                    area: 'lobby',
+                    type: 'runtime',
+                    code: 'load'
+                }
+            );
+        }
+
+        console.warn(
+            'Optional lobby interface could not load:',
+            error
+        );
+    }
+}
+
 async function init() {
 
     try {
@@ -238,7 +325,6 @@ async function init() {
 
         applyMapQuerySelection();
 
-        await loadTerrainBallisticsRuntime();
 
         initMapTools();
 
@@ -289,44 +375,43 @@ async function init() {
 
         applyLanguage();
 
-        /*
-         * Load and display MOTD.
-         */
-        await initMotd();
-
         inputs();
 
         resize();
 
         renderSavedTargets();
 
-        if (APP_CONFIG.collab?.enabled === true && APP_CONFIG.collab.serverUrl) {
-            try {
-                await loadRuntimeScript({
-                    selector: 'script[data-lobby-runtime]',
-                    dataAttribute: 'lobbyRuntime',
-                    url: new URL('js/collab/lobby.js', BASE_PATH).href,
-                    ready: () => typeof initLobby === 'function'
-                });
-                await initLobby();
-            } catch (error) {
-                if (
-                    typeof trackOperationalFailure ===
-                        'function'
-                ) {
-                    trackOperationalFailure(
-                        'client-error',
-                        {
-                            area: 'lobby',
-                            type: 'runtime',
-                            code: 'load'
-                        }
-                    );
-                }
-
-                console.warn('Optional lobby interface could not load:', error);
+        /*
+         * The useful calculator is now interactive. Optional network work is
+         * intentionally outside the critical startup path and slightly
+         * staggered so slow routes do not compete with the first render.
+         */
+        scheduleAfterFirstPaint(
+            loadTerrainBallisticsRuntime,
+            {
+                delay: 0,
+                timeout: 1000,
+                label: 'Terrain3D runtime'
             }
-        }
+        );
+
+        scheduleAfterFirstPaint(
+            initMotd,
+            {
+                delay: 150,
+                timeout: 1500,
+                label: 'MOTD'
+            }
+        );
+
+        scheduleAfterFirstPaint(
+            loadLobbyRuntime,
+            {
+                delay: 750,
+                timeout: 2500,
+                label: 'lobby runtime'
+            }
+        );
 
     } catch (error) {
 
