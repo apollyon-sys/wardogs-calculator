@@ -140,26 +140,46 @@ function getTileURL(
     );
 }
 
-function loadTile(
-    map,
-    zoom,
-    x,
-    y
-) {
+const TILE_REQUEST_CONCURRENCY = 8;
 
-    const key =
-        tileKey(
-            map.id,
-            zoom,
-            x,
-            y
+const TILE_LOAD_QUEUE = [];
+
+let TILE_ACTIVE_REQUESTS = 0;
+let TILE_QUEUE_EPOCH = 0;
+
+function sortTileLoadQueue() {
+    TILE_LOAD_QUEUE.sort(
+        (a, b) =>
+            a.priority -
+            b.priority
+    );
+}
+
+function finishTileRequest(
+    tile,
+    failed
+) {
+    tile.loading = false;
+    tile.loaded = !failed;
+    tile.failed = failed;
+
+    TILE_ACTIVE_REQUESTS =
+        Math.max(
+            0,
+            TILE_ACTIVE_REQUESTS - 1
         );
 
-    if (
-        TILE_CACHE.has(key)
-    ) {
-        return TILE_CACHE.get(key);
-    }
+    pumpTileLoadQueue();
+    draw();
+}
+
+function startTileRequest(tile) {
+    const {
+        map,
+        zoom,
+        x,
+        y
+    } = tile.request;
 
     const image =
         new Image();
@@ -170,27 +190,31 @@ function loadTile(
     image.decoding =
         'async';
 
-    const tile = {
-        image,
-        loaded: false,
-        failed: false
-    };
+    if (
+        'fetchPriority' in image
+    ) {
+        image.fetchPriority =
+            tile.priority < 0
+                ? 'high'
+                : 'auto';
+    }
+
+    tile.image = image;
+    tile.loading = true;
+    tile.queued = false;
+
+    TILE_ACTIVE_REQUESTS++;
 
     image.onload =
         () => {
-
-            tile.loaded =
-                true;
-
-            draw();
+            finishTileRequest(
+                tile,
+                false
+            );
         };
 
     image.onerror =
         () => {
-
-            tile.failed =
-                true;
-
             console.warn(
                 `Failed to load tile: ${getTileURL(
                     map,
@@ -215,7 +239,10 @@ function loadTile(
                 );
             }
 
-            draw();
+            finishTileRequest(
+                tile,
+                true
+            );
         };
 
     image.src =
@@ -225,14 +252,121 @@ function loadTile(
             x,
             y
         );
+}
+
+function pumpTileLoadQueue() {
+    while (
+        TILE_ACTIVE_REQUESTS <
+            TILE_REQUEST_CONCURRENCY &&
+        TILE_LOAD_QUEUE.length
+    ) {
+        const tile =
+            TILE_LOAD_QUEUE.shift();
+
+        if (
+            !tile ||
+            tile.loaded ||
+            tile.failed ||
+            tile.loading
+        ) {
+            continue;
+        }
+
+        startTileRequest(
+            tile
+        );
+    }
+}
+
+function queueTileLoad(tile) {
+    if (
+        tile.loaded ||
+        tile.failed ||
+        tile.loading ||
+        tile.queued
+    ) {
+        return;
+    }
+
+    tile.queued = true;
+
+    TILE_LOAD_QUEUE.push(
+        tile
+    );
+
+    sortTileLoadQueue();
+    pumpTileLoadQueue();
+}
+
+function loadTile(
+    map,
+    zoom,
+    x,
+    y,
+    priority = 0
+) {
+
+    const key =
+        tileKey(
+            map.id,
+            zoom,
+            x,
+            y
+        );
+
+    if (
+        TILE_CACHE.has(key)
+    ) {
+        const cached =
+            TILE_CACHE.get(key);
+
+        if (
+            !cached.loaded &&
+            !cached.failed &&
+            !cached.loading &&
+            Number.isFinite(priority) &&
+            priority <
+                cached.priority
+        ) {
+            cached.priority =
+                priority;
+
+            sortTileLoadQueue();
+        }
+
+        return cached;
+    }
+
+    const tile = {
+        image: null,
+        loaded: false,
+        failed: false,
+        loading: false,
+        queued: false,
+        priority:
+            Number.isFinite(priority)
+                ? priority
+                : 0,
+        request: {
+            map,
+            zoom,
+            x,
+            y
+        }
+    };
 
     TILE_CACHE.set(
         key,
         tile
     );
 
+    queueTileLoad(
+        tile
+    );
+
     return tile;
 }
+
 
 function findCachedTileAncestor(
     map,
@@ -343,6 +477,13 @@ function drawTileMap(map) {
     ) {
         return;
     }
+
+    /*
+     * Newer renders outrank stale queued requests from an older viewport.
+     * This keeps panning responsive even on high-latency connections.
+     */
+    const queueEpoch =
+        ++TILE_QUEUE_EPOCH;
 
     const tileCount =
         Math.pow(
@@ -497,6 +638,53 @@ function drawTileMap(map) {
             ) + 1
         );
 
+    const centerTileX =
+        (
+            minTileX +
+            maxTileX
+        ) / 2;
+
+    const centerTileY =
+        (
+            minTileY +
+            maxTileY
+        ) / 2;
+
+    /*
+     * Request one cheap low-resolution ancestor first. Once it arrives,
+     * findCachedTileAncestor() can immediately paint a usable map preview
+     * while detailed tiles continue loading in the background.
+     */
+    if (
+        zoom >
+        tiles.minZoom
+    ) {
+        const levels =
+            zoom -
+            tiles.minZoom;
+
+        const scale =
+            Math.pow(
+                2,
+                levels
+            );
+
+        loadTile(
+            map,
+            tiles.minZoom,
+            Math.floor(
+                centerTileX /
+                scale
+            ),
+            Math.floor(
+                centerTileY /
+                scale
+            ),
+            -queueEpoch * 1000000 -
+                100000
+        );
+    }
+
     ctx.save();
 
     /*
@@ -543,12 +731,27 @@ function drawTileMap(map) {
                     tileWorldTop
                 );
 
+            const priority =
+                -queueEpoch *
+                    1000000 +
+                Math.pow(
+                    tileX -
+                    centerTileX,
+                    2
+                ) +
+                Math.pow(
+                    tileY -
+                    centerTileY,
+                    2
+                );
+
             const tile =
                 loadTile(
                     map,
                     zoom,
                     tileX,
-                    tileY
+                    tileY,
+                    priority
                 );
 
             if (
