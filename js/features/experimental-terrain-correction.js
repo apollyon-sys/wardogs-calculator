@@ -379,10 +379,7 @@
     async function fetchJson(url) {
         const response =
             await fetch(
-                url,
-                {
-                    cache: 'no-store'
-                }
+                url
             );
 
         if (!response.ok) {
@@ -416,10 +413,7 @@
 
         const response =
             await fetch(
-                url,
-                {
-                    cache: 'no-store'
-                }
+                url
             );
 
         if (!response.ok) {
