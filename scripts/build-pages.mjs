@@ -75,6 +75,73 @@ const mobileStyleFiles = [
     'styles/mobile/responsive.css'
 ];
 
+const desktopScriptFiles = [
+    'js/core/core.js',
+    'js/core/resources.js',
+    'js/core/config.js',
+    'js/core/analytics.js',
+    'js/core/file-transfer.js',
+    'js/ui/i18n.js',
+    'js/ui/theme.js',
+    'js/ui/footer.js',
+    'js/ui/layout.js',
+    'js/features/saved-targets.js',
+    'js/features/motd.js',
+    'js/features/weapons.js',
+    'js/map/assets.js',
+    'js/map/maps.js',
+    'js/map/map-view.js',
+    'js/map/camera-keys.js',
+    'js/map/tiles.js',
+    'js/map/contours.js',
+    'js/map/overlays.js',
+    'js/map/map-tools.js',
+    'js/map/grid.js',
+    'js/map/renderer.js',
+    'js/features/coordinates.js',
+    'js/features/point-locks.js',
+    'js/features/results.js',
+    'js/ui/inputs.js',
+    'js/ui/cursor.js',
+    'js/events.js',
+    'js/main.js'
+];
+
+const mobileScriptFiles = [
+    'js/core/core.js',
+    'js/core/resources.js',
+    'js/core/config.js',
+    'js/core/analytics.js',
+    'js/core/file-transfer.js',
+    'js/ui/i18n.js',
+    'js/ui/theme.js',
+    'js/ui/footer.js',
+    'js/ui/layout.js',
+    'js/features/saved-targets.js',
+    'js/features/motd.js',
+    'js/features/weapons.js',
+    'js/map/assets.js',
+    'js/map/maps.js',
+    'js/map/map-view.js',
+    'js/map/tiles.js',
+    'js/map/contours.js',
+    'js/map/overlays.js',
+    'js/map/map-tools.js',
+    'js/map/grid.js',
+    'js/map/renderer.js',
+    'js/features/coordinates.js',
+    'js/features/point-locks.js',
+    'js/features/results.js',
+    'js/ui/inputs.js',
+    'js/ui/cursor.js',
+    'js/events.js',
+    'js/mobile/mobile.js',
+    'js/main.js'
+];
+
+const ASSET_CDN_ORIGIN =
+    'https://assets.wardogs-artillery.com';
+
 async function exists(path) {
     try {
         await stat(path);
@@ -202,6 +269,118 @@ async function bundleStyles() {
     await copyIfExists(
         join(root, 'styles', 'map-landing.css'),
         join(dist, 'styles', 'map-landing.css')
+    );
+}
+
+async function bundleScriptFiles(
+    files,
+    outputName
+) {
+    let javascript = '';
+
+    for (const file of files) {
+        javascript +=
+            `\n/* ${file} */\n`;
+
+        javascript +=
+            await readFile(
+                join(root, file),
+                'utf8'
+            );
+
+        /*
+         * Keep a hard statement boundary between source files so the
+         * production bundle cannot be affected by automatic semicolon
+         * insertion at a file boundary.
+         */
+        javascript += '\n;\n';
+    }
+
+    await mkdir(
+        join(dist, 'js'),
+        { recursive: true }
+    );
+
+    await writeFile(
+        join(
+            dist,
+            'js',
+            outputName
+        ),
+        javascript,
+        'utf8'
+    );
+}
+
+async function bundleScripts() {
+    await bundleScriptFiles(
+        desktopScriptFiles,
+        'app.bundle.js'
+    );
+
+    await bundleScriptFiles(
+        mobileScriptFiles,
+        'mobile.bundle.js'
+    );
+}
+
+function replaceApplicationScripts(
+    html,
+    scriptFiles,
+    bundleFile
+) {
+    let output = html;
+    let bundleInserted = false;
+
+    for (const file of scriptFiles) {
+        const escapedFile =
+            file.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                '\\$&'
+            );
+
+        const pattern =
+            new RegExp(
+                `<script\\s+src="${escapedFile}"></script>\\s*`,
+                'i'
+            );
+
+        if (!pattern.test(output)) {
+            throw new Error(
+                `Missing expected application script ${file}`
+            );
+        }
+
+        output = output.replace(
+            pattern,
+            bundleInserted
+                ? ''
+                : `<script src="${bundleFile}"></script>\n`
+        );
+
+        bundleInserted = true;
+    }
+
+    return output;
+}
+
+function addAssetConnectionHints(html) {
+    if (
+        html.includes(
+            `href="${ASSET_CDN_ORIGIN}" rel="preconnect"`
+        )
+    ) {
+        return html;
+    }
+
+    const hints = [
+        `<link crossorigin href="${ASSET_CDN_ORIGIN}" rel="preconnect"/>`,
+        '<link href="//assets.wardogs-artillery.com" rel="dns-prefetch"/>'
+    ].join('\n');
+
+    return html.replace(
+        /(<meta\b[^>]*\bcharset\s*=\s*["'][^"']+["'][^>]*>)/i,
+        `$1\n${hints}`
     );
 }
 
@@ -696,20 +875,27 @@ function addMobileAlternate(html, language) {
 
 async function writeDesktopPage(source, target, appConfig, language) {
     const html = await readFile(source, 'utf8');
-    const prepared = addProductionSecurityMeta(
-        addMobileAlternate(
-            applySeoV2(
-                refreshSeoMetadata(
-                    normalizeDesktopRuntimePlaceholders(html),
-                    appConfig
+    const prepared =
+        replaceApplicationScripts(
+            addProductionSecurityMeta(
+                addAssetConnectionHints(
+                    addMobileAlternate(
+                        applySeoV2(
+                            refreshSeoMetadata(
+                                normalizeDesktopRuntimePlaceholders(html),
+                                appConfig
+                            ),
+                            appConfig,
+                            language
+                        ),
+                        language
+                    )
                 ),
-                appConfig,
-                language
+                appConfig
             ),
-            language
-        ),
-        appConfig
-    );
+            desktopScriptFiles,
+            'js/app.bundle.js'
+        );
 
     await writeFile(target, prepared, 'utf8');
 }
@@ -964,13 +1150,20 @@ async function buildMobilePages() {
         await getMobileLanguages();
 
     for (const language of languages) {
-        const html = addProductionSecurityMeta(
-            renderMobileLocale(
-                template,
-                language
-            ),
-            appConfig
-        );
+        const html =
+            replaceApplicationScripts(
+                addProductionSecurityMeta(
+                    addAssetConnectionHints(
+                        renderMobileLocale(
+                            template,
+                            language
+                        )
+                    ),
+                    appConfig
+                ),
+                mobileScriptFiles,
+                'js/mobile.bundle.js'
+            );
 
         if (language === 'en') {
             await writeFile(
@@ -1028,6 +1221,7 @@ await mkdir(
 
 await copySharedStatic();
 await bundleStyles();
+await bundleScripts();
 await buildDesktopPages();
 await buildMapLandingPages();
 await buildSitemap();
