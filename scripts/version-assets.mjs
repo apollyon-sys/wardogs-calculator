@@ -307,6 +307,15 @@ const assetFiles =
                         'js/'
                     ) &&
                     /\.(?:js|mjs)$/.test(path)
+                ) ||
+                (
+                    /\.json$/i.test(path) &&
+                    (
+                        path.startsWith('config/') ||
+                        path.startsWith('data/') ||
+                        path.startsWith('locales/') ||
+                        path.startsWith('maps/')
+                    )
                 )
             );
         }

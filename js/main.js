@@ -317,11 +317,15 @@ async function init() {
          */
         loadAppSelections();
 
-        await loadWeapons();
-
-        await loadMapAssets();
-
-        await loadMaps();
+        /*
+         * These registries are independent. Loading them in parallel removes
+         * two avoidable request waterfalls on high-latency connections.
+         */
+        await Promise.all([
+            loadWeapons(),
+            loadMapAssets(),
+            loadMaps()
+        ]);
 
         applyMapQuerySelection();
 
