@@ -115,6 +115,16 @@ function handleAppShortcut(event) {
         return true;
     }
 
+    if (
+        key === 'i' &&
+        typeof setFireAdjustmentPick === 'function'
+    ) {
+        setFireAdjustmentPick(
+            !isFireAdjustmentPickArmed()
+        );
+        return true;
+    }
+
     return false;
 }
 
@@ -414,6 +424,13 @@ function bindEvents() {
             () => togglePointMapLock('target')
         );
 
+    if (
+        typeof bindFireAdjustment ===
+        'function'
+    ) {
+        bindFireAdjustment();
+    }
+
     $('zoomIn').addEventListener(
         'click',
         () => {
@@ -589,6 +606,19 @@ function bindEvents() {
                     null
                 );
 
+                return;
+            }
+
+            /*
+             * An armed impact pick consumes the next left click before any
+             * map tool or point placement can react to it.
+             */
+            if (
+                typeof handleFireAdjustmentMapPick ===
+                    'function' &&
+                handleFireAdjustmentMapPick(p)
+            ) {
+                drag = null;
                 return;
             }
 
@@ -874,6 +904,16 @@ function bindEvents() {
     window.addEventListener(
         'keydown',
         e => {
+            if (
+                e.key === 'Escape' &&
+                typeof cancelFireAdjustmentPick ===
+                    'function' &&
+                cancelFireAdjustmentPick()
+            ) {
+                e.preventDefault();
+                return;
+            }
+
             if (handleAppShortcut(e)) {
                 e.preventDefault();
                 return;

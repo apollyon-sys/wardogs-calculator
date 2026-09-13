@@ -16,6 +16,7 @@
 - Bakurani Terrain3D elevation lookup for SPH-2 result context
 - ΔZ display between the artillery position and target when terrain data is available
 - Prominent SPH-2 leveling guidance under the firing solution
+- Fire adjustment: Add/Drop and Left/Right corrections, or mark/paste the observed impact point to shift the target by the miss
 
 ### Tactical Map
 
@@ -90,6 +91,7 @@ Desktop Map Tool shortcuts:
 | `E` | Eraser |
 | `M` | Markers |
 | `F` | Coordinate Search |
+| `I` | Mark impact on map (fire adjustment) |
 | `L` | Layers |
 | `Esc` | Leave active tool |
 | `Ctrl + Z` | Undo |

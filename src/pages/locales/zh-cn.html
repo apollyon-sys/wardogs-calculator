@@ -176,6 +176,33 @@
 </div>
 <p class="hint" data-i18n="azimuthHint">方位角：0° 北，90° 东，180° 南，270° 西。</p>
 </div>
+<!-- FIRE ADJUSTMENT -->
+<div class="section fire-adjustment">
+<h2 data-i18n="fireAdjustment">修正射击</h2>
+<label data-i18n="fireAdjustmentRange" for="fireAdjustmentRange">距离</label>
+<div class="fire-adjustment-row">
+<select aria-label="距离" id="fireAdjustmentRangeDirection">
+<option data-i18n="fireAdjustmentAdd" value="add">加远</option>
+<option data-i18n="fireAdjustmentDrop" value="drop">减近</option>
+</select>
+<input id="fireAdjustmentRange" inputmode="decimal" min="0" placeholder="0 m" step="1" type="number"/>
+</div>
+<label data-i18n="fireAdjustmentDeflection" for="fireAdjustmentDeflection">方向</label>
+<div class="fire-adjustment-row">
+<select aria-label="方向" id="fireAdjustmentDeflectionDirection">
+<option data-i18n="fireAdjustmentLeft" value="left">向左</option>
+<option data-i18n="fireAdjustmentRight" value="right">向右</option>
+</select>
+<input id="fireAdjustmentDeflection" inputmode="decimal" min="0" placeholder="0 m" step="1" type="number"/>
+</div>
+<button data-i18n="fireAdjustmentApply" id="fireAdjustmentApply" style="margin-top:7px" type="button">应用修正</button>
+<div class="fire-adjustment-impact-actions">
+<button aria-pressed="false" data-i18n="fireAdjustmentMarkImpact" id="fireAdjustmentPick" type="button">在地图上标记落点</button>
+<button data-i18n="fireAdjustmentPasteImpact" id="fireAdjustmentPasteImpact" type="button">粘贴落点</button>
+</div>
+<div class="hint fire-adjustment-last" id="fireAdjustmentLast" hidden></div>
+<p class="hint" data-i18n="fireAdjustmentHint">加远 / 减近沿炮位–目标连线移动目标，向左 / 向右垂直于连线移动（以炮位视角）。标记或粘贴落点会按观测到的偏差移动目标。</p>
+</div>
 <!-- CONTROLS -->
 <div class="section">
 <h2 data-i18n="controls">控制</h2>
@@ -326,6 +353,7 @@
 <script src="js/map/renderer.js"></script>
 <script src="js/features/coordinates.js"></script>
 <script src="js/features/point-locks.js"></script>
+<script src="js/features/fire-adjustment.js"></script>
 <script src="js/features/results.js"></script>
 <script src="js/ui/inputs.js"></script>
 <script src="js/ui/cursor.js"></script>
