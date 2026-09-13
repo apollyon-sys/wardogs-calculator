@@ -35,6 +35,7 @@ The current event set intentionally focuses on meaningful user actions rather th
 | `targets-imported` | A valid single-target or target-list JSON file is imported | `count`, `format` |
 | `preset-marker-selected` | First preset-marker target selection for each map in the current browser-tab session | `map` |
 | `coordinate-search` | A valid coordinate search is completed | `map` |
+| `fire-adjusted` | A fire-adjustment correction or marked/pasted impact moves the target | `map`, `weapon`, `mode` (`correction` or `impact`) |
 | `terrain3d-toggle` | User manually enables or disables experimental Terrain3D correction | `enabled`, `map` |
 | `contours-toggle` | User enables or disables terrain contours directly or through the Base layer group | `enabled`, `map` |
 | `ruler-used` | A non-zero ruler measurement is completed | `map` |

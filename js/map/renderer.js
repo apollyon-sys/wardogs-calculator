@@ -302,6 +302,18 @@ function draw() {
     }
 
     /*
+     * Fire-adjustment ghost/impact overlay sits on top of the artillery
+     * markers and below preset icons.
+     */
+    if (
+        isMapLayerVisible('artillery') &&
+        typeof drawFireAdjustmentOverlay ===
+            'function'
+    ) {
+        drawFireAdjustmentOverlay();
+    }
+
+    /*
      * Other lobby participants expose only their personal origin and
      * target markers. Their range circles are deliberately never drawn.
      */
