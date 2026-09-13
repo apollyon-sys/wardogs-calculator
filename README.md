@@ -46,7 +46,7 @@ Lobby traffic starts only after a player creates or joins a room. See [Collabora
 
 ## Localization
 
-The shared locale system supports English, Russian, Ukrainian, German, French, Spanish, Polish, Portuguese, Simplified Chinese, Korean, Japanese, and the non-indexed Cat locale.
+The shared locale system supports English, Russian, Ukrainian, German, French, Spanish, Polish, Portuguese, Simplified Chinese, Korean, Japanese, Czech, and the non-indexed Cat locale.
 
 ## Documentation
 

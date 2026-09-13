@@ -13,6 +13,7 @@ The application currently supports:
 - Simplified Chinese
 - Korean
 - Japanese
+- Czech
 - Cat 🐈
 
 Translation data is stored once under:
@@ -43,6 +44,7 @@ Desktop pages:
 ├── zh-cn/
 ├── ko/
 ├── ja/
+├── cs/
 └── cat/
 ```
 
@@ -60,6 +62,7 @@ Mobile pages:
 ├── zh-cn/
 ├── ko/
 ├── ja/
+├── cs/
 └── cat/
 ```
 

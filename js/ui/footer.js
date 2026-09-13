@@ -242,6 +242,7 @@ const FEEDBACK_LAUNCHER_LABELS = {
     'zh-cn': '反馈',
     ko: '피드백',
     ja: 'フィードバック',
+    cs: 'Zpětná vazba',
     cat: 'Meowback'
 };
 

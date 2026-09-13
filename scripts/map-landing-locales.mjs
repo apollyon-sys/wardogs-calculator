@@ -685,6 +685,67 @@ export const MAP_LANDING_LOCALIZATIONS = {
         }
     },
 
+    cs: {
+        ui: {
+            skip: 'Přejít na obsah mapy', brandHome: 'Domovská stránka WARDOGS Artillery Calculator', calculator: 'Kalkulátor', language: 'Jazyk', breadcrumbAria: 'Navigační drobečková cesta', footerAria: 'Navigace v zápatí',
+            breadcrumb: 'Mapa {map}', eyebrow: 'MAPA WARDOGS', imageCaption: '{map} ve WARDOGS', capabilities: 'Možnosti mapy {map}', workspace: 'Pracovní plocha {map}',
+            factsEyebrow: 'ZVEŘEJNĚNÉ INFORMACE', factsHeading: 'Fakta o bojišti {map}', factsIntro: 'Zveřejněné informace o herní mapě uvádíme odděleně od funkcí kalkulátoru.',
+            faqHeading: 'Časté dotazy k mapě {map}', sourcesHeading: 'Zdroje a ověření',
+            sourcesIntro: 'Popis mapy a zápasu vychází pouze ze zveřejněných materiálů. Funkce kalkulátoru jsou popsány zvlášť; neoficiální názvy míst ani nepodložené taktické výhody si nevymýšlíme.',
+            openCalculator: 'Otevřít kalkulátor', openCalculatorBody: 'Pokračujte do plné verze pro počítač nebo mobil s již vybranou mapou {map}.', openMap: 'Otevřít mapu {map}',
+            otherMaps: 'Další mapy WARDOGS', otherMapsAria: 'Další mapy WARDOGS', relatedMap: 'Interaktivní mapa {map}',
+            footerDisclaimer: 'Neoficiální komunitní projekt. Není spojen se studiem BULKHEAD ani s vývojovým týmem WARDOGS a není jimi podporován.', sourceCode: 'Zdrojový kód'
+        },
+        content: {
+            title: 'Interaktivní mapa WARDOGS {map} | Artilerijní kalkulátor',
+            description: 'Interaktivní mapa WARDOGS {map}: {detail}. Výpočty pro L81 a SPH-2, izolinie, Terrain3D, nástroje mapy a týmová lobby.',
+            heading: 'WARDOGS {map} – interaktivní mapa',
+            highlightWeapons: 'Palebná řešení pro minomet L81 a SPH-2', highlightTerrain: 'Izolinie a volitelná korekce Terrain3D', highlightLobby: 'Společné poznámky v lobby a oddělené výpočty každého hráče',
+            factLabels: { setting: 'Zveřejněná oblast', district: 'Známá čtvrť', landmark: 'Známá dominanta', status: 'Stav mapy', focus: 'Vizuální téma', battlefield: 'Rozsah bojiště', objective: 'Hlavní cíl' },
+            battlefieldValue: '256 km²', objectiveValue: 'Náhodná kontrolní zóna 2 × 2 km',
+            weaponsHeading: 'Minomet L81 a SPH-2 na mapě {map}',
+            weapons: ['Pro minomet L81 kalkulátor zobrazí MIL z palebné tabulky, vzdálenost, azimut a stav dostřelu. U SPH-2 se plochá a horní dráha počítají zvlášť.', 'Zbraň, aktuální postavení, cíl i kružnice dostřelu patří jednomu hráči a nepřepisují palebné řešení spoluhráčů.'],
+            lobbyHeading: 'Společné plánování na mapě {map}',
+            lobby: ['Vytvořte lobby a pošlete odkaz nebo kód pozvánky. Kresby, zóny, polygony a uživatelské značky se synchronizují mezi připojenými účastníky.', 'Spoluhráči vidí popsané pozice hráčů bez cizích kružnic dostřelu. Lobby synchronizuje plánování v prohlížeči, žádná data z herního serveru nečte.'],
+            toolsHeading: 'Nástroje mapy pro {map}',
+            tools: ['Pravítkem změříte vzdálenost, tužkou kreslíte volně a zónou nebo polygonem vyznačíte plochu. K dispozici jsou také taktické značky, guma, krok zpět a vpřed.', 'Data nástrojů mapy lze importovat a exportovat odděleně od uložených cílů.'],
+            terrainSafety: 'Terrain3D je ve výchozím stavu vypnutý. Použijí se pouze kandidáti se stavem SAFE; nejistá, nepodporovaná nebo nedosažitelná řešení používají běžnou palebnou tabulku. Náklon plošiny ani podvozku se nekoriguje.',
+            faq: [
+                { question: 'Jak otevřu mapu {map} přímo v kalkulátoru?', answer: 'Zvolte „Otevřít mapu {map}“. Kalkulátor se spustí s ověřeným parametrem mapy a volbu si uloží jako obvykle.' },
+                { question: 'Jaké zbraně jsou na mapě {map} podporované?', answer: 'K dispozici jsou tabulkové hodnoty pro minomet L81 a řešení pro plochou i horní dráhu SPH-2.' },
+                { question: 'Může tým plánovat na mapě {map} společně?', answer: 'Ano. Lobby synchronizuje kresby, zóny, polygony a taktické značky, zatímco zbraň, postavení, cíl a kružnice dostřelu zůstávají osobní.' },
+                { question: 'Je Terrain3D potřeba?', answer: 'Ne. Jde o experimentální funkci, která je ve výchozím stavu vypnutá. Běžná palebná tabulka zůstává dostupná jako bezpečné řešení.' }
+            ],
+            sources: { team17: 'Oficiální představení hry a zápasů WARDOGS — Team17', maps: 'Přehled map WARDOGS — GameWatcher', reveal: 'Představení mapy Zestafona — video WARDOGS' }
+        },
+        maps: {
+            bakurani: {
+                detail: 'průmyslová čtvrť ve východoevropských horách', imageAlt: 'Krajina Bakurani ve WARDOGS s kostelem a slunečnicovým polem',
+                lead: 'Plánujte postavení artilerie, cíle a týmové poznámky na kalibrované mapě Bakurani v jedné pracovní ploše kalkulátoru.', mapHighlight: 'Kalibrované herní souřadnice pro Bakurani',
+                facts: [['setting', 'Východoevropské hory'], ['district', 'Průmyslová čtvrť']], profileHeading: 'Bakurani: hory, průmysl a měnící se cíl',
+                profile: ['Zveřejněné popisy charakterizují Bakurani jako průmyslovou čtvrť obklopenou východoevropskými horami. Jde o potvrzený údaj o mapě, ne o vymyšlený název místa.', 'Ve WARDOGS se do zápasu vejde až 100 hráčů ve třech týmech. Bojiště má 256 km², body ale přináší náhodně vybraná kontrolní zóna 2 × 2 km; vyhrává tým, který první dosáhne 100 bodů.'],
+                planningHeading: 'Plánování palby na Bakurani', planning: ['Postavení a cíl umístíte kliknutím do mapy nebo zadáním souřadnic. Kalkulátor vrátí vzdálenost, azimut, rozdíl souřadnic a řešení vybrané zbraně.', 'Dlaždice Bakurani, hledání souřadnic, uložené cíle i taktické poznámky používají stejnou kalibrovanou referenci.'],
+                terrainHeading: 'Reliéf Bakurani a Terrain3D', terrain: ['Pro Bakurani jsou k dispozici izolinie a výšková data Terrain3D. Běžná tabulková hodnota zůstává viditelná pro přímé srovnání s experimentálním kandidátem.']
+            },
+            ozeti: {
+                detail: 'západoevropské prostředí s fotbalovým stadionem', imageAlt: 'Stadion Ozeti a okolní krajina ve WARDOGS',
+                lead: 'Využijte opravené natočení mapy Ozeti, hledání souřadnic a artilerijní výpočty v jednotném souřadnicovém rámci.', mapHighlight: 'Opravené natočení hratelné oblasti Ozeti',
+                facts: [['setting', 'Západní Evropa'], ['landmark', 'Fotbalový stadion']], profileHeading: 'Ozeti: západní Evropa a stadion',
+                profile: ['Zveřejněné informace umisťují Ozeti do západní Evropy a jako hlavní dominantu uvádějí fotbalový stadion. Tato stránka nepřisuzuje jednotlivým místům nepodloženou taktickou hodnotu.', 'Bojiště má 256 km², ale hodnocená oblast je dána náhodnou kontrolní zónou 2 × 2 km. V zápase se střetne až 100 hráčů ve třech týmech.'],
+                planningHeading: 'Plánování podle souřadnic na Ozeti', planning: ['Zadejte známé souřadnice nebo umístěte postavení a cíl vizuálně. Jeden bod lze uzamknout a druhý upravovat; užitečná řešení si uložte.', 'Hledání souřadnic posune jen kameru a nemění aktuální pár postavení–cíl. Pravítko provádí nezávislé měření na mapě.'],
+                terrainHeading: 'Izolinie Ozeti a Terrain3D', terrain: ['Na Ozeti lze zapnout izolinie a použít výšková data pro podporované náhledy SPH-2. Plochá i horní dráha se kontrolují samostatně.']
+            },
+            zestafona: {
+                detail: 'opuštěný průmyslový areál s jeřáby a kontejnerovým depem', imageAlt: 'Průmyslová zóna a kontejnerové depo Zestafona ve WARDOGS',
+                lead: 'Otevřete Zestafonu přímou adresou a spojte přesné umístění bodů, výpočet palby a společné nástroje mapy.', mapHighlight: 'Víceúrovňové dlaždice mapy Zestafona',
+                facts: [['status', 'Třetí mapa představená před předběžným přístupem'], ['focus', 'Fabrika, jeřáby a kontejnerové depo']], profileHeading: 'Zestafona: představení průmyslové mapy',
+                profile: ['Zestafona byla představena jako třetí mapa WARDOGS ještě před předběžným přístupem. Video ukazuje opuštěný průmyslový areál s halami, jeřáby a stohy kontejnerů.', 'Podrobný oficiální seznam míst zveřejněn nebyl, a proto si tato stránka nevymýšlí názvy míst, trvalé cíle ani taktické výhody.'],
+                planningHeading: 'Palebný plán pro Zestafonu', planning: ['Postavení a cíl zadejte na mapě nebo souřadnicemi a přečtěte si vzdálenost, azimut, MIL a rozdíly v osách. Uzamčení drží jeden bod, zatímco druhý měníte.', 'Uložené cíle lze obnovit, importovat i exportovat nezávisle na kresbách a značkách.'],
+                terrainHeading: 'Kontext Terrain3D pro Zestafonu', terrain: ['Pracovní plocha Zestafony obsahuje izolinie a výškový rozsah Terrain3D. Víceúrovňové dlaždice umožňují silné přiblížení bez změny souřadnicové reference.']
+            }
+        }
+    },
+
     cat: {
         ui: {
             skip: 'Pounce to map content', brandHome: 'WARDOGS Artillery Calculator home', calculator: 'Catculator', language: 'Language', breadcrumbAria: 'Breadcrumb trail', footerAria: 'Footer paws',
