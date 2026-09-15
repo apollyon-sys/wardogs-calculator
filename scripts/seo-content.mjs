@@ -357,6 +357,26 @@ export const SEO_PAGE_CONTENT = {
             '戦術マップマーカー'
         ]
     },
+
+    cs: {
+        title: 'Artilerijní kalkulátor WARDOGS | Minomet L81, SPH-2 a týmová mapa',
+        description: 'Bezplatný artilerijní kalkulátor WARDOGS pro minomet L81 a SPH-2 s živými týmovými lobby, mapami Bakurani, Ozeti a Zestafona a korekcí MIL přes Terrain3D.',
+        heading: 'O tomto kalkulátoru',
+        intro: 'WARDOGS Artillery Calculator je bezplatný open-source komunitní nástroj pro výpočet palebných dat minometu L81 a SPH-2. Nabízí interaktivní mapy Bakurani, Ozeti a Zestafona, živá týmová lobby se společnou taktickou mapou, výpočet vzdálenosti, azimutu a MIL, izolinie a experimentální korekci MIL přes Terrain3D.',
+        usage: 'Vyberte mapu a zbraň, umístěte pozici artilerie a cíle a přečtěte si palebné řešení. V lobby se synchronizují kresby, zóny, polygony a taktické značky, zatímco zbraň, postavení, cíl a kružnice dostřelu zůstávají u každého hráče oddělené. Spoluhráči vidí popsané pozice bez cizích kružnic dostřelu. Experimentální korekce Terrain3D se zapíná ručně a používá pouze kandidáty SPH-2 označené jako SAFE; v ostatních případech platí běžná palebná tabulka. Náklon plošiny a podvozku se nekoriguje.',
+        features: [
+            'Kalkulátor minometu L81 pro WARDOGS',
+            'Palebná řešení SPH-2 pro plochou i horní dráhu',
+            'Živá týmová lobby se společnou taktickou mapou',
+            'Experimentální korekce MIL přes Terrain3D pro SPH-2',
+            'Interaktivní mapa Bakurani s izoliniemi',
+            'Taktická mapa Ozeti s izoliniemi',
+            'Interaktivní mapa Zestafona s izoliniemi',
+            'Palebná data uložených cílů',
+            'Pravítko a nástroje pro kreslení',
+            'Taktické značky na mapě'
+        ]
+    },
     
     cat: {
         title: 'WARDOGS Meowculator | L81 Mortar, SPH-2 & Team Meowp',

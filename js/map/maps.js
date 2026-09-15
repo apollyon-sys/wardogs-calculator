@@ -378,6 +378,7 @@ const MAP_STYLE_COPY = {
     'zh-cn': { label: '地图样式', grayscale: '黑白', color: '彩色' },
     ko: { label: '지도 스타일', grayscale: '흑백', color: '컬러' },
     ja: { label: 'マップスタイル', grayscale: '白黒', color: 'カラー' },
+    cs: { label: 'Styl mapy', grayscale: 'Černobílá', color: 'Barevná' },
     cat: { label: 'MEOWP STYLE', grayscale: 'BLACK & WHITE PAWS', color: 'COLORFUL PAWS' }
 };
 
