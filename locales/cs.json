@@ -20,6 +20,7 @@
   "artilleryXY": "Artilerie X / Y",
   "targetXY": "Cíl X / Y",
   "result": "Výsledek",
+  "mobileInput": "Zadání",
   "azimuth": "AZIMUT",
   "distance": "Vzdálenost",
   "meters": "Metry",
@@ -164,5 +165,15 @@
   "lobbyParticipantFallback": "Účastník",
   "lobbyRecoveryAvailable": "Níže je k dispozici záložní kopie. Uchovává se pouze v této kartě do obnovení stránky.",
   "lobbyArtilleryShort": "A",
-  "lobbyTargetShort": "C"
+  "lobbyTargetShort": "C",
+  "accessibility": "Přístupnost",
+  "accessibilitySettings": "Zobrazení a přístupnost",
+  "accessibilityTextSize": "Velikost textu",
+  "accessibilityTextNormal": "Normální",
+  "accessibilityTextLarge": "Velký",
+  "accessibilityTextExtraLarge": "Velmi velký",
+  "accessibilityLargerControls": "Větší ovládací prvky",
+  "accessibilityHighContrast": "Vysoký kontrast",
+  "accessibilityReset": "Obnovit výchozí",
+  "accessibilityClose": "Zavřít"
 }
