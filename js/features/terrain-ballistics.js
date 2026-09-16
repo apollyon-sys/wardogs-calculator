@@ -97,6 +97,12 @@
             warningTitle: '射击前请将 SPH-2 调平',
             warningBody: '车体倾斜会改变实际射程。请尽量将 SPH-2 停在平坦地面上。在炮手 HUD 中找到 STABILIZED / ASL 下方的车辆轮廓；两侧的小标记显示横向倾斜。重新调整车辆位置，直到标记尽可能居中并处于同一水平。前后坡度同样会影响射程，因此避免在上坡或下坡位置停车。'
         },
+        cs: {
+            terrainLoading: 'načítání výšek',
+            terrainStatus: 'ΔZ {dz} m · MIL bez automatické korekce',
+            warningTitle: 'PŘED VÝSTŘELEM SPH-2 VYROVNEJTE',
+            warningBody: 'Náklon vozidla mění skutečný dostřel. Postavte SPH-2 na co nejrovnější terén. V HUD střelce najděte siluetu vozidla pod STABILIZED / ASL: dvě malé značky po stranách ukazují příčný náklon. Přeparkujte vozidlo, dokud nebudou značky co nejvíce vystředěné a ve stejné výšce. Podélný sklon dostřel také ovlivňuje, proto se vyhněte postavení do stoupání nebo klesání.'
+        },
         cat: {
             terrainLoading: 'LOADING HEIGHT MEOWGIC',
             terrainStatus: 'ΔZ {dz} m · NO AUTO-MIL MEOWGIC',

@@ -954,6 +954,17 @@ const MOBILE_MENU_TEXT = {
         credits: '致谢',
         legal: '法律信息'
     },
+    cs: {
+        menu: 'Menu',
+        appearance: 'Vzhled',
+        light: 'Světlý',
+        dark: 'Tmavý',
+        language: 'Jazyk',
+        links: 'Odkazy',
+        support: 'Podpořit',
+        credits: 'Autoři',
+        legal: 'Právní informace'
+    },
     cat: {
         menu: 'MEOWNU',
         appearance: 'MEOWDE',

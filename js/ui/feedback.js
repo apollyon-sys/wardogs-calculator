@@ -102,6 +102,15 @@ const FEEDBACK_COPY = {
         sent: 'ありがとうございます。送信しました。', unavailable: 'フィードバックは一時的に利用できません。',
         limited: '送信回数が多すぎます。少し待ってから再試行してください。', required: '不具合または機能の内容を入力してください。'
     },
+    cs: {
+        title: 'Zpětná vazba', type: 'Typ', bug: 'Nahlásit chybu', feature: 'Návrh funkce',
+        description: 'Popis', placeholder: 'Co se stalo nebo jakou funkci byste chtěli?',
+        contact: 'Kontakt (nepovinné)', contactPlaceholder: 'Discord nebo e-mail',
+        diagnostics: 'Stránka, jazyk, mapa, zbraň, prohlížeč a velikost okna se přidávají automaticky. Uložené cíle ani souřadnice se neodesílají.',
+        anonymous: 'Účet ani registrace nejsou potřeba.', send: 'Odeslat', cancel: 'Zrušit', sending: 'Odesílání…',
+        sent: 'Děkuji! Zpráva byla odeslána.', unavailable: 'Zpětná vazba je dočasně nedostupná.',
+        limited: 'Příliš mnoho zpráv. Zkuste to prosím za chvíli.', required: 'Popište prosím chybu nebo návrh funkce.'
+    },
     cat: {
         title: 'Meowback', type: 'Type', bug: 'Report a bug 🐾', feature: 'Suggest a feature 😺',
         description: 'Meow', placeholder: 'What went wrong, hooman?', contact: 'Contact (optional)', contactPlaceholder: 'Discord or email',
@@ -177,6 +186,12 @@ const FEEDBACK_GENERAL_COPY = {
         generalPlaceholder: '計算機やサイトについての感想を教えてください。',
         generalRequired: '短いコメントを入力してください。',
         ratingRequired: '1〜5つ星で評価してください。'
+    },
+    cs: {
+        general: 'Obecná zpětná vazba', rating: 'Celkové hodnocení',
+        generalPlaceholder: 'Napište, co si o kalkulátoru nebo webu myslíte.',
+        generalRequired: 'Napište prosím alespoň krátký komentář.',
+        ratingRequired: 'Vyberte prosím hodnocení od 1 do 5 hvězdiček.'
     },
     cat: {
         general: 'General meowback 😸', rating: 'Paw rating',
