@@ -179,5 +179,16 @@
   "accessibilityLargerControls": "Commandes agrandies",
   "accessibilityHighContrast": "Contraste élevé",
   "accessibilityReset": "Réinitialiser",
-  "accessibilityClose": "Fermer"
+  "accessibilityClose": "Fermer",
+  "supportProject": "Soutenir le projet",
+  "supportDialogTitle": "Soutenir le projet",
+  "supportDialogClose": "Fermer",
+  "supportViaKoFi": "Soutenir via Ko-fi",
+  "supportViaBoosty": "Soutenir via Boosty",
+  "supportStatementGrowth": "À mesure que WARDOGS Artillery Calculator se développe et accueille davantage d’utilisateurs, **le coût nécessaire pour maintenir le projet en fonctionnement augmente lui aussi.**",
+  "supportStatementFree": "Ce projet n’a jamais été conçu comme un produit commercial. **Je ne prévois pas d’introduire de publicité tierce, de fonctionnalités payantes, d’offres premium ni d’abonnements.** Le projet restera gratuit et son financement continuera de reposer sur le soutien volontaire de ses utilisateurs.",
+  "supportStatementInvite": "Si le projet vous est utile et que vous souhaitez contribuer à ses frais de fonctionnement, **vous pouvez le soutenir par un don volontaire.**",
+  "supportStatementCosts": "Les dons servent à financer **le nom de domaine, l’analytique Umami, les services Cloudflare, l’hébergement des ressources et les autres infrastructures nécessaires au bon fonctionnement du projet.**",
+  "supportStatementContinuity": "**Le développement continuera, que le projet reçoive ou non un soutien financier.** Cependant, sans dons, je pourrais devoir réduire fortement les dépenses consacrées à l’analytique et à l’hébergement des ressources. Cela imposerait des compromis susceptibles d’affecter **les performances, la fiabilité, l’expérience utilisateur ainsi que la vitesse de publication des mises à jour et améliorations.**",
+  "supportStatementPayments": "Les paiements sont traités par des prestataires de paiement tiers. Si vous ne parvenez pas à effectuer un paiement ou si vous avez d’autres questions, contactez-moi à l’adresse suivante :"
 }

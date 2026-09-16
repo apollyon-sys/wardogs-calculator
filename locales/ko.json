@@ -175,5 +175,16 @@
   "accessibilityLargerControls": "큰 컨트롤",
   "accessibilityHighContrast": "고대비",
   "accessibilityReset": "초기화",
-  "accessibilityClose": "닫기"
+  "accessibilityClose": "닫기",
+  "supportProject": "프로젝트 후원하기",
+  "supportDialogTitle": "프로젝트 후원하기",
+  "supportDialogClose": "닫기",
+  "supportViaKoFi": "Ko-fi로 후원하기",
+  "supportViaBoosty": "Boosty로 후원하기",
+  "supportStatementGrowth": "WARDOGS Artillery Calculator가 성장하고 이용자가 늘어남에 따라 **프로젝트를 유지하는 비용도 함께 증가하고 있습니다.**",
+  "supportStatementFree": "이 프로젝트는 처음부터 상업적인 목적으로 만들어진 것이 아닙니다. **제3자 광고, 유료 기능, 프리미엄 등급 또는 구독제를 도입할 계획이 없습니다.** 프로젝트는 계속 무료로 제공되며, 운영 비용은 사용자들의 자발적인 후원에 기반합니다.",
+  "supportStatementInvite": "프로젝트가 유용했고 운영 비용을 함께 부담하고 싶다면 **자발적인 기부로 프로젝트를 지원할 수 있습니다.**",
+  "supportStatementCosts": "기부금은 **도메인, Umami 분석, Cloudflare 서비스, 에셋 호스팅 및 프로젝트를 안정적으로 운영하는 데 필요한 기타 인프라 비용**에 사용됩니다.",
+  "supportStatementContinuity": "**재정적 후원 여부와 관계없이 개발은 계속됩니다.** 다만 기부가 없다면 분석과 에셋 호스팅 비용을 크게 줄여야 할 수 있습니다. 이 경우 **성능, 안정성, 사용자 경험, 업데이트와 개선 사항을 제공하는 속도**에 영향을 주는 타협이 필요할 수 있습니다.",
+  "supportStatementPayments": "결제는 외부 결제 서비스 제공업체에서 처리합니다. 결제가 되지 않거나 다른 문의 사항이 있다면 다음 이메일로 연락해 주세요:"
 }

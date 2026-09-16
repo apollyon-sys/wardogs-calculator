@@ -179,5 +179,16 @@
   "accessibilityLargerControls": "Größere Bedienelemente",
   "accessibilityHighContrast": "Hoher Kontrast",
   "accessibilityReset": "Zurücksetzen",
-  "accessibilityClose": "Schließen"
+  "accessibilityClose": "Schließen",
+  "supportProject": "Projekt unterstützen",
+  "supportDialogTitle": "Projekt unterstützen",
+  "supportDialogClose": "Schließen",
+  "supportViaKoFi": "Über Ko-fi unterstützen",
+  "supportViaBoosty": "Über Boosty unterstützen",
+  "supportStatementGrowth": "Während der WARDOGS Artillery Calculator weiter wächst und von immer mehr Menschen genutzt wird, **steigen auch die laufenden Kosten des Projekts.**",
+  "supportStatementFree": "Dieses Projekt war nie als kommerzielles Produkt gedacht. **Ich plane weder Werbung von Drittanbietern noch kostenpflichtige Funktionen, Premium-Stufen oder Abonnements.** Das Projekt bleibt kostenlos und wird weiterhin durch freiwillige Unterstützung seiner Nutzer finanziert.",
+  "supportStatementInvite": "Wenn dir das Projekt nützlich ist und du bei den laufenden Kosten helfen möchtest, **kannst du es mit einer freiwilligen Spende unterstützen.**",
+  "supportStatementCosts": "Spenden werden verwendet, um **die Domain, Umami Analytics, Cloudflare-Dienste, das Hosting der Assets und weitere Infrastruktur für einen zuverlässigen Betrieb des Projekts zu bezahlen.**",
+  "supportStatementContinuity": "**Die Entwicklung wird unabhängig davon fortgesetzt, ob das Projekt finanzielle Unterstützung erhält.** Ohne Spenden muss ich die Ausgaben für Analytics und Asset-Hosting möglicherweise deutlich reduzieren. Dadurch wären Kompromisse nötig, die **Performance, Zuverlässigkeit, Nutzererlebnis sowie die Geschwindigkeit von Updates und Verbesserungen beeinträchtigen könnten.**",
+  "supportStatementPayments": "Zahlungen werden von externen Zahlungsdienstleistern verarbeitet. Falls eine Zahlung nicht möglich ist oder du andere Fragen hast, schreibe mir bitte an:"
 }

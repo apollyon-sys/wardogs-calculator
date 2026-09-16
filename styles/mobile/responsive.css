@@ -521,27 +521,58 @@
 }
 
 .mobile-app .mobile-side-menu
-.donation-link {
+.donation-support-button {
     width: 100%;
     min-height: 48px;
 
     margin: 0;
     padding: 0 12px;
 
-    gap: 8px;
-
     border-radius: 8px;
 
-    font-size: 11px;
+    font-size: calc(11px * var(--a11y-text-scale, 1));
     line-height: 1.3;
 }
 
-.mobile-app .mobile-side-menu
-.donation-link-icon {
-    width: 18px;
-    height: 18px;
+.mobile-app .donation-dialog {
+    width: calc(100vw - 18px);
+    max-height: calc(100dvh - 18px);
+}
 
-    flex-basis: 18px;
+.mobile-app .donation-dialog-shell {
+    max-height: calc(100dvh - 18px);
+}
+
+.mobile-app .donation-dialog-header {
+    padding-left: 14px;
+}
+
+.mobile-app .donation-dialog-body {
+    padding: 16px;
+
+    font-size: calc(13px * var(--a11y-text-scale, 1));
+    line-height: 1.62;
+}
+
+.mobile-app .donation-dialog-paragraph-free {
+    padding: 11px 12px;
+}
+
+.mobile-app .donation-dialog-contact {
+    padding: 11px 12px;
+}
+
+.mobile-app .donation-dialog-actions {
+    padding: 12px 14px 14px;
+
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.mobile-app .donation-provider-link {
+    min-height: 48px;
+
+    font-size: calc(12px * var(--a11y-text-scale, 1));
 }
 
 .mobile-side-menu-footer {

@@ -191,5 +191,16 @@
   "accessibilityLargerControls": "更大的控件",
   "accessibilityHighContrast": "高对比度",
   "accessibilityReset": "重置",
-  "accessibilityClose": "关闭"
+  "accessibilityClose": "关闭",
+  "supportProject": "支持项目",
+  "supportDialogTitle": "支持项目",
+  "supportDialogClose": "关闭",
+  "supportViaKoFi": "通过 Ko-fi 支持",
+  "supportViaBoosty": "通过 Boosty 支持",
+  "supportStatementGrowth": "随着 WARDOGS Artillery Calculator 不断发展、用户数量持续增长，**维持项目运行的成本也在不断上升。**",
+  "supportStatementFree": "这个项目从未打算商业化。**我不计划加入第三方商业广告、付费功能、高级会员层级或订阅。** 项目将始终免费，资金模式也会继续以用户自愿支持为基础。",
+  "supportStatementInvite": "如果这个项目对你有帮助，并且你愿意帮助承担运行成本，**你可以通过自愿捐款来支持项目。**",
+  "supportStatementCosts": "捐款将用于支付 **域名、Umami 分析、Cloudflare 服务、资源托管以及维持项目稳定运行所需的其他基础设施费用。**",
+  "supportStatementContinuity": "**无论项目是否获得资金支持，开发都不会停止。** 不过，如果没有捐款，我可能不得不大幅减少在分析和资源托管方面的开支。这意味着需要做出一些取舍，并可能影响 **性能、可靠性、用户体验，以及更新和改进的发布速度。**",
+  "supportStatementPayments": "付款由第三方支付服务商处理。如果你无法完成付款，或有其他问题，请通过以下邮箱联系我："
 }

@@ -14,7 +14,7 @@ const FOOTER_PARTNERS = [
 const DONATION_LINKS = [
     {
         id: 'ko-fi',
-        label: 'Support me on Ko-fi',
+        labelKey: 'supportViaKoFi',
         url: 'https://ko-fi.com/D3J32528AD',
         icon: `
             <svg
@@ -34,7 +34,7 @@ const DONATION_LINKS = [
     },
     {
         id: 'boosty',
-        label: 'Donate via Boosty',
+        labelKey: 'supportViaBoosty',
         url: 'https://boosty.to/apollyonsys/donate',
         icon: `
             <svg
@@ -52,18 +52,68 @@ const DONATION_LINKS = [
     }
 ];
 
+const DONATION_PARAGRAPH_KEYS = [
+    'supportStatementGrowth',
+    'supportStatementFree',
+    'supportStatementInvite',
+    'supportStatementCosts',
+    'supportStatementContinuity'
+];
+
+let donationDialog = null;
+
+function appendDonationRichText(
+    element,
+    value
+) {
+    const parts =
+        String(value || '')
+            .split(/(\*\*[^*]+\*\*)/g)
+            .filter(Boolean);
+
+    parts.forEach(part => {
+        if (
+            part.startsWith('**') &&
+            part.endsWith('**')
+        ) {
+            const strong =
+                document.createElement(
+                    'strong'
+                );
+
+            strong.textContent =
+                part.slice(2, -2);
+
+            element.appendChild(
+                strong
+            );
+            return;
+        }
+
+        element.appendChild(
+            document.createTextNode(
+                part
+            )
+        );
+    });
+}
+
 function createDonationLink(
     donation,
     placement
 ) {
-
     const link =
         document.createElement(
             'a'
         );
 
+    const label =
+        typeof tr === 'function'
+            ? tr(donation.labelKey)
+            : donation.id;
+
     link.className =
-        `donation-link donation-link-${donation.id}`;
+        `donation-provider-link donation-provider-link-${donation.id}`;
 
     link.href =
         donation.url;
@@ -76,7 +126,7 @@ function createDonationLink(
 
     link.setAttribute(
         'aria-label',
-        donation.label
+        label
     );
 
     const icon =
@@ -85,25 +135,25 @@ function createDonationLink(
         );
 
     icon.className =
-        'donation-link-icon';
+        'donation-provider-icon';
 
     icon.innerHTML =
         donation.icon;
 
-    const label =
+    const labelElement =
         document.createElement(
             'span'
         );
 
-    label.className =
-        'donation-link-label';
+    labelElement.className =
+        'donation-provider-label';
 
-    label.textContent =
-        donation.label;
+    labelElement.textContent =
+        label;
 
     link.append(
         icon,
-        label
+        labelElement
     );
 
     link.addEventListener(
@@ -113,13 +163,23 @@ function createDonationLink(
                 typeof trackAnalytics ===
                 'function'
             ) {
+                const currentPlacement =
+                    link
+                        .closest(
+                            '.donation-dialog'
+                        )
+                        ?.dataset
+                        .donationPlacement ||
+                    placement;
+
                 trackAnalytics(
                     'donation-click',
                     {
                         service:
                             donation.id,
 
-                        placement
+                        placement:
+                            currentPlacement
                     }
                 );
             }
@@ -129,10 +189,261 @@ function createDonationLink(
     return link;
 }
 
+function ensureDonationDialog(
+    placement = 'footer'
+) {
+    if (donationDialog?.isConnected) {
+        donationDialog.dataset
+            .donationPlacement =
+            placement;
+        return donationDialog;
+    }
+
+    const dialog =
+        document.createElement(
+            'dialog'
+        );
+
+    dialog.className =
+        'donation-dialog';
+
+    dialog.dataset
+        .donationPlacement =
+        placement;
+
+    dialog.setAttribute(
+        'aria-labelledby',
+        'donationDialogTitle'
+    );
+
+    const shell =
+        document.createElement(
+            'div'
+        );
+
+    shell.className =
+        'donation-dialog-shell';
+
+    const header =
+        document.createElement(
+            'div'
+        );
+
+    header.className =
+        'donation-dialog-header';
+
+    const title =
+        document.createElement(
+            'h2'
+        );
+
+    title.id =
+        'donationDialogTitle';
+
+    title.textContent =
+        typeof tr === 'function'
+            ? tr('supportDialogTitle')
+            : 'Support the project';
+
+    const closeButton =
+        document.createElement(
+            'button'
+        );
+
+    const closeLabel =
+        typeof tr === 'function'
+            ? tr('supportDialogClose')
+            : 'Close';
+
+    closeButton.type =
+        'button';
+
+    closeButton.className =
+        'donation-dialog-close';
+
+    closeButton.textContent =
+        '×';
+
+    closeButton.title =
+        closeLabel;
+
+    closeButton.setAttribute(
+        'aria-label',
+        closeLabel
+    );
+
+    header.append(
+        title,
+        closeButton
+    );
+
+    const body =
+        document.createElement(
+            'div'
+        );
+
+    body.className =
+        'donation-dialog-body';
+
+    DONATION_PARAGRAPH_KEYS.forEach(
+        key => {
+            const paragraph =
+                document.createElement(
+                    'p'
+                );
+
+            paragraph.className =
+                `donation-dialog-paragraph donation-dialog-paragraph-${key.replace('supportStatement', '').toLowerCase()}`;
+
+            appendDonationRichText(
+                paragraph,
+                typeof tr === 'function'
+                    ? tr(key)
+                    : key
+            );
+
+            body.appendChild(
+                paragraph
+            );
+        }
+    );
+
+    const contact =
+        document.createElement(
+            'p'
+        );
+
+    contact.className =
+        'donation-dialog-contact';
+
+    contact.textContent =
+        typeof tr === 'function'
+            ? tr('supportStatementPayments')
+            : 'Payments are handled by third-party payment providers. If you are unable to make a payment or have any other questions, please contact me at:';
+
+    const email =
+        document.createElement(
+            'a'
+        );
+
+    email.href =
+        'mailto:contact@wardogs-artillery.com';
+
+    email.textContent =
+        'contact@wardogs-artillery.com';
+
+    contact.append(
+        document.createElement('br'),
+        email
+    );
+
+    const signature =
+        document.createElement(
+            'p'
+        );
+
+    signature.className =
+        'donation-dialog-signature';
+
+    signature.textContent =
+        '— Apollyon';
+
+    body.append(
+        contact,
+        signature
+    );
+
+    const actions =
+        document.createElement(
+            'div'
+        );
+
+    actions.className =
+        'donation-dialog-actions';
+
+    DONATION_LINKS.forEach(
+        donation => {
+            actions.appendChild(
+                createDonationLink(
+                    donation,
+                    placement
+                )
+            );
+        }
+    );
+
+    shell.append(
+        header,
+        body,
+        actions
+    );
+
+    dialog.appendChild(
+        shell
+    );
+
+    closeButton.addEventListener(
+        'click',
+        () => {
+            dialog.close();
+        }
+    );
+
+    dialog.addEventListener(
+        'click',
+        event => {
+            if (event.target === dialog) {
+                dialog.close();
+            }
+        }
+    );
+
+    document.body.appendChild(
+        dialog
+    );
+
+    donationDialog =
+        dialog;
+
+    return dialog;
+}
+
+function openDonationDialog(
+    placement = 'footer'
+) {
+    const dialog =
+        ensureDonationDialog(
+            placement
+        );
+
+    if (dialog.open) {
+        return;
+    }
+
+    if (
+        typeof trackAnalytics ===
+        'function'
+    ) {
+        trackAnalytics(
+            'donation-dialog-opened',
+            {
+                placement
+            }
+        );
+    }
+
+    dialog.showModal();
+
+    dialog
+        .querySelector(
+            '.donation-dialog-close'
+        )
+        ?.focus();
+}
+
 function createDonationLinks(
     placement = 'footer'
 ) {
-
     const links =
         document.createElement(
             'span'
@@ -141,15 +452,35 @@ function createDonationLinks(
     links.className =
         `donation-links donation-links-${placement}`;
 
-    DONATION_LINKS.forEach(
-        donation => {
-            links.appendChild(
-                createDonationLink(
-                    donation,
-                    placement
-                )
+    const button =
+        document.createElement(
+            'button'
+        );
+
+    button.type =
+        'button';
+
+    // Keep the legacy donation-link class so existing mobile-menu
+    // close handling continues to work without duplicating listeners.
+    button.className =
+        'donation-link donation-support-button';
+
+    button.textContent =
+        typeof tr === 'function'
+            ? tr('supportProject')
+            : 'Support the project';
+
+    button.addEventListener(
+        'click',
+        () => {
+            openDonationDialog(
+                placement
             );
         }
+    );
+
+    links.appendChild(
+        button
     );
 
     return links;

@@ -113,104 +113,375 @@ footer a:hover {
 .donation-links {
     display: flex;
     align-items: center;
-
-    gap: 6px;
 }
 
-.donation-link {
-    --donation-tone: var(--accent);
-
+.donation-support-button {
     min-height: 26px;
-
-    padding: 4px 8px;
+    padding: 4px 9px;
 
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     gap: 5px;
 
     border: 1px solid
         color-mix(
             in srgb,
-            var(--donation-tone) 44%,
+            var(--accent-border) 72%,
             var(--border-light)
         );
-
     border-radius: 7px;
 
     background:
         color-mix(
             in srgb,
-            var(--donation-tone) 12%,
+            var(--accent) 7%,
             var(--input-bg)
         );
+    color: var(--accent);
 
-    color: var(--text);
-
-    font-size: 10px;
-    font-weight: 700;
+    font-size: calc(10px * var(--a11y-text-scale, 1));
+    font-weight: 800;
     line-height: 1;
 
     white-space: nowrap;
 
-    box-shadow:
-        inset 0 0 0 1px
-        color-mix(
-            in srgb,
-            var(--donation-tone) 5%,
-            transparent
-        );
+    box-shadow: none;
 
     transition:
         border-color .15s ease,
         background .15s ease,
         color .15s ease,
+        transform .15s ease,
+        box-shadow .15s ease;
+}
+
+.donation-support-button::before {
+    content: '♥';
+
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+
+    opacity: .9;
+}
+
+.donation-support-button:hover,
+.donation-support-button:focus-visible {
+    border-color: var(--accent-border);
+    background:
+        color-mix(
+            in srgb,
+            var(--accent) 13%,
+            var(--input-hover-bg)
+        );
+    color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow:
+        0 2px 8px
+        rgba(0, 0, 0, .14);
+}
+
+.donation-support-button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.donation-dialog {
+    width: min(760px, calc(100vw - 32px));
+    max-height: min(820px, calc(100dvh - 32px));
+
+    margin: auto;
+    padding: 0;
+
+    overflow: hidden;
+
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+
+    background: var(--panel-bg);
+    color: var(--text);
+
+    box-shadow:
+        0 24px 72px
+        rgba(0, 0, 0, .48);
+}
+
+.donation-dialog::backdrop {
+    background: rgba(5, 7, 9, .72);
+    backdrop-filter: blur(2px);
+}
+
+.donation-dialog-shell {
+    max-height: min(820px, calc(100dvh - 32px));
+
+    display: flex;
+    flex-direction: column;
+}
+
+.donation-dialog-header {
+    min-height: 56px;
+
+    padding: 12px 16px 12px 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    flex: 0 0 auto;
+
+    border-bottom: 1px solid var(--border);
+
+    background: var(--header-bg);
+}
+
+.donation-dialog-header h2 {
+    margin: 0;
+
+    color: var(--text);
+
+    font-size: calc(17px * var(--a11y-text-scale, 1));
+    line-height: 1.25;
+}
+
+.donation-dialog-close {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px;
+
+    padding: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--border-light);
+    border-radius: 7px;
+
+    background: var(--input-bg);
+    color: var(--muted);
+
+    font-size: 22px;
+    line-height: 1;
+}
+
+.donation-dialog-close:hover,
+.donation-dialog-close:focus-visible {
+    border-color: var(--accent-border);
+    background: var(--input-hover-bg);
+    color: var(--accent);
+}
+
+.donation-dialog-body {
+    min-height: 0;
+
+    padding: 24px;
+
+    overflow: auto;
+
+    color: var(--text);
+
+    font-size: calc(14px * var(--a11y-text-scale, 1));
+    line-height: 1.68;
+}
+
+.donation-dialog-body > * {
+    max-width: 670px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.donation-dialog-paragraph {
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+.donation-dialog-paragraph strong {
+    color: inherit;
+    font-weight: 800;
+}
+
+.donation-dialog-paragraph-free {
+    margin-top: 18px;
+    margin-bottom: 18px;
+    padding: 13px 15px;
+
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+
+    background:
+        color-mix(
+            in srgb,
+            var(--accent) 7%,
+            transparent
+        );
+}
+
+.donation-dialog-paragraph-invite {
+    margin-top: 20px;
+    margin-bottom: 20px;
+
+    font-size: 1.03em;
+}
+
+.donation-dialog-paragraph-invite strong {
+    color: var(--accent);
+}
+
+.donation-dialog-paragraph-costs {
+    padding-top: 2px;
+}
+
+.donation-dialog-paragraph-continuity {
+    margin-top: 20px;
+    padding-top: 18px;
+
+    border-top: 1px solid var(--border);
+}
+
+.donation-dialog-contact {
+    margin-top: 22px;
+    margin-bottom: 0;
+    padding: 12px 14px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    background:
+        color-mix(
+            in srgb,
+            var(--input-bg) 62%,
+            transparent
+        );
+
+    color: var(--muted);
+
+    font-size: .93em;
+    line-height: 1.55;
+}
+
+.donation-dialog-contact a {
+    display: inline-block;
+
+    margin-top: 6px;
+
+    color: var(--accent);
+    font-weight: 800;
+}
+
+.donation-dialog-signature {
+    margin-top: 14px;
+    margin-bottom: 0;
+
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.donation-dialog-actions {
+    padding: 14px 22px 18px;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+
+    flex: 0 0 auto;
+
+    border-top: 1px solid var(--border);
+
+    background:
+        color-mix(
+            in srgb,
+            var(--header-bg) 78%,
+            var(--panel-bg)
+        );
+}
+
+.donation-provider-link {
+    --donation-tone: var(--accent);
+
+    min-height: 44px;
+
+    padding: 9px 12px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    border: 1px solid
+        color-mix(
+            in srgb,
+            var(--donation-tone) 58%,
+            var(--border-light)
+        );
+
+    border-radius: 8px;
+
+    background:
+        color-mix(
+            in srgb,
+            var(--donation-tone) 13%,
+            var(--input-bg)
+        );
+
+    color: var(--text);
+
+    font-size: calc(11px * var(--a11y-text-scale, 1));
+    font-weight: 750;
+    line-height: 1.2;
+
+    text-align: center;
+    text-decoration: none;
+
+    transition:
+        border-color .15s ease,
+        background .15s ease,
         transform .15s ease;
 }
 
-.donation-link-ko-fi {
+.donation-provider-link-ko-fi {
     --donation-tone: #72a4f2;
 }
 
-.donation-link-boosty {
+.donation-provider-link-boosty {
     --donation-tone: #f15f2c;
 }
 
-.donation-link:hover,
-.donation-link:focus-visible {
+.donation-provider-link:hover,
+.donation-provider-link:focus-visible {
     border-color: var(--donation-tone);
 
     background:
         color-mix(
             in srgb,
-            var(--donation-tone) 20%,
+            var(--donation-tone) 22%,
             var(--input-hover-bg)
         );
 
     color: var(--text);
-
     text-decoration: none;
-
     transform: translateY(-1px);
 }
 
-.donation-link:active {
+.donation-provider-link:active {
     transform: translateY(0);
 }
 
-.donation-link-icon {
-    width: 15px;
-    height: 15px;
+.donation-provider-icon {
+    width: 18px;
+    height: 18px;
 
     display: inline-flex;
 
-    flex: 0 0 15px;
+    flex: 0 0 18px;
 
     color: var(--donation-tone);
 }
 
-.donation-link-icon svg {
+.donation-provider-icon svg {
     width: 100%;
     height: 100%;
 }

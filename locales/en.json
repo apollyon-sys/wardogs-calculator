@@ -175,5 +175,16 @@
   "accessibilityLargerControls": "Larger controls",
   "accessibilityHighContrast": "High contrast",
   "accessibilityReset": "Reset",
-  "accessibilityClose": "Close"
+  "accessibilityClose": "Close",
+  "supportProject": "Support the project",
+  "supportDialogTitle": "Support the project",
+  "supportDialogClose": "Close",
+  "supportViaKoFi": "Support via Ko-fi",
+  "supportViaBoosty": "Support via Boosty",
+  "supportStatementGrowth": "As WARDOGS Artillery Calculator continues to grow and more people use it, **the cost of keeping the project running is increasing as well.**",
+  "supportStatementFree": "This project was never intended to be commercial. **I do not plan to introduce third-party advertising, paid features, premium tiers, or subscriptions.** The project will remain free, and its funding model will continue to be based on voluntary support from its users.",
+  "supportStatementInvite": "If you find the project useful and would like to help cover its running costs, **you can support it with a voluntary donation.**",
+  "supportStatementCosts": "Donations are used to pay for **the domain, Umami analytics, Cloudflare services, asset hosting, and other infrastructure required to keep the project running smoothly.**",
+  "supportStatementContinuity": "**Development will continue regardless of whether the project receives financial support.** However, without donations I may need to significantly reduce spending on analytics and asset hosting. This would mean making compromises that could affect **performance, reliability, the user experience, and the speed at which updates and improvements can be delivered.**",
+  "supportStatementPayments": "Payments are handled by third-party payment providers. If you are unable to make a payment or have any other questions, please contact me at:"
 }

@@ -175,5 +175,16 @@
   "accessibilityLargerControls": "Větší ovládací prvky",
   "accessibilityHighContrast": "Vysoký kontrast",
   "accessibilityReset": "Obnovit výchozí",
-  "accessibilityClose": "Zavřít"
+  "accessibilityClose": "Zavřít",
+  "supportProject": "Podpořit projekt",
+  "supportDialogTitle": "Podpořit projekt",
+  "supportDialogClose": "Zavřít",
+  "supportViaKoFi": "Podpořit přes Ko-fi",
+  "supportViaBoosty": "Podpořit přes Boosty",
+  "supportStatementGrowth": "S dalším růstem WARDOGS Artillery Calculator a počtu jeho uživatelů **rostou také náklady na provoz projektu.**",
+  "supportStatementFree": "Tento projekt nikdy neměl být komerční. **Neplánuji zavádět reklamu třetích stran, placené funkce, prémiové úrovně ani předplatné.** Projekt zůstane zdarma a jeho financování bude i nadále založeno na dobrovolné podpoře uživatelů.",
+  "supportStatementInvite": "Pokud je pro vás projekt užitečný a chcete pomoci pokrýt jeho provozní náklady, **můžete ho podpořit dobrovolným finančním darem.**",
+  "supportStatementCosts": "Dary slouží k úhradě **domény, analytiky Umami, služeb Cloudflare, hostingu assetů a další infrastruktury potřebné pro spolehlivý provoz projektu.**",
+  "supportStatementContinuity": "**Vývoj bude pokračovat bez ohledu na to, zda projekt získává finanční podporu.** Bez darů však možná budu muset výrazně omezit výdaje na analytiku a hosting assetů. To by znamenalo kompromisy, které mohou ovlivnit **výkon, spolehlivost, uživatelský komfort a rychlost vydávání aktualizací a vylepšení.**",
+  "supportStatementPayments": "Platby zpracovávají externí poskytovatelé platebních služeb. Pokud se vám nedaří platbu provést nebo máte jiné dotazy, napište mi na:"
 }
