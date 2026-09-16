@@ -976,18 +976,6 @@ function selectPresetMarkerAsTarget(
 
     renderSavedTargets();
 
-    if (
-        typeof trackAnalytics ===
-        'function'
-    ) {
-        trackAnalytics(
-            'preset-marker-selected',
-            {
-                map: S.map
-            }
-        );
-    }
-
     startPresetTargetSelectionAnimation();
 
     return true;

@@ -19,21 +19,17 @@ It cannot retroactively modify a stale third-party deployment that still contain
 
 ## Custom events
 
-The current event set intentionally focuses on meaningful user actions rather than high-frequency UI input:
+The event set is deliberately quota-conscious. High-frequency actions that can be inferred from a completed calculation are not tracked separately.
 
 | Event | When it is sent | Event data |
 |---|---|---|
-| `calculation` | First stable calculation for each map + weapon context in the current browser-tab session | `map`, `weapon`, `inRange` |
-| `origin-placed` | First artillery/origin placement for each map in the current browser-tab session | `map` |
-| `target-placed` | First target placement for each map in the current browser-tab session | `map` |
-| `map-changed` | User changes the map preset or applies a custom map | `map` |
-| `weapon-changed` | User selects a different weapon | `weapon` |
+| `calculation` | First stable calculation for each map + weapon context in a sampled browser-tab session | `map`, `weapon`, `inRange` |
+| `map-style-changed` | User switches between grayscale and color map tiles | `map`, `style` |
 | `target-saved` | User saves the current target | `withArtillery` |
 | `target-restored` | User restores a saved target | `withArtillery` |
 | `target-exported` | User exports one saved target | `withArtillery` |
 | `targets-exported` | User exports the complete saved-target list | `count` |
 | `targets-imported` | A valid single-target or target-list JSON file is imported | `count`, `format` |
-| `preset-marker-selected` | First preset-marker target selection for each map in the current browser-tab session | `map` |
 | `coordinate-search` | A valid coordinate search is completed | `map` |
 | `terrain3d-toggle` | User manually enables or disables experimental Terrain3D correction | `enabled`, `map` |
 | `contours-toggle` | User enables or disables terrain contours directly or through the Base layer group | `enabled`, `map` |
@@ -42,39 +38,49 @@ The current event set intentionally focuses on meaningful user actions rather th
 | `zone-created` | A non-zero circular zone is completed | `map` |
 | `polygon-created` | A polygon with at least three points is completed | `map` |
 | `user-marker-placed` | A user Map Tools marker is placed | `map` |
-| `map-changes-exported` | User exports persistent Map Tools data | `drawings`, `markers` |
-| `map-changes-imported` | A valid Map Tools JSON file is imported | `drawings`, `markers`, `layers` |
+| `map-changes-exported` | User exports persistent Map Tools data | aggregate counts only |
+| `map-changes-imported` | A valid Map Tools JSON file is imported | aggregate counts only |
 | `partner-click` | User opens a community partner link | `partner`, `placement` |
 | `donation-click` | User opens a donation service | `service`, `placement` |
+| `feedback-opened` | User opens the feedback dialog | none |
+| `feedback-sent` | Feedback is accepted by the backend | coarse feedback `type` |
+| `feedback-failed` | Feedback submission fails | coarse `type`, bounded `reason` |
 | `desktop-version` | Mobile user chooses the desktop interface | none |
-| `lobby-opened` | Lobby panel is opened for the first time during the current page lifetime | `map` |
-| `lobby-connected` | A lobby connection succeeds after creating, joining or reconnecting | `method`, `map`, optional `withSavedTargets` for creation |
-| `lobby-failed` | Creating, joining or reconnecting does not complete | `operation`, coarse `reason` |
-| `lobby-disconnected` | An active lobby unexpectedly loses its connection | `map` |
-| `lobby-left` | User explicitly leaves a lobby | `map` |
-| `lobby-invite-copied` | An invite link is successfully copied | `map` |
-| `lobby-recovery-exported` | A lobby recovery file is exported | `map` |
+| `lobby-*` | Completed lobby lifecycle actions | bounded lifecycle fields described below |
 
-## High-volume event budget
+The following former high-volume events are intentionally retired:
 
-The analytics wrapper applies session-level deduplication to the highest-volume interaction events:
+- `origin-placed`;
+- `target-placed`;
+- `preset-marker-selected`;
+- `map-changed`;
+- `weapon-changed`.
 
-- `calculation` is emitted at most once for each map + weapon combination in the current browser-tab session;
-- `origin-placed` is emitted at most once per map in the current browser-tab session;
-- `target-placed` is emitted at most once per map in the current browser-tab session;
-- `preset-marker-selected` is emitted at most once per map in the current browser-tab session.
+Their product value was low relative to their event volume. Map and weapon context remain available on the sampled `calculation` event, while map-style, Terrain3D, saved-target, map-tool, donation, feedback and lobby telemetry stay intact.
 
-The deduplication keys are stored in `sessionStorage`, so a page reload in the same tab does not immediately generate the same high-volume events again. A new tab starts a new analytics session budget. If `sessionStorage` is unavailable, the same policy still works in memory for the current page lifetime.
+## Event budget and sampling
 
-`lobby-opened` has a separate page-lifetime guard in the lobby module. Repeatedly closing and reopening the panel does not emit additional events until the page is reloaded.
+`calculation` is the only sampled product event. A random bucket is created once per browser-tab session and persisted in `sessionStorage`; **20% of sessions** are selected for calculation telemetry. Within a selected session, `calculation` is still emitted at most once for each map + weapon combination.
 
-This intentionally changes these events from action counters into **feature-usage signals**. They are suitable for measuring how many sessions use a feature and for preserving the Origin → Target → Calculation funnel without spending analytics quota on every repeated drag or recalculation.
+This preserves an unbiased feature-usage sample while reducing the dominant custom-event source by about 80%. The initial solution rendered on application startup is still treated as a baseline and is not counted. A changed solution must remain stable for 900 ms before analytics considers it.
 
-## Calculation event behavior
+Operational failures keep session-level deduplication by failure signature. Repeated copies of the same failure in one tab are not sent again after the first matching event.
 
-`calculation` is still debounced. Dragging a target or artillery marker therefore does not emit an event on every pointer move.
+Normal product events no longer receive a `build` property automatically. Build identifiers are attached only to operational failure events, where they are useful for regression diagnosis.
 
-The initial solution rendered on application startup is treated as a baseline and is not counted as a user calculation. A changed solution must remain stable for 900 ms before analytics considers it, and the session-level budget then decides whether that map + weapon context has already been recorded.
+## Performance and operational telemetry
+
+Umami's built-in `data-performance="true"` tracker remains enabled for Core Web Vitals. The previous custom `lcp-slow-*` events have been removed because they duplicated the built-in performance dataset and carried large payloads.
+
+Resource-error telemetry ignores failures originating from third-party scripts, Cloudflare instrumentation/challenges, and Umami itself. Application/site resources and the WARDOGS asset CDN remain observable.
+
+Client-error telemetry also suppresses known browser noise that is not actionable application code:
+
+- `ResizeObserver loop ...` warnings;
+- opaque `Script error.` events without a source;
+- errors originating from browser-extension URLs.
+
+Operational payloads omit empty diagnostic fields. This keeps `client-error`, `map-load-failed`, `asset-load-failed` and `terrain-load-failed` useful without spending quota on empty metadata.
 
 ## v1.7 feature telemetry
 
@@ -142,9 +148,9 @@ Map data transfer events contain only aggregate item counts and whether layer se
 
 Lobby events never include the invite or room code, owner key, player name, roster, coordinates, room contents, or recovery data. Failures are reduced to a small allowlist of categories instead of reporting raw server errors.
 
-This keeps event payloads small and avoids generating excessive event-data usage. High-frequency actions such as map panning, cursor movement, mouse movement, and pinch/wheel zoom are deliberately not tracked.
+This keeps event payloads small and avoids generating excessive event-data usage. High-frequency actions such as point placement, preset-target selection, map/weapon switching, map panning, cursor movement, mouse movement, and pinch/wheel zoom are deliberately not tracked as standalone custom events.
 
-Repeated high-volume calculator interactions are also deduplicated before they are queued or sent to Umami. Rare actions such as saved-target transfer, completed map drawings, zones and polygons, ruler use, map changes, Terrain3D/contour toggles, donation/partner clicks and lobby lifecycle actions continue to be recorded per completed action because their event volume is comparatively small and their action counts remain useful.
+The sampled calculation signal provides map/weapon usage context without recording every interaction. Lower-volume actions such as saved-target transfer, completed map drawings, zones and polygons, ruler use, map-style changes, Terrain3D/contour toggles, donation/partner clicks, feedback and lobby lifecycle actions continue to be recorded because their event volume is comparatively small and their action counts remain useful.
 
 ## Adding an event
 

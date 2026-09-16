@@ -456,17 +456,6 @@ function finishMobileTap(event, gesture) {
 
     clamp(S[pointType]);
 
-    if (
-        typeof trackAnalytics ===
-        'function'
-    ) {
-        trackAnalytics(
-            `${pointType}-placed`,
-            {
-                map: S.map
-            }
-        );
-    }
 
     inputs();
     renderSavedTargets();
@@ -501,19 +490,6 @@ function handleMobilePointerUp(event) {
         return;
     }
 
-    if (
-        gesture?.type === 'point' &&
-        gesture.pointerId === event.pointerId &&
-        typeof trackAnalytics ===
-        'function'
-    ) {
-        trackAnalytics(
-            `${gesture.pointType}-placed`,
-            {
-                map: S.map
-            }
-        );
-    }
 
     if (gesture?.type === 'pinch') {
         if (MOBILE_TOUCH.pointers.size === 1) {

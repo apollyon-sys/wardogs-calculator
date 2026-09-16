@@ -20,17 +20,15 @@ const ANALYTICS_MAX_QUEUE = 32;
 const ANALYTICS_FLUSH_INTERVAL = 500;
 const ANALYTICS_FLUSH_ATTEMPTS = 30;
 const ANALYTICS_CALCULATION_DELAY = 900;
-const ANALYTICS_SLOW_LCP_MS = 2500;
-const ANALYTICS_LCP_REPORT_MS = 8000;
+const ANALYTICS_CALCULATION_SAMPLE_RATE = 0.2;
 const ANALYTICS_SESSION_DEDUPE_KEY =
-    'wardogs-analytics-session-v1';
+    'wardogs-analytics-session-v2';
+const ANALYTICS_SESSION_SAMPLE_KEY =
+    'wardogs-analytics-sample-v1';
 
 const ANALYTICS_CONTEXT_DEDUPED_EVENTS =
     new Set([
         'calculation',
-        'origin-placed',
-        'target-placed',
-        'preset-marker-selected',
         'client-error',
         'map-load-failed',
         'asset-load-failed',
@@ -44,13 +42,59 @@ let analyticsCalculationInitialized = false;
 let analyticsLastCalculationFingerprint = null;
 let analyticsSessionKeys =
     loadAnalyticsSessionKeys();
+let analyticsSessionSampleBucket =
+    loadAnalyticsSessionSampleBucket();
 
 let analyticsMapLayerHooksInstalled =
     false;
-let analyticsLcpObserver = null;
-let analyticsLcpLatest = null;
-let analyticsLcpReported = false;
 
+
+function loadAnalyticsSessionSampleBucket() {
+    try {
+        const raw =
+            window.sessionStorage.getItem(
+                ANALYTICS_SESSION_SAMPLE_KEY
+            );
+        const stored =
+            raw === null || raw === ''
+                ? NaN
+                : Number(raw);
+
+        if (
+            Number.isFinite(stored) &&
+            stored >= 0 &&
+            stored < 1
+        ) {
+            return stored;
+        }
+    } catch (_) {
+        // sessionStorage is optional.
+    }
+
+    const bucket = Math.random();
+
+    try {
+        window.sessionStorage.setItem(
+            ANALYTICS_SESSION_SAMPLE_KEY,
+            String(bucket)
+        );
+    } catch (_) {
+        // Keep the page-lifetime bucket in memory.
+    }
+
+    return bucket;
+}
+
+function shouldSampleAnalyticsEvent(name) {
+    if (name !== 'calculation') {
+        return true;
+    }
+
+    return (
+        analyticsSessionSampleBucket <
+        ANALYTICS_CALCULATION_SAMPLE_RATE
+    );
+}
 
 function loadAnalyticsSessionKeys() {
     try {
@@ -416,12 +460,10 @@ function createClientErrorDiagnosticData(
 }
 
 function normalizeAnalyticsData(data) {
-    const normalized = {
-        build: getAnalyticsBuildId()
-    };
+    const normalized = {};
 
     if (!data || typeof data !== 'object') {
-        return normalized;
+        return undefined;
     }
 
     Object.entries(data)
@@ -561,6 +603,10 @@ function trackAnalytics(name, data = undefined) {
     const normalizedData =
         normalizeAnalyticsData(data);
 
+    if (!shouldSampleAnalyticsEvent(normalizedName)) {
+        return;
+    }
+
     if (
         shouldSuppressAnalyticsEvent(
             normalizedName,
@@ -614,74 +660,43 @@ function trackOperationalFailure(
         return;
     }
 
-    trackAnalytics(
-        name,
-        {
-            area:
-                typeof data?.area === 'string'
-                    ? data.area
-                    : '',
-            type:
-                typeof data?.type === 'string'
-                    ? data.type
-                    : '',
-            map:
-                typeof data?.map === 'string'
-                    ? data.map
-                    : '',
-            code:
-                typeof data?.code === 'string'
-                    ? data.code
-                    : '',
-            resource:
-                typeof data?.resource === 'string'
-                    ? data.resource
-                    : '',
-            origin:
-                typeof data?.origin === 'string'
-                    ? data.origin
-                    : '',
-            phase:
-                typeof data?.phase === 'string'
-                    ? data.phase
-                    : '',
-            errorType:
-                typeof data?.errorType === 'string'
-                    ? data.errorType
-                    : '',
-            source:
-                typeof data?.source === 'string'
-                    ? data.source
-                    : '',
-            line:
-                Number.isFinite(
-                    Number(data?.line)
-                )
-                    ? Number(data.line)
-                    : 0,
-            column:
-                Number.isFinite(
-                    Number(data?.column)
-                )
-                    ? Number(data.column)
-                    : 0,
-            messageHash:
-                typeof data?.messageHash === 'string'
-                    ? data.messageHash
-                    : '',
-            attempts:
-                Number.isFinite(
-                    Number(data?.attempts)
-                )
-                    ? Math.max(
-                        0,
-                        Math.round(
-                            Number(data.attempts)
-                        )
-                    )
-                    : 0
+    const payload = {
+        build: getAnalyticsBuildId()
+    };
+
+    [
+        'area',
+        'type',
+        'map',
+        'code',
+        'resource',
+        'origin',
+        'phase',
+        'errorType',
+        'source',
+        'messageHash'
+    ].forEach(key => {
+        if (
+            typeof data?.[key] === 'string' &&
+            data[key]
+        ) {
+            payload[key] = data[key];
         }
-    );
+    });
+
+    [
+        'line',
+        'column',
+        'attempts'
+    ].forEach(key => {
+        const value = Number(data?.[key]);
+
+        if (Number.isFinite(value) && value > 0) {
+            payload[key] = Math.round(value);
+        }
+    });
+
+    trackAnalytics(name, payload);
 }
 
 function classifyOperationalResource(target) {
@@ -822,6 +837,53 @@ function classifyOperationalResource(target) {
     }
 }
 
+const ANALYTICS_IGNORED_RESOURCE_ORIGINS =
+    new Set([
+        'external',
+        'cloudflare',
+        'umami'
+    ]);
+
+function isBrowserExtensionErrorSource(value) {
+    const text = String(value || '');
+
+    return /(?:chrome|moz|safari-web|ms-browser)-extension:\/\//i
+        .test(text);
+}
+
+function shouldIgnoreWindowClientError(event) {
+    const message =
+        String(event?.message || '').trim();
+    const source =
+        String(event?.filename || '');
+    const stack =
+        String(event?.error?.stack || '');
+
+    if (/^ResizeObserver loop/i.test(message)) {
+        return true;
+    }
+
+    if (
+        /^Script error\.?$/i.test(message) &&
+        !source
+    ) {
+        return true;
+    }
+
+    return (
+        isBrowserExtensionErrorSource(source) ||
+        isBrowserExtensionErrorSource(stack)
+    );
+}
+
+function shouldIgnoreUnhandledRejection(reason) {
+    return isBrowserExtensionErrorSource(
+        reason?.stack ||
+        reason?.sourceURL ||
+        ''
+    );
+}
+
 function installOperationalErrorTelemetry() {
     window.addEventListener(
         'error',
@@ -839,6 +901,14 @@ function installOperationalErrorTelemetry() {
                         target
                     );
 
+                if (
+                    ANALYTICS_IGNORED_RESOURCE_ORIGINS.has(
+                        classification.origin
+                    )
+                ) {
+                    return;
+                }
+
                 trackOperationalFailure(
                     'asset-load-failed',
                     {
@@ -853,6 +923,10 @@ function installOperationalErrorTelemetry() {
                             classification.origin
                     }
                 );
+                return;
+            }
+
+            if (shouldIgnoreWindowClientError(event)) {
                 return;
             }
 
@@ -887,6 +961,10 @@ function installOperationalErrorTelemetry() {
             const reason =
                 event?.reason;
 
+            if (shouldIgnoreUnhandledRejection(reason)) {
+                return;
+            }
+
             const diagnostics =
                 createClientErrorDiagnosticData(
                     reason,
@@ -918,160 +996,11 @@ function installOperationalErrorTelemetry() {
 installOperationalErrorTelemetry();
 
 /*
- * Temporary launch diagnostic for slow real-user LCP.
- * No textContent, URLs, element IDs or arbitrary class names are sent.
- * The fixed event-name suffix also makes the culprit visible in the
- * existing EA monitor without requiring a monitor update.
+ * Core Web Vitals are collected by Umami's built-in
+ * data-performance tracker. Keep custom analytics focused on
+ * product usage and actionable application failures.
  */
-function classifyLcpElement(element) {
-    if (!element || typeof element.closest !== 'function') return 'unknown';
-    if (element.closest('.motd')) return 'motd';
-    if (element.closest('.solution-result, .result')) return 'result';
-    if (element.closest('header')) return 'header';
-    if (element.closest('main aside')) return 'sidebar';
-    if (element.closest('.workspace')) return 'workspace';
 
-    const tag = String(element.tagName || '').toLowerCase();
-    if (['img', 'picture', 'svg'].includes(tag)) return 'image';
-    if (['h1', 'h2', 'h3', 'p', 'span', 'div', 'section', 'article'].includes(tag)) return 'text';
-    return 'other';
-}
-
-function classifyLcpSelector(element) {
-    if (
-        !element ||
-        typeof element.closest !== 'function'
-    ) {
-        return 'unknown';
-    }
-
-    if (element.closest('.motd')) return '.motd';
-    if (element.closest('.solution-result, .result')) return '.result';
-    if (element.closest('.saved-targets')) return '.saved-targets';
-    if (element.closest('header')) return 'header';
-    if (element.closest('main aside')) return 'main-aside';
-    if (element.closest('.workspace')) return '.workspace';
-
-    return String(
-        element.tagName ||
-        'unknown'
-    )
-        .toLowerCase()
-        .slice(0, 24);
-}
-
-function lcpSizeBucket(size) {
-    const value = Number(size) || 0;
-    if (value < 50000) return 'lt-50k';
-    if (value < 150000) return '50k-150k';
-    if (value < 500000) return '150k-500k';
-    return 'gte-500k';
-}
-
-function reportSlowLcp(reason) {
-    const lcp = analyticsLcpLatest;
-    if (analyticsLcpReported || !lcp || lcp.lcpMs < ANALYTICS_SLOW_LCP_MS) return;
-
-    analyticsLcpReported = true;
-    analyticsLcpObserver?.disconnect();
-
-    const navigation =
-        performance.getEntriesByType(
-            'navigation'
-        )[0];
-    const firstContentfulPaint =
-        performance.getEntriesByName(
-            'first-contentful-paint'
-        )[0];
-    const connection = navigator.connection;
-    const ttfbMs =
-        Math.round(
-            Number(
-                navigation?.responseStart
-            ) || 0
-        );
-    const fcpMs =
-        Math.round(
-            Number(
-                firstContentfulPaint?.startTime
-            ) || 0
-        );
-
-    trackAnalytics(`lcp-slow-${lcp.kind}`, {
-        kind: lcp.kind,
-        tag: lcp.tag,
-        selector: lcp.selector,
-        lcpMs: lcp.lcpMs,
-        ttfbMs,
-        fcpMs,
-        afterTtfbMs:
-            Math.max(
-                0,
-                lcp.lcpMs - ttfbMs
-            ),
-        renderMs: lcp.renderMs,
-        loadMs: lcp.loadMs,
-        size: lcp.size,
-        motd: lcp.motd,
-        map: typeof S === 'object' && S && typeof S.map === 'string' ? S.map : '',
-        weapon: typeof S === 'object' && S && typeof S.weapon === 'string' ? S.weapon : '',
-        reason,
-        connection: typeof connection?.effectiveType === 'string' ? connection.effectiveType : '',
-        navigation: typeof navigation?.type === 'string' ? navigation.type : ''
-    });
-}
-
-function installLcpDiagnosticTelemetry() {
-    if (
-        typeof PerformanceObserver !== 'function' ||
-        !PerformanceObserver.supportedEntryTypes?.includes('largest-contentful-paint')
-    ) {
-        return;
-    }
-
-    try {
-        analyticsLcpObserver = new PerformanceObserver(list => {
-            for (const entry of list.getEntries()) {
-                const element = entry.element;
-                analyticsLcpLatest = {
-                    kind: classifyLcpElement(element),
-                    tag: String(element?.tagName || 'unknown').toLowerCase().slice(0, 16),
-                    selector: classifyLcpSelector(element),
-                    lcpMs: Math.round(Number(entry.startTime) || 0),
-                    renderMs: Math.round(Number(entry.renderTime) || 0),
-                    loadMs: Math.round(Number(entry.loadTime) || 0),
-                    size: lcpSizeBucket(entry.size),
-                    motd: Boolean(document.querySelector('.motd'))
-                };
-
-                if (analyticsLcpLatest.lcpMs >= ANALYTICS_LCP_REPORT_MS) {
-                    window.setTimeout(() => reportSlowLcp('late-entry'), 250);
-                }
-            }
-        });
-
-        analyticsLcpObserver.observe({
-            type: 'largest-contentful-paint',
-            buffered: true
-        });
-    } catch (_) {
-        analyticsLcpObserver = null;
-        return;
-    }
-
-    const afterInput = () => window.setTimeout(() => reportSlowLcp('interaction'), 0);
-    for (const type of ['pointerdown', 'keydown', 'touchstart']) {
-        window.addEventListener(type, afterInput, { once: true, capture: true, passive: true });
-    }
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') reportSlowLcp('hidden');
-    });
-    window.addEventListener('pagehide', () => reportSlowLcp('pagehide'), { once: true });
-    window.setTimeout(() => reportSlowLcp('timeout'), ANALYTICS_LCP_REPORT_MS);
-}
-
-installLcpDiagnosticTelemetry();
 
 function getCalculationFingerprint() {
     if (

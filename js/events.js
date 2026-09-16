@@ -231,18 +231,6 @@ function bindEvents() {
                 requestTerrainBallisticsForCurrentState();
             }
 
-            if (
-                typeof trackAnalytics ===
-                'function'
-            ) {
-                trackAnalytics(
-                    'map-changed',
-                    {
-                        map: S.map
-                    }
-                );
-            }
-
             inputs();
         }
     );
@@ -318,18 +306,6 @@ function bindEvents() {
                 requestTerrainBallisticsForCurrentState();
             }
 
-            if (
-                typeof trackAnalytics ===
-                'function'
-            ) {
-                trackAnalytics(
-                    'weapon-changed',
-                    {
-                        weapon: S.weapon
-                    }
-                );
-            }
-
             draw();
         }
     );
@@ -387,18 +363,6 @@ function bindEvents() {
 
             resetMapToolHistory();
             updatePresetLock();
-
-            if (
-                typeof trackAnalytics ===
-                'function'
-            ) {
-                trackAnalytics(
-                    'map-changed',
-                    {
-                        map: 'custom'
-                    }
-                );
-            }
 
             inputs();
         }
@@ -823,23 +787,7 @@ function bindEvents() {
         'mouseup',
         () => {
 
-            const placedPoint =
-                drag;
-
             handleMapToolMouseUp();
-
-            if (
-                placedPoint &&
-                typeof trackAnalytics ===
-                'function'
-            ) {
-                trackAnalytics(
-                    `${placedPoint}-placed`,
-                    {
-                        map: S.map
-                    }
-                );
-            }
 
             drag =
                 null;
