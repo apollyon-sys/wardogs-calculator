@@ -48,6 +48,17 @@ function inputs() {
         refreshSavedTargetHighlight();
     }
 
+    /*
+     * The last-correction line and ghost overlay only describe the target
+     * while it still sits where the correction put it.
+     */
+    if (
+        typeof updateFireAdjustmentUI ===
+        'function'
+    ) {
+        updateFireAdjustmentUI();
+    }
+
     result();
     draw();
 }

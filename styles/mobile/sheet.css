@@ -351,3 +351,82 @@
     padding: 0;
     font-size: 0;
 }
+
+.mobile-app .fire-adjustment-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 7px;
+}
+
+.mobile-app .fire-adjustment-card > button {
+    margin-top: 8px;
+}
+
+.mobile-app .fire-adjustment-impact-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-top: 7px;
+}
+
+.mobile-app .fire-adjustment-impact-actions button {
+    min-height: 38px;
+    padding: 5px 8px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.mobile-app .fire-adjustment-impact-actions button.active {
+    border-color: var(--accent-border);
+    background: var(--active-bg);
+    color: var(--accent);
+}
+
+.mobile-app .fire-adjustment-last {
+    margin-top: 8px;
+    color: var(--text);
+}
+
+.mobile-app .fire-adjustment-last[hidden],
+.mobile-app .fire-adjustment-banner[hidden] {
+    display: none;
+}
+
+.mobile-app .fire-adjustment-banner {
+    position: absolute;
+    top: auto;
+    right: 10px;
+    bottom: calc(var(--mobile-sheet-peek) + env(safe-area-inset-bottom) + 58px);
+    left: 10px;
+    z-index: 18;
+
+    max-width: none;
+    transform: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    padding: 8px 8px 8px 12px;
+
+    border: 1px solid var(--accent-border);
+    border-radius: 10px;
+    background:
+        color-mix(
+            in srgb,
+            var(--panel-bg) 90%,
+            transparent
+        );
+
+    color: var(--text);
+    font-size: 12px;
+}
+
+.mobile-app .fire-adjustment-banner-cancel {
+    width: auto;
+    min-height: 34px;
+    padding: 4px 12px;
+    color: var(--muted);
+    font-size: 12px;
+}

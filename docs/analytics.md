@@ -31,6 +31,7 @@ The event set is deliberately quota-conscious. High-frequency actions that can b
 | `targets-exported` | User exports the complete saved-target list | `count` |
 | `targets-imported` | A valid single-target or target-list JSON file is imported | `count`, `format` |
 | `coordinate-search` | A valid coordinate search is completed | `map` |
+| `fire-adjusted` | A fire-adjustment correction or marked/pasted impact moves the target | `map`, `weapon`, `mode` (`correction` or `impact`) |
 | `terrain3d-toggle` | User manually enables or disables experimental Terrain3D correction | `enabled`, `map` |
 | `contours-toggle` | User enables or disables terrain contours directly or through the Base layer group | `enabled`, `map` |
 | `ruler-used` | A non-zero ruler measurement is completed | `map` |
