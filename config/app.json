@@ -46,14 +46,14 @@
     }
   },
   "site": {
-    "lastModified": "2026-09-15",
+    "lastModified": "2026-09-17",
     "footer": {
       "disclaimer": "Unofficial community project. Not affiliated with or endorsed by BULKHEAD or the WARDOGS development team.",
       "productName": "WARDOGS Artillery Calculator",
       "authorLabel": "by",
       "authorName": "Apollyon",
       "authorUrl": "https://discord.com/users/202109460238434304",
-      "version": "1.9.0"
+      "version": "1.9.1"
     }
   },
   "map": {

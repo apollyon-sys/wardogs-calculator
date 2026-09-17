@@ -24,7 +24,7 @@ const DEFAULT_APP_CONFIG = {
             authorUrl:
                 'https://discord.com/users/202109460238434304',
             version:
-                '1.9.0'
+                '1.9.1'
         }
     },
 
