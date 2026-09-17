@@ -141,33 +141,6 @@
 </div>
 <p class="hint" data-i18n="azimuthHint">방위각: 0° 북쪽, 90° 동쪽, 180° 남쪽, 270° 서쪽.</p>
 </div>
-<!-- FIRE ADJUSTMENT -->
-<div class="section fire-adjustment">
-<h2 data-i18n="fireAdjustment">사격 수정</h2>
-<label data-i18n="fireAdjustmentRange" for="fireAdjustmentRange">거리</label>
-<div class="fire-adjustment-row">
-<select aria-label="거리" id="fireAdjustmentRangeDirection">
-<option data-i18n="fireAdjustmentAdd" value="add">멀리</option>
-<option data-i18n="fireAdjustmentDrop" value="drop">가까이</option>
-</select>
-<input id="fireAdjustmentRange" inputmode="decimal" min="0" placeholder="0 m" step="1" type="number"/>
-</div>
-<label data-i18n="fireAdjustmentDeflection" for="fireAdjustmentDeflection">편의</label>
-<div class="fire-adjustment-row">
-<select aria-label="편의" id="fireAdjustmentDeflectionDirection">
-<option data-i18n="fireAdjustmentLeft" value="left">왼쪽</option>
-<option data-i18n="fireAdjustmentRight" value="right">오른쪽</option>
-</select>
-<input id="fireAdjustmentDeflection" inputmode="decimal" min="0" placeholder="0 m" step="1" type="number"/>
-</div>
-<button data-i18n="fireAdjustmentApply" id="fireAdjustmentApply" style="margin-top:7px" type="button">수정 적용</button>
-<div class="fire-adjustment-impact-actions">
-<button aria-pressed="false" data-i18n="fireAdjustmentMarkImpact" id="fireAdjustmentPick" type="button">지도에 탄착점 표시</button>
-<button data-i18n="fireAdjustmentPasteImpact" id="fireAdjustmentPasteImpact" type="button">탄착점 붙여넣기</button>
-</div>
-<div class="hint fire-adjustment-last" id="fireAdjustmentLast" hidden></div>
-<p class="hint" data-i18n="fireAdjustmentHint">멀리 / 가까이는 포–목표 선을 따라, 왼쪽 / 오른쪽은 포 위치에서 본 기준으로 그 선에 수직으로 목표를 이동합니다. 탄착점을 표시하거나 붙여넣으면 관측된 오차만큼 목표가 이동합니다.</p>
-</div>
 <!-- CONTROLS -->
 <div class="section">
 <h2 data-i18n="controls">조작</h2>

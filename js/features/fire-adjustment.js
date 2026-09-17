@@ -13,9 +13,27 @@
 
 const FIRE_ADJUSTMENT_FEEDBACK_DELAY = 1100;
 
+const FIRE_ADJUSTMENT_DEFAULT_STEP = 50;
+
+/* A single correction is capped well beyond any in-game engagement range. */
+const FIRE_ADJUSTMENT_MAX_STEP = 100000;
+
 const FIRE_ADJUSTMENT_STATE = {
     /* One-shot map pick armed by "Mark impact on map". */
     picking: false,
+
+    /* Distance one arrow press adds to the staged correction, in meters. */
+    step: FIRE_ADJUSTMENT_DEFAULT_STEP,
+
+    /*
+     * Correction staged by the arrow pad, in meters, positive = add / right.
+     * Arrow presses accumulate here so that a combined correction such as
+     * "add 50, right 20" is built up before it is committed by Apply.
+     */
+    draft: {
+        rangeMeters: 0,
+        deflectionMeters: 0
+    },
 
     /*
      * Last applied correction, kept for the map overlay and the status line.
@@ -63,11 +81,16 @@ function fireAdjustmentAxes() {
     };
 }
 
-function fireAdjustmentNumberInput(id) {
-    const input = $(id);
+/*
+ * Step distance currently typed into the centre of the arrow pad. The state
+ * copy survives popover rebuilds (language switch, first open).
+ */
+function readFireAdjustmentStep() {
+    const input =
+        $('fireAdjustmentStep');
 
     if (!input) {
-        return 0;
+        return FIRE_ADJUSTMENT_STATE.step;
     }
 
     const value =
@@ -76,36 +99,76 @@ function fireAdjustmentNumberInput(id) {
                 .replace(',', '.')
         );
 
-    return Number.isFinite(value)
-        ? Math.abs(value)
-        : 0;
+    if (
+        !Number.isFinite(value) ||
+        value <= 0
+    ) {
+        return 0;
+    }
+
+    return Math.min(
+        Math.abs(value),
+        FIRE_ADJUSTMENT_MAX_STEP
+    );
 }
 
 /*
- * Reads the correction panel as signed meters:
+ * Staged correction in signed meters:
  * positive range = add (farther), positive deflection = right.
  */
 function readFireAdjustmentCorrection() {
-    const range =
-        fireAdjustmentNumberInput('fireAdjustmentRange');
-
-    const deflection =
-        fireAdjustmentNumberInput('fireAdjustmentDeflection');
-
-    const rangeSign =
-        $('fireAdjustmentRangeDirection')?.value === 'drop'
-            ? -1
-            : 1;
-
-    const deflectionSign =
-        $('fireAdjustmentDeflectionDirection')?.value === 'left'
-            ? -1
-            : 1;
-
     return {
-        rangeMeters: range * rangeSign,
-        deflectionMeters: deflection * deflectionSign
+        rangeMeters:
+            FIRE_ADJUSTMENT_STATE.draft.rangeMeters,
+        deflectionMeters:
+            FIRE_ADJUSTMENT_STATE.draft.deflectionMeters
     };
+}
+
+function clearFireAdjustmentDraft() {
+    FIRE_ADJUSTMENT_STATE.draft = {
+        rangeMeters: 0,
+        deflectionMeters: 0
+    };
+
+    updateFireAdjustmentUI();
+}
+
+/*
+ * One arrow press. `axis` is 'range' (add/drop) or 'deflection'
+ * (right/left), `sign` is +1 for add/right. Presses accumulate, so the
+ * opposite arrow walks the staged value back and ↑↑ stages two steps.
+ */
+function nudgeFireAdjustment(axis, sign) {
+    const step =
+        readFireAdjustmentStep();
+
+    if (!step) {
+        $('fireAdjustmentStep')?.focus();
+        return;
+    }
+
+    FIRE_ADJUSTMENT_STATE.step = step;
+
+    const key =
+        axis === 'range'
+            ? 'rangeMeters'
+            : 'deflectionMeters';
+
+    const next =
+        FIRE_ADJUSTMENT_STATE.draft[key] +
+        sign * step;
+
+    FIRE_ADJUSTMENT_STATE.draft[key] =
+        Math.max(
+            -FIRE_ADJUSTMENT_MAX_STEP,
+            Math.min(
+                FIRE_ADJUSTMENT_MAX_STEP,
+                next
+            )
+        );
+
+    updateFireAdjustmentUI();
 }
 
 /*
@@ -233,13 +296,7 @@ function applyFireAdjustmentCorrection() {
         );
 
     if (applied) {
-        if ($('fireAdjustmentRange')) {
-            $('fireAdjustmentRange').value = '';
-        }
-
-        if ($('fireAdjustmentDeflection')) {
-            $('fireAdjustmentDeflection').value = '';
-        }
+        clearFireAdjustmentDraft();
 
         flashFireAdjustmentButton(
             'fireAdjustmentApply',
@@ -253,20 +310,28 @@ function applyFireAdjustmentCorrection() {
 
 /*
  * The round landed at `impact` while aiming at the current target, so the
- * aim point moves by (target - impact).
+ * aim point moves by (target - impact). A measured impact supersedes
+ * anything staged on the arrow pad, so the staged correction is dropped.
  */
 function applyFireAdjustmentImpact(impact) {
-    return shiftFireAdjustmentTarget(
-        {
-            x: S.target.x - impact.x,
-            y: S.target.y - impact.y
-        },
-        'impact',
-        {
-            x: impact.x,
-            y: impact.y
-        }
-    );
+    const applied =
+        shiftFireAdjustmentTarget(
+            {
+                x: S.target.x - impact.x,
+                y: S.target.y - impact.y
+            },
+            'impact',
+            {
+                x: impact.x,
+                y: impact.y
+            }
+        );
+
+    if (applied) {
+        clearFireAdjustmentDraft();
+    }
+
+    return applied;
 }
 
 /*
@@ -542,6 +607,470 @@ function ensureFireAdjustmentBanner() {
     return banner;
 }
 
+/*
+ * Toolbar button and popover are injected at runtime, the way the shape and
+ * history tools are, so the feature needs no markup in the page shells.
+ */
+function ensureFireAdjustmentTool() {
+    const bar =
+        document.querySelector(
+            '.map-tools-bar'
+        );
+
+    if (!bar) {
+        return null;
+    }
+
+    let popover =
+        $('fireAdjustmentPopover');
+
+    if (!popover) {
+        popover =
+            document.createElement('div');
+
+        popover.id =
+            'fireAdjustmentPopover';
+
+        popover.className =
+            'map-tool-popover map-tool-fire-adjustment';
+
+        bar.before(popover);
+    }
+
+    if (!$('mapToolFireAdjustment')) {
+        const button =
+            document.createElement('button');
+
+        button.type = 'button';
+
+        button.id =
+            'mapToolFireAdjustment';
+
+        button.className =
+            'map-tool-button';
+
+        button.dataset.tool =
+            'fireAdjust';
+
+        button.innerHTML = `
+            <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <circle cx="10" cy="14" r="5.5"/>
+                <path d="M10 6v2.5M10 19.5V17M2.5 14H5M17.5 14H15"/>
+                <path d="m14.5 9.5 5-5"/>
+                <path d="M15.5 4h4v4"/>
+            </svg>
+        `;
+
+        button.addEventListener(
+            'click',
+            event => {
+                event.stopPropagation();
+                toggleFireAdjustmentTool();
+            }
+        );
+
+        bar.insertBefore(
+            button,
+            $('mapToolCoordinateSearch') ||
+            null
+        );
+    }
+
+    return popover;
+}
+
+function createFireAdjustmentNudge(
+    axis,
+    sign,
+    direction,
+    glyph
+) {
+    const button =
+        document.createElement('button');
+
+    button.type = 'button';
+
+    button.className =
+        `fire-adjustment-nudge fire-adjustment-nudge-${direction}`;
+
+    button.dataset.axis = axis;
+
+    button.dataset.sign =
+        String(sign);
+
+    const label =
+        tr(
+            `fireAdjustment${
+                direction.charAt(0).toUpperCase()
+            }${
+                direction.slice(1)
+            }`
+        );
+
+    button.setAttribute(
+        'aria-label',
+        label
+    );
+
+    button.title = label;
+
+    button.innerHTML = `
+        <span class="fire-adjustment-nudge-glyph" aria-hidden="true">${glyph}</span>
+        <span class="fire-adjustment-nudge-label"></span>
+    `;
+
+    setText(
+        button.querySelector('.fire-adjustment-nudge-label'),
+        label
+    );
+
+    button.addEventListener(
+        'click',
+        event => {
+            event.stopPropagation();
+
+            nudgeFireAdjustment(
+                axis,
+                sign
+            );
+        }
+    );
+
+    return button;
+}
+
+function createFireAdjustmentStepField() {
+    const input =
+        document.createElement('input');
+
+    input.id =
+        'fireAdjustmentStep';
+
+    input.className =
+        'fire-adjustment-step';
+
+    input.type = 'number';
+    input.min = '0';
+    input.step = '1';
+    input.inputMode = 'decimal';
+
+    input.value =
+        String(
+            FIRE_ADJUSTMENT_STATE.step
+        );
+
+    const label =
+        tr('fireAdjustmentStep');
+
+    input.setAttribute(
+        'aria-label',
+        label
+    );
+
+    input.title = label;
+
+    input.addEventListener(
+        'input',
+        () => {
+            const step =
+                readFireAdjustmentStep();
+
+            if (step) {
+                FIRE_ADJUSTMENT_STATE.step =
+                    step;
+            }
+        }
+    );
+
+    input.addEventListener(
+        'keydown',
+        event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                applyFireAdjustmentCorrection();
+            }
+        }
+    );
+
+    const field =
+        document.createElement('div');
+
+    field.className =
+        'fire-adjustment-step-field';
+
+    const unit =
+        document.createElement('span');
+
+    unit.className =
+        'fire-adjustment-step-unit';
+
+    unit.setAttribute(
+        'aria-hidden',
+        'true'
+    );
+
+    unit.textContent = 'm';
+
+    field.append(
+        input,
+        unit
+    );
+
+    return field;
+}
+
+function createFireAdjustmentButton(
+    id,
+    key,
+    className,
+    handler
+) {
+    const button =
+        document.createElement('button');
+
+    button.type = 'button';
+    button.id = id;
+
+    if (className) {
+        button.className = className;
+    }
+
+    setText(
+        button,
+        tr(key)
+    );
+
+    button.addEventListener(
+        'click',
+        event => {
+            event.stopPropagation();
+            handler();
+        }
+    );
+
+    return button;
+}
+
+/*
+ * Rebuilt on language change, like the other map-tool popovers.
+ */
+function buildFireAdjustmentPopover() {
+    const popover =
+        ensureFireAdjustmentTool();
+
+    if (!popover) {
+        return;
+    }
+
+    popover.replaceChildren();
+
+    const title =
+        document.createElement('div');
+
+    title.className =
+        'map-tool-popover-title';
+
+    setText(
+        title,
+        tr('fireAdjustment')
+    );
+
+    /*
+     * The pad reads like a fire order: the vertical axis is range, the
+     * horizontal one deflection, and the centre holds the distance that one
+     * arrow press stages.
+     */
+    const pad =
+        document.createElement('div');
+
+    pad.className =
+        'fire-adjustment-pad';
+
+    pad.setAttribute(
+        'role',
+        'group'
+    );
+
+    pad.setAttribute(
+        'aria-label',
+        tr('fireAdjustment')
+    );
+
+    pad.append(
+        createFireAdjustmentNudge(
+            'range',
+            1,
+            'add',
+            '&#8593;'
+        ),
+        createFireAdjustmentNudge(
+            'deflection',
+            -1,
+            'left',
+            '&#8592;'
+        ),
+        createFireAdjustmentStepField(),
+        createFireAdjustmentNudge(
+            'deflection',
+            1,
+            'right',
+            '&#8594;'
+        ),
+        createFireAdjustmentNudge(
+            'range',
+            -1,
+            'drop',
+            '&#8595;'
+        )
+    );
+
+    const draft =
+        document.createElement('div');
+
+    draft.id =
+        'fireAdjustmentDraft';
+
+    draft.className =
+        'fire-adjustment-draft';
+
+    draft.hidden = true;
+
+    const draftText =
+        document.createElement('span');
+
+    draftText.className =
+        'fire-adjustment-draft-text';
+
+    const clearLabel =
+        tr('fireAdjustmentClear');
+
+    const draftClear =
+        createFireAdjustmentButton(
+            'fireAdjustmentClear',
+            'fireAdjustmentClear',
+            'fire-adjustment-draft-clear',
+            clearFireAdjustmentDraft
+        );
+
+    /* Icon-only button: the label lives in the accessible name. */
+    draftClear.innerHTML =
+        '<span aria-hidden="true">&#10005;</span>';
+
+    draftClear.setAttribute(
+        'aria-label',
+        clearLabel
+    );
+
+    draftClear.title =
+        clearLabel;
+
+    draft.append(
+        draftText,
+        draftClear
+    );
+
+    const impactActions =
+        document.createElement('div');
+
+    impactActions.className =
+        'fire-adjustment-impact-actions';
+
+    const pick =
+        createFireAdjustmentButton(
+            'fireAdjustmentPick',
+            'fireAdjustmentMarkImpact',
+            '',
+            () => setFireAdjustmentPick(
+                !FIRE_ADJUSTMENT_STATE.picking
+            )
+        );
+
+    pick.setAttribute(
+        'aria-pressed',
+        'false'
+    );
+
+    impactActions.append(
+        pick,
+        createFireAdjustmentButton(
+            'fireAdjustmentPasteImpact',
+            'fireAdjustmentPasteImpact',
+            '',
+            pasteFireAdjustmentImpact
+        )
+    );
+
+    const status =
+        document.createElement('div');
+
+    status.id =
+        'fireAdjustmentLast';
+
+    status.className =
+        'hint fire-adjustment-last';
+
+    status.hidden = true;
+
+    const hint =
+        document.createElement('p');
+
+    hint.className = 'hint';
+
+    setText(
+        hint,
+        tr('fireAdjustmentHint')
+    );
+
+    popover.append(
+        title,
+        pad,
+        draft,
+        createFireAdjustmentButton(
+            'fireAdjustmentApply',
+            'fireAdjustmentApply',
+            'fire-adjustment-apply',
+            applyFireAdjustmentCorrection
+        ),
+        impactActions,
+        status,
+        hint
+    );
+
+    updateFireAdjustmentUI();
+}
+
+/*
+ * Opening the tool arms the impact pick, because the usual sequence right
+ * after a shot is "open, click where it landed". Closing it disarms again;
+ * the pad stays usable while the pick is armed.
+ */
+function toggleFireAdjustmentTool() {
+    MAP_TOOL_STATE.tool =
+        'fireAdjust';
+
+    buildFireAdjustmentPopover();
+
+    toggleMapToolMenu(
+        'fireAdjustmentPopover'
+    );
+
+    setFireAdjustmentPick(
+        isMapToolMenuOpen(
+            'fireAdjustmentPopover'
+        )
+    );
+}
+
 function updateFireAdjustmentUI() {
     const picking =
         FIRE_ADJUSTMENT_STATE.picking;
@@ -584,6 +1113,48 @@ function updateFireAdjustmentUI() {
         }
     }
 
+    const drafted =
+        FIRE_ADJUSTMENT_STATE.draft;
+
+    const staged =
+        drafted.rangeMeters !== 0 ||
+        drafted.deflectionMeters !== 0;
+
+    const draftLine =
+        $('fireAdjustmentDraft');
+
+    if (draftLine) {
+        if (staged) {
+            setText(
+                draftLine.querySelector('.fire-adjustment-draft-text'),
+                `${tr('fireAdjustmentPending')}: ${formatFireAdjustmentSummary(drafted)}`
+            );
+        }
+
+        if (draftLine.hidden !== !staged) {
+            draftLine.hidden = !staged;
+        }
+    }
+
+    document
+        .querySelectorAll('.fire-adjustment-nudge')
+        .forEach(button => {
+            const value =
+                button.dataset.axis === 'range'
+                    ? drafted.rangeMeters
+                    : drafted.deflectionMeters;
+
+            const active =
+                value !== 0 &&
+                Math.sign(value) ===
+                Number(button.dataset.sign);
+
+            button.classList.toggle(
+                'active',
+                active
+            );
+        });
+
     const status =
         $('fireAdjustmentLast');
 
@@ -605,44 +1176,7 @@ function updateFireAdjustmentUI() {
 }
 
 function bindFireAdjustment() {
-    $('fireAdjustmentApply')
-        ?.addEventListener(
-            'click',
-            applyFireAdjustmentCorrection
-        );
-
-    [
-        'fireAdjustmentRange',
-        'fireAdjustmentDeflection'
-    ].forEach(
-        id => {
-            $(id)?.addEventListener(
-                'keydown',
-                event => {
-                    if (event.key === 'Enter') {
-                        event.preventDefault();
-                        applyFireAdjustmentCorrection();
-                    }
-                }
-            );
-        }
-    );
-
-    $('fireAdjustmentPick')
-        ?.addEventListener(
-            'click',
-            () => setFireAdjustmentPick(
-                !FIRE_ADJUSTMENT_STATE.picking
-            )
-        );
-
-    $('fireAdjustmentPasteImpact')
-        ?.addEventListener(
-            'click',
-            pasteFireAdjustmentImpact
-        );
-
-    updateFireAdjustmentUI();
+    buildFireAdjustmentPopover();
 }
 
 

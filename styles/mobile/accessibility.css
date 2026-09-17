@@ -198,6 +198,23 @@
     font-size: calc(12px * var(--a11y-text-scale));
 }
 
+:root .mobile-app .fire-adjustment-nudge-glyph {
+    font-size: calc(15px * var(--a11y-text-scale));
+}
+
+:root .mobile-app .fire-adjustment-nudge-label {
+    font-size: calc(10px * var(--a11y-text-scale));
+}
+
+:root .mobile-app .fire-adjustment-draft,
+:root .mobile-app .fire-adjustment-draft-clear {
+    font-size: calc(12px * var(--a11y-text-scale));
+}
+
+:root .mobile-app .fire-adjustment-step-unit {
+    font-size: calc(11px * var(--a11y-text-scale));
+}
+
 :root .mobile-app .fire-adjustment-banner {
     font-size: calc(12px * var(--a11y-text-scale));
 }

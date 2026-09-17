@@ -146,16 +146,6 @@ function handleAppShortcut(event) {
         return true;
     }
 
-    if (
-        key === 'i' &&
-        typeof setFireAdjustmentPick === 'function'
-    ) {
-        setFireAdjustmentPick(
-            !isFireAdjustmentPickArmed()
-        );
-        return true;
-    }
-
     return false;
 }
 
