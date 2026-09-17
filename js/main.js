@@ -257,6 +257,24 @@ function requestTerrainBallisticsForCurrentState() {
     return requestTerrainBallisticsRuntime();
 }
 
+async function loadSphPlatformCorrectionRuntime() {
+    try {
+        await loadRuntimeScript({
+            selector: 'script[data-sph-platform-correction]',
+            dataAttribute: 'sphPlatformCorrection',
+            url: 'js/features/experimental-sph-platform-correction.js',
+            ready: () =>
+                typeof initSphPlatformCorrection ===
+                'function'
+        });
+    } catch (error) {
+        console.warn(
+            '[sph-platform] Experimental hull correction runtime unavailable; base calculator remains active.',
+            error
+        );
+    }
+}
+
 
 /*
  * Optional network runtimes must not delay the first useful calculator paint.
@@ -412,6 +430,8 @@ async function init() {
             loadMaps()
         ]);
 
+        await loadSphPlatformCorrectionRuntime();
+
         applyMapQuerySelection();
 
 
@@ -449,6 +469,13 @@ async function init() {
         persistAppSelections();
 
         bindEvents();
+
+        if (
+            typeof initSphPlatformCorrection ===
+                'function'
+        ) {
+            initSphPlatformCorrection();
+        }
 
         if (
             typeof initMobileUI ===
