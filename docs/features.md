@@ -16,7 +16,6 @@
 - Bakurani Terrain3D elevation lookup for SPH-2 result context
 - ΔZ display between the artillery position and target when terrain data is available
 - Prominent SPH-2 leveling guidance under the firing solution
-- Fire adjustment: Add/Drop and Left/Right corrections, or mark/paste the observed impact point to shift the target by the miss
 
 ### Tactical Map
 
@@ -44,6 +43,7 @@ The floating Map Tools toolbar provides:
 - **Eraser** — remove pencil strokes, zones, polygons, and user-placed map markers
 - **Markers** — place tactical markers
 - **Coordinate Search** — jump to specific coordinates
+- **Adjust Fire** — arrow pad that stages Add/Drop and Left/Right corrections in meters, or mark/paste the observed impact point to shift the target by the observed miss
 - **Layers** — toggle map tiles, overlays, drawings, markers, and cursor coordinates
 - **Import / Export** — back up or share drawings, zones, polygons, user markers, and layer visibility settings as JSON
 - **Undo / Redo** — drawings, zones, polygons, erased items, user markers, and Artillery/Target position changes
@@ -93,7 +93,7 @@ Desktop Map Tool shortcuts:
 | `E` | Eraser |
 | `M` | Markers |
 | `F` | Coordinate Search |
-| `I` | Mark impact on map (fire adjustment) |
+| `I` | Adjust Fire |
 | `L` | Layers |
 | `Esc` | Leave active tool |
 | `Ctrl + Z` | Undo |

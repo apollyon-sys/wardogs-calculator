@@ -717,7 +717,7 @@ function activateColorMapTool(tool) {
 }
 
 function closeMapToolMenus(except = null) {
-    ['pencilPalette', 'markerPicker', 'coordinateSearchPopover', 'mapLayersPopover', 'mapDataTransferPopover'].forEach(
+    ['pencilPalette', 'markerPicker', 'coordinateSearchPopover', 'mapLayersPopover', 'mapDataTransferPopover', 'fireAdjustmentPopover'].forEach(
         id => {
             if (id === except) {
                 return;
@@ -866,6 +866,13 @@ function updateMapToolsUI() {
                 active =
                     isMapToolMenuOpen(
                         'mapDataTransferPopover'
+                    );
+            }
+
+            if (tool === 'fireAdjust') {
+                active =
+                    isMapToolMenuOpen(
+                        'fireAdjustmentPopover'
                     );
             }
 
@@ -1665,6 +1672,7 @@ function handleMapToolShortcut(event) {
         marker: getMapToolShortcut('marker'),
         coordinateSearch: getMapToolShortcut('coordinateSearch'),
         layers: getMapToolShortcut('layers'),
+        fireAdjust: getMapToolShortcut('fireAdjust'),
         clearTool: getMapToolShortcut('clearTool')
     };
 
@@ -1725,6 +1733,15 @@ function handleMapToolShortcut(event) {
         updateMapToolsUI();
         buildMapLayers();
         toggleMapToolMenu('mapLayersPopover');
+        return true;
+    }
+
+    if (
+        shortcuts.fireAdjust &&
+        key === shortcuts.fireAdjust &&
+        typeof toggleFireAdjustmentTool === 'function'
+    ) {
+        toggleFireAdjustmentTool();
         return true;
     }
 
@@ -2128,6 +2145,23 @@ function updateMapToolsLocalization() {
     buildMarkerPicker();
     buildMapLayers();
     buildMapDataTransfer();
+
+    /*
+     * Fire adjustment is an optional runtime feature; it injects its own
+     * toolbar button and popover when the script is loaded.
+     */
+    if (
+        typeof buildFireAdjustmentPopover ===
+        'function'
+    ) {
+        buildFireAdjustmentPopover();
+
+        setToolButtonLabel(
+            $('mapToolFireAdjustment'),
+            'fireAdjustment',
+            'fireAdjust'
+        );
+    }
 
     const goButton = $('coordinateSearchGo');
     if (goButton) goButton.textContent = tr('mapToolSearchGo');

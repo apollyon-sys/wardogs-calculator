@@ -152,6 +152,6 @@ Map landing markup is shared in `src/pages/maps/template.html`. English map-spec
 
 ## Map Tools localization
 
-Map Tools use the shared locale JSON just like the rest of the application. Localized tool labels include **Ruler**, **Pencil**, **Eraser**, **Markers**, **Coordinate search**, **Layers**, import/export actions and the cursor-coordinate layer toggle.
+Map Tools use the shared locale JSON just like the rest of the application. Localized tool labels include **Ruler**, **Pencil**, **Eraser**, **Markers**, **Coordinate search**, **Adjust fire** (including its arrow labels and staged-correction line), **Layers**, import/export actions and the cursor-coordinate layer toggle.
 
 Any new user-visible UI string should be added to every supported locale or intentionally fall back to English. Runtime strings use the same shared localization APIs/tables as the rest of the application; there is no locale-specific monkey-patch layer.
