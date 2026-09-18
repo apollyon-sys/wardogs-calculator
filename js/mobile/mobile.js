@@ -217,7 +217,16 @@ function handleMobilePointerDown(event) {
 
     const world = toWorld(point.x, point.y);
 
+    /*
+     * An armed impact pick must not start a tool or marker gesture; the tap
+     * resolves in finishMobileTap and a drag still pans the map.
+     */
+    const fireAdjustmentPick =
+        typeof isFireAdjustmentPickArmed === 'function' &&
+        isFireAdjustmentPickArmed();
+
     if (
+        !fireAdjustmentPick &&
         typeof MAP_TOOL_STATE !== 'undefined' &&
         ['ruler', 'pencil', 'zone', 'polygon', 'eraser', 'marker'].includes(
             MAP_TOOL_STATE.tool
@@ -237,10 +246,13 @@ function handleMobilePointerDown(event) {
         }
     }
 
-    const markerType = getMobileUserMarkerAt(
-        point.x,
-        point.y
-    );
+    const markerType =
+        fireAdjustmentPick
+            ? null
+            : getMobileUserMarkerAt(
+                point.x,
+                point.y
+            );
 
     if (markerType) {
         if (
@@ -397,6 +409,16 @@ function handleMobilePointerMove(event) {
 
 function finishMobileTap(event, gesture) {
     const point = mobileCanvasPoint(event);
+
+    if (
+        typeof handleFireAdjustmentMapPick ===
+            'function' &&
+        handleFireAdjustmentMapPick(
+            toWorld(point.x, point.y)
+        )
+    ) {
+        return;
+    }
 
     if (
         typeof MAP_TOOL_STATE === 'undefined' ||

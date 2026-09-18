@@ -292,6 +292,19 @@ footer {
     font-size: calc(10px * var(--a11y-text-scale));
 }
 
+/* Fire adjustment ships its own compact sizes; scale them explicitly. */
+:root .fire-adjustment-impact-actions button {
+    font-size: calc(10px * var(--a11y-text-scale));
+}
+
+:root .fire-adjustment-banner {
+    font-size: calc(11px * var(--a11y-text-scale));
+}
+
+:root .fire-adjustment-banner-cancel {
+    font-size: calc(10px * var(--a11y-text-scale));
+}
+
 /* Keep circular header actions circular when larger controls are enabled. */
 :root[data-a11y-large-controls="true"] .desktop-motd-button {
     width: 44px;
