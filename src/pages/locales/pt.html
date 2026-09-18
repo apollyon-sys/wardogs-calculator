@@ -141,6 +141,33 @@
 </div>
 <p class="hint" data-i18n="azimuthHint">Azimute: 0° — norte, 90° — leste, 180° — sul, 270° — oeste.</p>
 </div>
+<!-- FIRE ADJUSTMENT -->
+<div class="section fire-adjustment">
+<h2 data-i18n="fireAdjustment">Corrigir o tiro</h2>
+<label data-i18n="fireAdjustmentRange" for="fireAdjustmentRange">Alcance</label>
+<div class="fire-adjustment-row">
+<select aria-label="Alcance" id="fireAdjustmentRangeDirection">
+<option data-i18n="fireAdjustmentAdd" value="add">Alongar</option>
+<option data-i18n="fireAdjustmentDrop" value="drop">Encurtar</option>
+</select>
+<input id="fireAdjustmentRange" inputmode="decimal" min="0" placeholder="0 m" step="1" type="number"/>
+</div>
+<label data-i18n="fireAdjustmentDeflection" for="fireAdjustmentDeflection">Direção</label>
+<div class="fire-adjustment-row">
+<select aria-label="Direção" id="fireAdjustmentDeflectionDirection">
+<option data-i18n="fireAdjustmentLeft" value="left">Esquerda</option>
+<option data-i18n="fireAdjustmentRight" value="right">Direita</option>
+</select>
+<input id="fireAdjustmentDeflection" inputmode="decimal" min="0" placeholder="0 m" step="1" type="number"/>
+</div>
+<button data-i18n="fireAdjustmentApply" id="fireAdjustmentApply" style="margin-top:7px" type="button">Aplicar correção</button>
+<div class="fire-adjustment-impact-actions">
+<button aria-pressed="false" data-i18n="fireAdjustmentMarkImpact" id="fireAdjustmentPick" type="button">Marcar impacto no mapa</button>
+<button data-i18n="fireAdjustmentPasteImpact" id="fireAdjustmentPasteImpact" type="button">Colar impacto</button>
+</div>
+<div class="hint fire-adjustment-last" id="fireAdjustmentLast" hidden></div>
+<p class="hint" data-i18n="fireAdjustmentHint">Alongar / Encurtar desloca o alvo ao longo da linha artilharia–alvo, Esquerda / Direita na perpendicular, visto da artilharia. Marcar ou colar o ponto de impacto desloca o alvo pelo desvio observado.</p>
+</div>
 <!-- CONTROLS -->
 <div class="section">
 <h2 data-i18n="controls">Controlos</h2>
@@ -273,6 +300,7 @@
 <script src="js/map/renderer.js"></script>
 <script src="js/features/coordinates.js"></script>
 <script src="js/features/point-locks.js"></script>
+<script src="js/features/fire-adjustment.js"></script>
 <script src="js/features/results.js"></script>
 <script src="js/ui/inputs.js"></script>
 <script src="js/ui/cursor.js"></script>

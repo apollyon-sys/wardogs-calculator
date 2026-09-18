@@ -192,3 +192,16 @@
 :root .mobile-app .mobile-solution-hud .sph-level-warning-body {
     font-size: calc(9px * var(--a11y-text-scale));
 }
+
+/* Fire adjustment keeps its own mobile sizes; scale them explicitly. */
+:root .mobile-app .fire-adjustment-impact-actions button {
+    font-size: calc(12px * var(--a11y-text-scale));
+}
+
+:root .mobile-app .fire-adjustment-banner {
+    font-size: calc(12px * var(--a11y-text-scale));
+}
+
+:root .mobile-app .fire-adjustment-banner-cancel {
+    font-size: calc(12px * var(--a11y-text-scale));
+}
