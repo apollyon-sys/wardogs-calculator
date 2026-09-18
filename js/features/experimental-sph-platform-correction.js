@@ -175,15 +175,19 @@ function sphPlatformNormalizeManualMilAdjustment(value) {
 }
 
 function sphPlatformLoadManualMilAdjustment() {
+    /*
+     * Manual platform MIL adjustment is intentionally hidden for now.
+     * Reset any value saved by earlier experimental builds so a stale,
+     * invisible correction can never keep affecting the firing solution.
+     */
+    sphPlatformManualMilAdjustment = 0;
+
     try {
-        sphPlatformManualMilAdjustment =
-            sphPlatformNormalizeManualMilAdjustment(
-                localStorage.getItem(
-                    SPH_PLATFORM_MANUAL_MIL_STORAGE_KEY
-                )
-            );
+        localStorage.removeItem(
+            SPH_PLATFORM_MANUAL_MIL_STORAGE_KEY
+        );
     } catch (error) {
-        sphPlatformManualMilAdjustment = 0;
+        /* Local persistence is optional. */
     }
 }
 
@@ -726,9 +730,7 @@ function sphPlatformEnsureStyles() {
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             grid-template-areas:
                 "hull-label arc-label"
-                "hull-input arc-input"
-                "manual-label manual-label"
-                "manual-input .";
+                "hull-input arc-input";
             column-gap: 7px;
             row-gap: 4px;
             align-items: end;
@@ -778,17 +780,9 @@ function sphPlatformEnsureStyles() {
             grid-area: arc-input;
         }
 
-        .sph-platform-manual-label {
-            grid-area: manual-label;
-            display: block;
-            min-width: 0;
-            margin: 4px 0 0 !important;
-            padding: 0 !important;
-            line-height: 18px;
-        }
-
+        .sph-platform-manual-label,
         .sph-platform-manual-input {
-            grid-area: manual-input;
+            display: none !important;
         }
 
         .sph-platform-hull-input,
