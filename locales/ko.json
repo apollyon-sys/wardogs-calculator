@@ -29,7 +29,7 @@
   "fit": "지도 전체 보기",
   "swap": "위치 바꾸기",
   "clear": "초기화",
-  "controlsHint": "좌클릭 — 지점 지정 · 마커 드래그 — 지점 이동 · 스크롤 — 확대/축소 · 우클릭 — 지도 이동",
+  "controlsHint": "좌클릭 — 지점 지정 · 마커 드래그 — 지점 이동 · Ctrl+좌클릭 / 우클릭 — 지도 이동 · 스크롤 — 확대/축소 · 1 — 포 위치 · 2 — 목표",
   "savedTargets": "저장된 목표",
   "noSavedTargets": "저장된 목표 없음",
   "saveArtilleryPosition": "포 위치 저장",

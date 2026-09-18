@@ -31,7 +31,7 @@
   "fit": "Dopasuj mapę",
   "swap": "Zamień punkty",
   "clear": "Resetuj",
-  "controlsHint": "LMB — ustaw punkt · Przeciągnij — przesuń · Kółko — zoom · RMB — przesuń mapę.",
+  "controlsHint": "LMB — ustaw punkt · Przeciągnij — przesuń · Ctrl+LMB / RMB — przesuń mapę · Kółko — zoom · 1 — artyleria · 2 — cel.",
   "savedTargets": "Zapisane cele",
   "noSavedTargets": "Brak zapisanych celów",
   "saveArtilleryPosition": "Zapisz pozycję artylerii",

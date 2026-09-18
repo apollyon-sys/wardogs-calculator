@@ -29,7 +29,7 @@
   "fit": "Přizpůsobit mapu",
   "swap": "Prohodit body",
   "clear": "Resetovat",
-  "controlsHint": "LMB — umístit bod · Tažení značek — přesun bodů · Kolečko — přiblížení · PMB — posun mapy.",
+  "controlsHint": "LMB — umístit bod · Tažení značek — přesun bodů · Ctrl+LMB / PMB — posun mapy · Kolečko — přiblížení · 1 — artilerie · 2 — cíl.",
   "savedTargets": "Uložené cíle",
   "noSavedTargets": "Žádné uložené cíle",
   "saveArtilleryPosition": "Uložit i pozici artilerie",

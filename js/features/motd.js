@@ -35,6 +35,55 @@ function formatMotdMessage(message) {
         .replace(/\\n/g, '\n');
 }
 
+function renderMotdMessage(container, message) {
+    const text =
+        formatMotdMessage(message);
+
+    const linkPattern =
+        /\[([^\]\n]+)\]\((https:\/\/[^)\s]+)\)/g;
+
+    let cursor = 0;
+    let match;
+
+    while ((match = linkPattern.exec(text)) !== null) {
+        if (match.index > cursor) {
+            container.appendChild(
+                document.createTextNode(
+                    text.slice(cursor, match.index)
+                )
+            );
+        }
+
+        const link =
+            document.createElement('a');
+
+        link.textContent =
+            match[1];
+
+        link.href =
+            match[2];
+
+        link.target =
+            '_blank';
+
+        link.rel =
+            'noopener noreferrer';
+
+        container.appendChild(link);
+
+        cursor =
+            linkPattern.lastIndex;
+    }
+
+    if (cursor < text.length) {
+        container.appendChild(
+            document.createTextNode(
+                text.slice(cursor)
+            )
+        );
+    }
+}
+
 function isMotdActive(motd) {
     if (!motd || motd.enabled !== true) {
         return false;
@@ -292,12 +341,12 @@ function createMotd(motd) {
     message.className =
         'motd-message';
 
-    message.textContent =
-        formatMotdMessage(
-            getLocalizedMotdValue(
-                motd.message
-            )
-        );
+    renderMotdMessage(
+        message,
+        getLocalizedMotdValue(
+            motd.message
+        )
+    );
 
     container.append(
         header,

@@ -31,7 +31,7 @@
   "fit": "Ajuster la carte",
   "swap": "Échanger les points",
   "clear": "Réinitialiser",
-  "controlsHint": "LMB — placer · Glisser — déplacer · Molette — zoom · RMB — déplacer la carte.",
+  "controlsHint": "LMB — placer · Glisser — déplacer · Ctrl+LMB / RMB — déplacer la carte · Molette — zoom · 1 — artillerie · 2 — cible.",
   "savedTargets": "Cibles enregistrées",
   "noSavedTargets": "Aucune cible enregistrée",
   "saveArtilleryPosition": "Enregistrer la position de l'artillerie",

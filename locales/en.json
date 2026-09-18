@@ -29,7 +29,7 @@
   "fit": "Fit map",
   "swap": "Swap points",
   "clear": "Reset",
-  "controlsHint": "LMB — place point · Drag markers — move points · Scroll — zoom · RMB — move map.",
+  "controlsHint": "LMB — place point · Drag markers — move points · Ctrl+LMB / RMB — pan map · Scroll — zoom · 1 — Artillery · 2 — Target.",
   "savedTargets": "Saved targets",
   "noSavedTargets": "No saved targets",
   "saveArtilleryPosition": "Save artillery position",

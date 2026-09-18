@@ -84,6 +84,8 @@ Desktop Map Tool shortcuts:
 
 | Shortcut | Action |
 |---|---|
+| `1` | Select Artillery placement |
+| `2` | Select Target placement |
 | `R` | Ruler |
 | `P` | Pencil |
 | `Z` | Zone |
@@ -110,6 +112,7 @@ Desktop camera controls:
 | `+` | Zoom in |
 | `-` | Zoom out |
 | Right-click drag | Pan the map |
+| `Ctrl` + left-click drag | Pan the map |
 | Mouse wheel | Zoom at the cursor |
 
 Map Tool shortcuts and the keyboard pan speed can be configured in:

@@ -198,6 +198,17 @@
     line-height: 1.6;
 }
 
+.motd-message a {
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.motd-message a:hover {
+    text-decoration-thickness: 2px;
+}
+
 @media (max-width: 720px) {
     .motd {
         top: auto;

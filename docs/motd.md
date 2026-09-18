@@ -9,6 +9,7 @@ data/motd.json
 MOTD supports:
 
 - Multiple languages
+- Safe inline HTTPS links using `[label](https://example.com)`
 - Scheduled start time
 - Scheduled end time
 - Per-message IDs

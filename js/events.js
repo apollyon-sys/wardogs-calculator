@@ -90,10 +90,19 @@ function handleAppShortcut(event) {
             : String(event.key || '').toLowerCase();
 
     /*
-     * Plain Tab is an application shortcut on desktop. Handle it before the
-     * editable-control guard so focused buttons/selects do not steal it for
-     * focus navigation. Shift+Tab keeps the browser's normal focus behavior.
+     * Never steal Tab from form controls. This keeps normal browser focus
+     * navigation between coordinate X/Y fields and other editable controls.
+     * The legacy desktop Tab shortcut is kept only when page focus is not on
+     * an interactive form element.
      */
+    if (
+        isAppShortcutInputTarget(
+            event.target
+        )
+    ) {
+        return false;
+    }
+
     if (
         key === 'tab' &&
         !event.shiftKey &&
@@ -104,12 +113,14 @@ function handleAppShortcut(event) {
         return true;
     }
 
-    if (
-        isAppShortcutInputTarget(
-            event.target
-        )
-    ) {
-        return false;
+    if (key === '1') {
+        setPointPlacementMode('origin');
+        return true;
+    }
+
+    if (key === '2') {
+        setPointPlacementMode('target');
+        return true;
     }
 
     if (key === 'q') {
@@ -592,8 +603,11 @@ function bindEvents() {
                 );
 
             if (
-                e.button ===
-                2
+                e.button === 2 ||
+                (
+                    e.button === 0 &&
+                    e.ctrlKey
+                )
             ) {
 
                 pan = {

@@ -29,7 +29,7 @@
   "fit": "显示全图",
   "swap": "交换位置",
   "clear": "重置",
-  "controlsHint": "左键 — 设置位置 · 拖动标记 — 移动位置 · 滚轮 — 缩放 · 右键 — 移动地图。",
+  "controlsHint": "左键 — 设置位置 · 拖动标记 — 移动位置 · Ctrl+左键 / 右键 — 移动地图 · 滚轮 — 缩放 · 1 — 炮位 · 2 — 目标。",
   "savedTargets": "已保存目标",
   "noSavedTargets": "暂无保存的目标",
   "saveArtilleryPosition": "同时保存炮位",

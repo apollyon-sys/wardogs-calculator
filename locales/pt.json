@@ -31,7 +31,7 @@
   "fit": "Ajustar mapa",
   "swap": "Trocar pontos",
   "clear": "Repor",
-  "controlsHint": "LMB — colocar ponto · Arrastar — mover pontos · Roda — zoom · RMB — mover mapa.",
+  "controlsHint": "LMB — colocar ponto · Arrastar — mover pontos · Ctrl+LMB / RMB — mover mapa · Roda — zoom · 1 — artilharia · 2 — alvo.",
   "savedTargets": "Alvos guardados",
   "noSavedTargets": "Nenhum alvo guardado",
   "saveArtilleryPosition": "Guardar posição da artilharia",

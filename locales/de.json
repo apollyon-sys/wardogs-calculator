@@ -31,7 +31,7 @@
   "fit": "Karte einpassen",
   "swap": "Punkte tauschen",
   "clear": "Zurücksetzen",
-  "controlsHint": "LMB — Punkt setzen · Marker ziehen — Punkt bewegen · Scrollen — Zoom · RMB — Karte verschieben.",
+  "controlsHint": "LMB — Punkt setzen · Marker ziehen — Punkt bewegen · Ctrl+LMB / RMB — Karte verschieben · Scrollen — Zoom · 1 — Artillerie · 2 — Ziel.",
   "savedTargets": "Gespeicherte Ziele",
   "noSavedTargets": "Keine gespeicherten Ziele",
   "saveArtilleryPosition": "Artillerieposition speichern",
