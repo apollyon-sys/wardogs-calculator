@@ -112,6 +112,8 @@
   "sphHullCorrectionInactive": "Hull correction is off. Enter the hull direction to enable it.",
   "sphHullCorrectionActive": "Hull correction active: {pitch}° baseline pitch. Intended for level / near-level placements.",
   "sphHullCorrectionShort": "Hull corr.",
+  "sphPlatformMilAdjustment": "Platform MIL adjustment",
+  "sphPlatformMilAdjustmentShort": "Platform adj.",
   "noFiringSolution": "No firing solution",
   "copyCoordinates": "Copy",
   "pasteCoordinates": "Paste",

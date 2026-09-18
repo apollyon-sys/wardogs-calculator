@@ -116,6 +116,8 @@
   "sphHullCorrectionInactive": "Die Fahrzeugkorrektur ist aus. Gib die Fahrzeugrichtung ein, um sie zu aktivieren.",
   "sphHullCorrectionActive": "Fahrzeugkorrektur aktiv: {pitch}° Basis-Längsneigung. Für ebene / nahezu ebene Stellungen vorgesehen.",
   "sphHullCorrectionShort": "Fahrzeugkorr.",
+  "sphPlatformMilAdjustment": "Plattform-MIL-Korrektur",
+  "sphPlatformMilAdjustmentShort": "Plattformkorr.",
   "noFiringSolution": "Keine Feuerlösung",
   "copyCoordinates": "Kopieren",
   "pasteCoordinates": "Einfügen",

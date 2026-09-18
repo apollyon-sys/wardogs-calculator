@@ -116,6 +116,8 @@
   "sphHullCorrectionInactive": "La corrección del chasis está desactivada. Introduce la orientación del chasis para activarla.",
   "sphHullCorrectionActive": "Corrección del chasis activa: inclinación longitudinal base de {pitch}°. Pensada para posiciones niveladas / casi niveladas.",
   "sphHullCorrectionShort": "Corr. chasis",
+  "sphPlatformMilAdjustment": "Ajuste MIL de plataforma",
+  "sphPlatformMilAdjustmentShort": "Ajuste plataforma",
   "noFiringSolution": "Sin solución de tiro",
   "copyCoordinates": "Copiar",
   "pasteCoordinates": "Pegar",

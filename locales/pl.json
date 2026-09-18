@@ -116,6 +116,8 @@
   "sphHullCorrectionInactive": "Korekta kadłuba jest wyłączona. Podaj kierunek kadłuba, aby ją włączyć.",
   "sphHullCorrectionActive": "Korekta kadłuba aktywna: bazowe pochylenie wzdłużne {pitch}°. Przeznaczona dla równych / prawie równych stanowisk.",
   "sphHullCorrectionShort": "Kor. kadłuba",
+  "sphPlatformMilAdjustment": "Korekta MIL platformy",
+  "sphPlatformMilAdjustmentShort": "Korekta platformy",
   "noFiringSolution": "Brak rozwiązania ogniowego",
   "copyCoordinates": "Kopiuj",
   "pasteCoordinates": "Wklej",

@@ -112,6 +112,8 @@
   "sphHullCorrectionInactive": "Korekce korby je vypnutá. Zadejte směr korby, aby se aktivovala.",
   "sphHullCorrectionActive": "Korekce korby aktivní: základní podélný náklon {pitch}°. Určeno pro rovné / téměř rovné pozice.",
   "sphHullCorrectionShort": "Kor. korby",
+  "sphPlatformMilAdjustment": "Korekce MIL platformy",
+  "sphPlatformMilAdjustmentShort": "Korekce platformy",
   "noFiringSolution": "Žádné řešení palby",
   "copyCoordinates": "Kopírovat",
   "pasteCoordinates": "Vložit",

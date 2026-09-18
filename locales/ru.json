@@ -112,6 +112,8 @@
   "sphHullCorrectionInactive": "Коррекция по корпусу выключена. Укажите направление корпуса, чтобы включить её.",
   "sphHullCorrectionActive": "Коррекция по корпусу активна: базовый продольный наклон {pitch}°. Для ровных / почти ровных позиций.",
   "sphHullCorrectionShort": "Корр. корпуса",
+  "sphPlatformMilAdjustment": "Поправка MIL платформы",
+  "sphPlatformMilAdjustmentShort": "Поправка платформы",
   "noFiringSolution": "Нет решения для стрельбы",
   "copyCoordinates": "Копировать",
   "pasteCoordinates": "Вставить",

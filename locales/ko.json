@@ -112,6 +112,8 @@
   "sphHullCorrectionInactive": "차체 보정이 꺼져 있습니다. 차체 방향을 입력하면 활성화됩니다.",
   "sphHullCorrectionActive": "차체 보정 활성: 기준 종방향 피치 {pitch}°. 평지 / 거의 평평한 위치를 기준으로 합니다.",
   "sphHullCorrectionShort": "차체 보정",
+  "sphPlatformMilAdjustment": "플랫폼 MIL 보정",
+  "sphPlatformMilAdjustmentShort": "플랫폼 보정",
   "noFiringSolution": "사격 제원 없음",
   "copyCoordinates": "복사",
   "pasteCoordinates": "붙여넣기",

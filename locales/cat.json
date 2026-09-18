@@ -122,6 +122,8 @@
   "sphHullCorrectionInactive": "HULL CORRECTION IS NAPPING. ENTER HULL MEOWDIRECTION TO WAKE IT.",
   "sphHullCorrectionActive": "HULL CORRECTION PURRING: {pitch}° BASELINE PITCH. FOR LEVEL / NEAR-LEVEL PARKING SPOTS.",
   "sphHullCorrectionShort": "HULL CORR.",
+  "sphPlatformMilAdjustment": "MEOWTFORM MIL ADJUSTMENT",
+  "sphPlatformMilAdjustmentShort": "MEOWTFORM ADJ.",
   "noFiringSolution": "NO FIRING SOLUTION, MEOW",
   "copyCoordinates": "COPY COORDS",
   "pasteCoordinates": "PASTE COORDS",

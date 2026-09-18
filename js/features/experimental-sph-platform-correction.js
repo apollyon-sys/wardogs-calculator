@@ -14,6 +14,11 @@
  *
  * Roll is intentionally left at zero for this test patch. The longitudinal
  * component is much better constrained than the small roll/yaw component.
+ *
+ * Field validation on 2026-09-18 showed that applying the inverse-transform
+ * yaw as a user-facing AZIMUTH correction produced almost exactly the observed
+ * lateral miss. AZIMUTH therefore remains the normal geometric world azimuth;
+ * the experimental hull/platform model adjusts MIL only.
  */
 
 const SPH_PLATFORM_CORRECTION_STORAGE_KEY =
@@ -21,6 +26,9 @@ const SPH_PLATFORM_CORRECTION_STORAGE_KEY =
 
 const SPH_PLATFORM_ARC_STORAGE_KEY =
     'wardogs-sph-platform-correction-arc';
+
+const SPH_PLATFORM_MANUAL_MIL_STORAGE_KEY =
+    'wardogs-sph-platform-manual-mil-adjustment';
 
 const SPH_PLATFORM_CORRECTION = Object.freeze({
     weaponId: 'spg',
@@ -30,6 +38,7 @@ const SPH_PLATFORM_CORRECTION = Object.freeze({
 
 let sphPlatformHullHeadingDeg = null;
 let sphPlatformSelectedArc = 'high';
+let sphPlatformManualMilAdjustment = 0;
 let sphPlatformLastAimMeta = null;
 let sphPlatformCorrectionInitialized = false;
 
@@ -77,6 +86,10 @@ function sphPlatformLabels() {
                 ),
         correction:
             tr('sphHullCorrectionShort'),
+        manualMil:
+            tr('sphPlatformMilAdjustment'),
+        manualMilShort:
+            tr('sphPlatformMilAdjustmentShort'),
         lowHigh:
             `${tr('lowArc')} / ${tr('highArc')}`
     };
@@ -146,6 +159,100 @@ function sphPlatformPersistArc() {
     } catch (error) {
         /* Local persistence is optional. */
     }
+}
+
+function sphPlatformNormalizeManualMilAdjustment(value) {
+    const mil = Number(value);
+
+    if (!Number.isFinite(mil)) {
+        return 0;
+    }
+
+    return Math.max(
+        -50,
+        Math.min(50, mil)
+    );
+}
+
+function sphPlatformLoadManualMilAdjustment() {
+    try {
+        sphPlatformManualMilAdjustment =
+            sphPlatformNormalizeManualMilAdjustment(
+                localStorage.getItem(
+                    SPH_PLATFORM_MANUAL_MIL_STORAGE_KEY
+                )
+            );
+    } catch (error) {
+        sphPlatformManualMilAdjustment = 0;
+    }
+}
+
+function sphPlatformPersistManualMilAdjustment() {
+    try {
+        if (Math.abs(sphPlatformManualMilAdjustment) < 1e-9) {
+            localStorage.removeItem(
+                SPH_PLATFORM_MANUAL_MIL_STORAGE_KEY
+            );
+            return;
+        }
+
+        localStorage.setItem(
+            SPH_PLATFORM_MANUAL_MIL_STORAGE_KEY,
+            String(sphPlatformManualMilAdjustment)
+        );
+    } catch (error) {
+        /* Local persistence is optional. */
+    }
+}
+
+function sphPlatformApplyManualMilToSolution(solution) {
+    if (!solution) {
+        return solution;
+    }
+
+    const delta =
+        Number(sphPlatformManualMilAdjustment);
+
+    if (!Number.isFinite(delta) || Math.abs(delta) < 1e-9) {
+        return solution;
+    }
+
+    const add = value =>
+        Number.isFinite(Number(value))
+            ? Number(value) + delta
+            : value;
+
+    return {
+        ...solution,
+        mil: add(solution.mil),
+        minMil: add(solution.minMil),
+        maxMil: add(solution.maxMil)
+    };
+}
+
+function sphPlatformApplyManualMilToSolutionSet(solutions) {
+    if (
+        !solutions ||
+        S.weapon !== SPH_PLATFORM_CORRECTION.weaponId
+    ) {
+        return solutions;
+    }
+
+    return {
+        ...solutions,
+        single:
+            sphPlatformApplyManualMilToSolution(
+                solutions.single
+            ),
+        low:
+            sphPlatformApplyManualMilToSolution(
+                solutions.low
+            ),
+        high:
+            sphPlatformApplyManualMilToSolution(
+                solutions.high
+            )
+    };
 }
 
 function sphPlatformSelectArcSolutions(solutions) {
@@ -357,17 +464,6 @@ function sphPlatformCorrectAim(
             correctedLocalDirection
         ) * 1000;
 
-    const correctedRelativeYawDeg =
-        sphPlatformAzimuthRadians(
-            correctedLocalDirection
-        ) * 180 / Math.PI;
-
-    const correctedAzimuthDeg =
-        sphPlatformNormalizeDegrees(
-            hullHeading +
-            correctedRelativeYawDeg
-        );
-
     return {
         baselineMil: mil,
         correctedMil,
@@ -375,12 +471,6 @@ function sphPlatformCorrectAim(
             correctedMil - mil,
         targetAzimuthDeg:
             targetAzimuth,
-        correctedAzimuthDeg,
-        azimuthDeltaDeg:
-            sphPlatformNormalizeDegreesSigned(
-                correctedAzimuthDeg -
-                targetAzimuth
-            ),
         hullHeadingDeg:
             hullHeading,
         relativeYawDeg:
@@ -520,40 +610,6 @@ function sphPlatformCorrectSolutionSet(
     };
 }
 
-function sphPlatformFormatAzimuthAim(aim) {
-    if (!aim) {
-        return null;
-    }
-
-    if (aim.center) {
-        return `${aim.center.correctedAzimuthDeg.toFixed(1)}°`;
-    }
-
-    const min =
-        aim.min?.correctedAzimuthDeg;
-    const max =
-        aim.max?.correctedAzimuthDeg;
-
-    if (
-        !Number.isFinite(min) ||
-        !Number.isFinite(max)
-    ) {
-        return null;
-    }
-
-    if (
-        Math.abs(
-            sphPlatformNormalizeDegreesSigned(
-                max - min
-            )
-        ) < 0.05
-    ) {
-        return `${min.toFixed(1)}°`;
-    }
-
-    return `${min.toFixed(1)}–${max.toFixed(1)}°`;
-}
-
 function sphPlatformRepresentativeMilDelta(aim) {
     if (!aim) {
         return null;
@@ -577,170 +633,79 @@ function sphPlatformRepresentativeMilDelta(aim) {
 }
 
 function sphPlatformRenderCorrectedAim() {
+    const details = [];
+
     if (
-        !sphPlatformCorrectionIsActive() ||
-        !sphPlatformLastAimMeta
+        sphPlatformCorrectionIsActive() &&
+        sphPlatformLastAimMeta
     ) {
-        const angleSub =
-            $('angle')
-                ?.closest('.solution-metric')
-                ?.querySelector(
-                    '.solution-metric-sub'
-                );
+        const aim =
+            sphPlatformLastAimMeta;
 
-        if (angleSub) {
-            setText(angleSub, '\u00a0');
-            angleSub.setAttribute(
-                'aria-hidden',
-                'true'
-            );
-        }
-
-        return;
-    }
-
-    const aim =
-        sphPlatformLastAimMeta;
-
-    let azimuthText = null;
-    let azimuthDetail = '';
-    let correctionDetail = '';
-
-    if (aim.single) {
-        azimuthText =
-            sphPlatformFormatAzimuthAim(
-                aim.single
-            );
-
-        const delta =
-            sphPlatformRepresentativeMilDelta(
-                aim.single
-            );
-
-        if (Number.isFinite(delta)) {
-            correctionDetail =
-                `${sphPlatformLabels().correction} ${delta >= 0 ? '+' : ''}${delta.toFixed(1)} MIL`;
-        }
-    } else if (aim.low && aim.high) {
-        const lowAz =
-            sphPlatformFormatAzimuthAim(
-                aim.low
-            );
-
-        const highAz =
-            sphPlatformFormatAzimuthAim(
-                aim.high
-            );
-
-        if (lowAz && highAz) {
-            azimuthText =
-                `${lowAz} / ${highAz}`;
-            azimuthDetail =
-                sphPlatformLabels().lowHigh;
-        }
-
-        const lowDelta =
-            sphPlatformRepresentativeMilDelta(
-                aim.low
-            );
-
-        const highDelta =
-            sphPlatformRepresentativeMilDelta(
-                aim.high
-            );
-
-        if (
-            Number.isFinite(lowDelta) &&
-            Number.isFinite(highDelta)
-        ) {
-            correctionDetail =
-                `${sphPlatformLabels().correction} ` +
-                `${lowDelta >= 0 ? '+' : ''}${lowDelta.toFixed(1)} / ` +
-                `${highDelta >= 0 ? '+' : ''}${highDelta.toFixed(1)} MIL`;
-        }
-    } else {
         const key =
-            aim.low
-                ? 'low'
-                : aim.high
-                    ? 'high'
-                    : null;
+            aim.single
+                ? 'single'
+                : aim.low
+                    ? 'low'
+                    : aim.high
+                        ? 'high'
+                        : null;
 
         if (key) {
-            azimuthText =
-                sphPlatformFormatAzimuthAim(
-                    aim[key]
-                );
-
-            azimuthDetail =
-                key === 'low'
-                    ? tr('lowArc')
-                    : tr('highArc');
-
             const delta =
                 sphPlatformRepresentativeMilDelta(
                     aim[key]
                 );
 
             if (Number.isFinite(delta)) {
-                correctionDetail =
-                    `${sphPlatformLabels().correction} ${delta >= 0 ? '+' : ''}${delta.toFixed(1)} MIL`;
+                details.push(
+                    `${sphPlatformLabels().correction} ` +
+                    `${delta >= 0 ? '+' : ''}${delta.toFixed(1)} MIL`
+                );
             }
         }
     }
 
-    if (azimuthText) {
-        setText(
-            $('angle'),
-            azimuthText
+    if (
+        Number.isFinite(sphPlatformManualMilAdjustment) &&
+        Math.abs(sphPlatformManualMilAdjustment) >= 0.05
+    ) {
+        const delta =
+            sphPlatformManualMilAdjustment;
+
+        details.push(
+            `${sphPlatformLabels().manualMilShort} ` +
+            `${delta >= 0 ? '+' : ''}${delta.toFixed(1)} MIL`
         );
     }
 
-    const angleSub =
-        $('angle')
-            ?.closest('.solution-metric')
-            ?.querySelector(
-                '.solution-metric-sub'
-            );
-
-    if (angleSub) {
-        setText(
-            angleSub,
-            azimuthDetail || '\u00a0'
-        );
-
-        if (azimuthDetail) {
-            angleSub.removeAttribute(
-                'aria-hidden'
-            );
-        } else {
-            angleSub.setAttribute(
-                'aria-hidden',
-                'true'
-            );
-        }
+    if (!details.length) {
+        return;
     }
 
-    if (correctionDetail) {
-        const detail =
-            $('milAlt');
+    const detail =
+        $('milAlt');
 
-        if (detail) {
-            const current =
-                detail.hidden
-                    ? ''
-                    : detail.textContent.trim();
-
-            setText(
-                detail,
-                current
-                    ? `${current} · ${correctionDetail}`
-                    : correctionDetail
-            );
-
-            detail.hidden = false;
-        }
+    if (!detail) {
+        return;
     }
+
+    const current =
+        detail.hidden
+            ? ''
+            : detail.textContent.trim();
+
+    const correctionDetail =
+        details.join(' · ');
+
+    setText(
+        detail,
+        current
+            ? `${current} · ${correctionDetail}`
+            : correctionDetail
+    );
+
+    detail.hidden = false;
 }
 
 
@@ -761,7 +726,9 @@ function sphPlatformEnsureStyles() {
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             grid-template-areas:
                 "hull-label arc-label"
-                "hull-input arc-input";
+                "hull-input arc-input"
+                "manual-label manual-label"
+                "manual-input .";
             column-gap: 7px;
             row-gap: 4px;
             align-items: end;
@@ -811,8 +778,22 @@ function sphPlatformEnsureStyles() {
             grid-area: arc-input;
         }
 
+        .sph-platform-manual-label {
+            grid-area: manual-label;
+            display: block;
+            min-width: 0;
+            margin: 4px 0 0 !important;
+            padding: 0 !important;
+            line-height: 18px;
+        }
+
+        .sph-platform-manual-input {
+            grid-area: manual-input;
+        }
+
         .sph-platform-hull-input,
-        .sph-platform-arc-select {
+        .sph-platform-arc-select,
+        .sph-platform-manual-input {
             width: 100%;
             min-width: 0;
             box-sizing: border-box;
@@ -1226,11 +1207,49 @@ function sphPlatformEnsureControls() {
         highOption
     );
 
+    const manualMilLabel =
+        document.createElement('label');
+
+    manualMilLabel.id =
+        'sphPlatformManualMilLabel';
+
+    manualMilLabel.htmlFor =
+        'sphPlatformManualMil';
+
+    manualMilLabel.className =
+        'sph-platform-manual-label';
+
+    const manualMilInput =
+        document.createElement('input');
+
+    manualMilInput.id =
+        'sphPlatformManualMil';
+
+    manualMilInput.type =
+        'number';
+
+    manualMilInput.min =
+        '-50';
+
+    manualMilInput.max =
+        '50';
+
+    manualMilInput.step =
+        '1';
+
+    manualMilInput.inputMode =
+        'decimal';
+
+    manualMilInput.className =
+        'sph-platform-manual-input';
+
     grid.append(
         hullLabelRow,
         arcLabelRow,
         input,
-        arcSelect
+        arcSelect,
+        manualMilLabel,
+        manualMilInput
     );
 
     const hint =
@@ -1303,6 +1322,30 @@ function sphPlatformEnsureControls() {
             result();
         }
     );
+
+    manualMilInput.addEventListener(
+        'input',
+        () => {
+            sphPlatformManualMilAdjustment =
+                sphPlatformNormalizeManualMilAdjustment(
+                    manualMilInput.value
+                );
+
+            sphPlatformPersistManualMilAdjustment();
+            sphPlatformSyncControls();
+            result();
+        }
+    );
+
+    manualMilInput.addEventListener(
+        'change',
+        () => {
+            manualMilInput.value =
+                Math.abs(sphPlatformManualMilAdjustment) < 1e-9
+                    ? '0'
+                    : String(sphPlatformManualMilAdjustment);
+        }
+    );
 }
 
 function sphPlatformSyncControls() {
@@ -1327,10 +1370,21 @@ function sphPlatformSyncControls() {
     const arcLabel =
         $('sphArcSelectLabel');
 
+    const manualMilLabel =
+        $('sphPlatformManualMilLabel');
+
+    const manualMilInput =
+        $('sphPlatformManualMil');
+
     const hint =
         $('sphPlatformCorrectionHint');
 
-    if (!controls || !input || !arcSelect) {
+    if (
+        !controls ||
+        !input ||
+        !arcSelect ||
+        !manualMilInput
+    ) {
         return;
     }
 
@@ -1373,6 +1427,11 @@ function sphPlatformSyncControls() {
     if (arcLabel) {
         arcLabel.textContent =
             labels.arc;
+    }
+
+    if (manualMilLabel) {
+        manualMilLabel.textContent =
+            labels.manualMil;
     }
 
     const lowOption =
@@ -1423,6 +1482,19 @@ function sphPlatformSyncControls() {
             expectedValue;
     }
 
+    const expectedManualMil =
+        Math.abs(sphPlatformManualMilAdjustment) < 1e-9
+            ? '0'
+            : String(sphPlatformManualMilAdjustment);
+
+    if (
+        document.activeElement !== manualMilInput &&
+        manualMilInput.value !== expectedManualMil
+    ) {
+        manualMilInput.value =
+            expectedManualMil;
+    }
+
     if (hint) {
         hint.textContent =
             sphPlatformCorrectionIsActive()
@@ -1441,6 +1513,7 @@ function initSphPlatformCorrection() {
 
     sphPlatformLoadHullHeading();
     sphPlatformLoadArc();
+    sphPlatformLoadManualMilAdjustment();
     sphPlatformEnsureControls();
 
     const originalResolveElevationSolutions =
@@ -1458,45 +1531,45 @@ function initSphPlatformCorrection() {
                 solutions
             );
 
-        const resolved = {
-            ...baseResolved,
-            solutions:
-                sphPlatformSelectArcSolutions(
-                    baseResolved.solutions
-                )
-        };
+        let resolvedSolutions =
+            sphPlatformSelectArcSolutions(
+                baseResolved.solutions
+            );
 
         sphPlatformLastAimMeta =
             null;
 
-        if (
-            !sphPlatformCorrectionIsActive(
-                weapon
-            )
-        ) {
-            return resolved;
-        }
-
         const targetAzimuthDeg =
             sphPlatformGetTargetAzimuth();
 
-        if (!Number.isFinite(targetAzimuthDeg)) {
-            return resolved;
+        if (
+            sphPlatformCorrectionIsActive(
+                weapon
+            ) &&
+            Number.isFinite(targetAzimuthDeg)
+        ) {
+            const corrected =
+                sphPlatformCorrectSolutionSet(
+                    resolvedSolutions,
+                    targetAzimuthDeg
+                );
+
+            resolvedSolutions =
+                corrected.solutions;
+
+            sphPlatformLastAimMeta =
+                corrected.aim;
         }
 
-        const corrected =
-            sphPlatformCorrectSolutionSet(
-                resolved.solutions,
-                targetAzimuthDeg
+        resolvedSolutions =
+            sphPlatformApplyManualMilToSolutionSet(
+                resolvedSolutions
             );
 
-        sphPlatformLastAimMeta =
-            corrected.aim;
-
         return {
-            ...resolved,
+            ...baseResolved,
             solutions:
-                corrected.solutions,
+                resolvedSolutions,
             platformHeadingCorrection: {
                 hullHeadingDeg:
                     sphPlatformHullHeadingDeg,
@@ -1504,8 +1577,10 @@ function initSphPlatformCorrection() {
                     SPH_PLATFORM_CORRECTION.baselinePitchDeg,
                 baselineRollDeg:
                     SPH_PLATFORM_CORRECTION.baselineRollDeg,
+                manualMilAdjustment:
+                    sphPlatformManualMilAdjustment,
                 aim:
-                    corrected.aim
+                    sphPlatformLastAimMeta
             }
         };
     };

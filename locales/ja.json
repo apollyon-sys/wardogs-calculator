@@ -112,6 +112,8 @@
   "sphHullCorrectionInactive": "車体補正はオフです。車体方位を入力すると有効になります。",
   "sphHullCorrectionActive": "車体補正が有効です：基準の前後ピッチ {pitch}°。水平 / ほぼ水平な設置位置を想定しています。",
   "sphHullCorrectionShort": "車体補正",
+  "sphPlatformMilAdjustment": "プラットフォームMIL補正",
+  "sphPlatformMilAdjustmentShort": "プラットフォーム補正",
   "noFiringSolution": "射撃諸元なし",
   "copyCoordinates": "コピー",
   "pasteCoordinates": "貼り付け",

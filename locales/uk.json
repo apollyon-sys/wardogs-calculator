@@ -116,6 +116,8 @@
   "sphHullCorrectionInactive": "Корекцію за напрямком корпусу вимкнено. Вкажіть напрямок корпусу, щоб увімкнути її.",
   "sphHullCorrectionActive": "Корекція за напрямком корпусу активна: базовий поздовжній нахил {pitch}°. Для рівних / майже рівних позицій.",
   "sphHullCorrectionShort": "Кор. корпусу",
+  "sphPlatformMilAdjustment": "Поправка MIL платформи",
+  "sphPlatformMilAdjustmentShort": "Поправка платформи",
   "noFiringSolution": "Немає рішення для стрільби",
   "copyCoordinates": "Копіювати",
   "pasteCoordinates": "Вставити",

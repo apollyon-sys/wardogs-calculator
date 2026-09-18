@@ -112,6 +112,8 @@
   "sphHullCorrectionInactive": "车体修正已关闭。输入车体朝向即可启用。",
   "sphHullCorrectionActive": "车体修正已启用：基准纵向俯仰 {pitch}°。适用于水平 / 接近水平的停车位置。",
   "sphHullCorrectionShort": "车体修正",
+  "sphPlatformMilAdjustment": "平台 MIL 修正",
+  "sphPlatformMilAdjustmentShort": "平台修正",
   "noFiringSolution": "没有可用射击解算",
   "copyCoordinates": "复制",
   "pasteCoordinates": "粘贴",
