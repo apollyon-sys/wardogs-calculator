@@ -38,6 +38,7 @@ const DEFAULT_APP_CONFIG = {
             marker: 'm',
             coordinateSearch: 'f',
             layers: 'l',
+            fireAdjust: 'i',
             clearTool: 'escape',
             undo: 'ctrl+z',
             redo: 'ctrl+y',

@@ -184,3 +184,82 @@
     min-height: 42px;
     font-size: 12px;
 }
+
+.mobile-app .map-tool-fire-adjustment {
+    width: min(272px, calc(100vw - 72px));
+
+    /*
+     * The pad plus its hint is taller than the default popover cap, which
+     * would hide the impact actions behind a scroll at large text sizes.
+     */
+    max-height: calc(100dvh - 190px);
+}
+
+.mobile-app .fire-adjustment-nudge {
+    min-height: 46px;
+}
+
+.mobile-app .fire-adjustment-nudge-glyph {
+    font-size: 15px;
+}
+
+.mobile-app .fire-adjustment-nudge-label {
+    font-size: 10px;
+}
+
+.mobile-app .fire-adjustment-step-unit {
+    font-size: 11px;
+}
+
+.mobile-app .fire-adjustment-draft {
+    font-size: 12px;
+}
+
+.mobile-app .fire-adjustment-draft-clear {
+    min-height: 30px;
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+.mobile-app .fire-adjustment-impact-actions button {
+    min-height: 42px;
+    font-size: 12px;
+}
+
+/*
+ * The pick banner hangs above the collapsed sheet, clear of the mode switch
+ * and the tab bar. The horizontal insets keep it out from under the lobby
+ * launcher on the left and the vertical tool bar on the right, both of which
+ * paint above it.
+ */
+.mobile-app .fire-adjustment-banner {
+    position: absolute;
+    top: auto;
+    right: 62px;
+    bottom: calc(var(--mobile-sheet-peek) + env(safe-area-inset-bottom) + 58px);
+    left: 60px;
+    z-index: 18;
+
+    max-width: none;
+    transform: none;
+
+    justify-content: space-between;
+
+    padding: 8px 8px 8px 12px;
+
+    border-radius: 10px;
+    background:
+        color-mix(
+            in srgb,
+            var(--panel-bg) 90%,
+            transparent
+        );
+
+    font-size: 12px;
+}
+
+.mobile-app .fire-adjustment-banner-cancel {
+    min-height: 34px;
+    padding: 4px 12px;
+    font-size: 12px;
+}

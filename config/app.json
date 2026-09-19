@@ -39,6 +39,7 @@
       "marker": "m",
       "coordinateSearch": "f",
       "layers": "l",
+      "fireAdjust": "i",
       "clearTool": "escape",
       "undo": "ctrl+z",
       "redo": "ctrl+y",

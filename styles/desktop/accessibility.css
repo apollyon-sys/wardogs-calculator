@@ -297,6 +297,26 @@ footer {
     font-size: calc(10px * var(--a11y-text-scale));
 }
 
+:root .fire-adjustment-nudge-glyph {
+    font-size: calc(13px * var(--a11y-text-scale));
+}
+
+:root .fire-adjustment-nudge-label {
+    font-size: calc(9px * var(--a11y-text-scale));
+}
+
+:root .fire-adjustment-draft {
+    font-size: calc(10px * var(--a11y-text-scale));
+}
+
+:root .fire-adjustment-step-unit {
+    font-size: calc(10px * var(--a11y-text-scale));
+}
+
+:root .fire-adjustment-draft-clear {
+    font-size: calc(10px * var(--a11y-text-scale));
+}
+
 :root .fire-adjustment-banner {
     font-size: calc(11px * var(--a11y-text-scale));
 }
