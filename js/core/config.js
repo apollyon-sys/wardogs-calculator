@@ -23,6 +23,8 @@ const DEFAULT_APP_CONFIG = {
                 'Apollyon',
             authorUrl:
                 'https://discord.com/users/202109460238434304',
+            sourceCodeUrl:
+                'https://github.com/apollyon-sys/wardogs-calculator',
             version:
                 '1.9.2'
         }

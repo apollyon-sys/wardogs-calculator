@@ -1835,6 +1835,17 @@ function initMobileSideMenu() {
         );
     }
 
+    if (
+        typeof createSourceCodeLink ===
+        'function'
+    ) {
+        links.appendChild(
+            createSourceCodeLink(
+                'mobile-menu'
+            )
+        );
+    }
+
     if (partnerLink) {
 
         partnerLink.dataset

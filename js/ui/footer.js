@@ -687,6 +687,50 @@ function createFeedbackLauncher() {
     return button;
 }
 
+function createSourceCodeLink(placement = 'footer') {
+    const link = document.createElement('a');
+
+    link.href =
+        APP_CONFIG
+            ?.site
+            ?.footer
+            ?.sourceCodeUrl ||
+        'https://github.com/apollyon-sys/wardogs-calculator';
+
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+
+    const label =
+        typeof tr === 'function'
+            ? tr('sourceCode')
+            : 'Source code';
+
+    link.setAttribute('aria-label', label);
+    link.title = label;
+    link.innerHTML = `
+        <span class="footer-feedback-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.477 2 2 6.486 2 12.021c0 4.428 2.865 8.184 6.839 9.504.5.093.682-.217.682-.483 0-.237-.009-.866-.014-1.7-2.782.605-3.369-1.343-3.369-1.343-.455-1.158-1.11-1.466-1.11-1.466-.908-.622.069-.609.069-.609 1.004.071 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.832.091-.647.35-1.088.636-1.338-2.221-.253-4.555-1.112-4.555-4.947 0-1.093.39-1.987 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.269 2.75 1.027A9.55 9.55 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.378.203 2.397.1 2.65.64.701 1.028 1.595 1.028 2.688 0 3.845-2.337 4.691-4.566 4.94.359.31.678.923.678 1.86 0 1.343-.012 2.426-.012 2.756 0 .268.18.58.688.481A10.023 10.023 0 0 0 22 12.021C22 6.486 17.523 2 12 2Z"></path>
+            </svg>
+        </span>
+        <span class="footer-feedback-label"></span>
+    `;
+
+    link.querySelector('.footer-feedback-label').textContent = label;
+
+    if (placement === 'mobile-menu') {
+        /* Reuse the existing mobile navigation-card appearance. */
+        link.className =
+            'mobile-desktop-link mobile-source-code-link';
+    } else {
+        /* Reuse the existing footer action-button appearance. */
+        link.className =
+            'footer-feedback-button footer-source-code-link';
+    }
+
+    return link;
+}
+
 function renderFooter() {
     const footer =
         $('siteFooter') ||
@@ -753,6 +797,12 @@ function renderFooter() {
             createFeedbackLauncher()
         );
     }
+
+    meta.appendChild(
+        createSourceCodeLink(
+            'footer'
+        )
+    );
 
     meta.appendChild(
         createDonationLinks(
