@@ -92,6 +92,7 @@
   "weaponRange": "Дальність",
   "desktopVersion": "Версія для ПК",
   "mapToolEraser": "Гумка",
+  "mapToolEraseAll": "Стерти все",
   "mapToolLayers": "Шари",
   "mapLayerCursorCoordinates": "Координати курсора",
   "mapToolDataTransfer": "Імпорт / експорт",

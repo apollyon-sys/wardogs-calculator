@@ -92,6 +92,7 @@
   "weaponRange": "Zasięg",
   "desktopVersion": "Wersja komputerowa",
   "mapToolEraser": "Gumka",
+  "mapToolEraseAll": "Wymaż wszystko",
   "mapToolLayers": "Warstwy",
   "mapLayerCursorCoordinates": "Współrzędne kursora",
   "mapToolDataTransfer": "Import / Eksport",

@@ -88,6 +88,7 @@
   "weaponRange": "射程",
   "desktopVersion": "デスクトップ版",
   "mapToolEraser": "消しゴム",
+  "mapToolEraseAll": "すべて消去",
   "mapToolLayers": "レイヤー",
   "mapLayerCursorCoordinates": "カーソル座標",
   "mapToolDataTransfer": "インポート / エクスポート",

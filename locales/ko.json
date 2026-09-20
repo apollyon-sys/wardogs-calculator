@@ -88,6 +88,7 @@
   "weaponRange": "사거리",
   "desktopVersion": "데스크톱 버전",
   "mapToolEraser": "지우개",
+  "mapToolEraseAll": "모두 지우기",
   "mapToolLayers": "레이어",
   "mapLayerCursorCoordinates": "커서 좌표",
   "mapToolDataTransfer": "가져오기 / 내보내기",

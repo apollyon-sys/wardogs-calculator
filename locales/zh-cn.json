@@ -88,6 +88,7 @@
   "weaponRange": "射程",
   "desktopVersion": "桌面版",
   "mapToolEraser": "橡皮擦",
+  "mapToolEraseAll": "全部清除",
   "mapToolLayers": "图层",
   "mapLayerCursorCoordinates": "光标坐标",
   "mapToolDataTransfer": "导入 / 导出",

@@ -660,6 +660,53 @@ async function importMapToolChanges() {
     }
 }
 
+function clearCurrentMapToolContent() {
+    const mapId =
+        currentMapToolMapId();
+
+    const collections = [
+        'drawings',
+        'zones',
+        'polygons',
+        'markers'
+    ];
+
+    const hasContent =
+        collections.some(
+            name =>
+                MAP_TOOL_STATE[name].some(
+                    item =>
+                        item.mapId === mapId
+                )
+        );
+
+    if (!hasContent) {
+        return false;
+    }
+
+    pushMapToolHistory();
+
+    collections.forEach(name => {
+        MAP_TOOL_STATE[name] =
+            MAP_TOOL_STATE[name].filter(
+                item =>
+                    item.mapId !== mapId
+            );
+    });
+
+    MAP_TOOL_STATE.hoverPathId = null;
+    MAP_TOOL_STATE.hoverDeletePoint = null;
+    MAP_TOOL_STATE.hoverShapeType = null;
+    MAP_TOOL_STATE.hoverShapeId = null;
+    MAP_TOOL_STATE.hoverMarkerId = null;
+
+    saveMapToolState();
+    updateMapToolsUI();
+    draw();
+
+    return true;
+}
+
 function setMapTool(tool) {
     MAP_TOOL_STATE.tool =
         MAP_TOOL_STATE.tool === tool
@@ -716,8 +763,122 @@ function activateColorMapTool(tool) {
     );
 }
 
+function ensureEraserPopover() {
+    const bar =
+        document.querySelector(
+            '.map-tools-bar'
+        );
+
+    if (!bar) {
+        return null;
+    }
+
+    let popover =
+        $('eraserPopover');
+
+    if (!popover) {
+        popover =
+            document.createElement(
+                'div'
+            );
+
+        popover.id =
+            'eraserPopover';
+
+        /*
+         * Reuse the coordinate-search popover shell and primary action styles
+         * so the eraser menu follows the same layout, responsive sizing and
+         * accessibility behavior as the existing Map Tools windows.
+         */
+        popover.className =
+            'map-tool-popover map-tool-coordinate-search';
+
+        bar.before(popover);
+    }
+
+    return popover;
+}
+
+function buildEraserPopover() {
+    const container =
+        ensureEraserPopover();
+
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = '';
+
+    const title =
+        document.createElement(
+            'div'
+        );
+
+    title.className =
+        'map-tool-popover-title';
+
+    title.textContent =
+        tr('mapToolEraser');
+
+    const clearButton =
+        document.createElement(
+            'button'
+        );
+
+    clearButton.type = 'button';
+    clearButton.className =
+        'map-tool-search-go';
+
+    const clearLabel =
+        tr('mapToolEraseAll');
+
+    clearButton.textContent =
+        clearLabel;
+
+    clearButton.setAttribute(
+        'aria-label',
+        clearLabel
+    );
+
+    clearButton.addEventListener(
+        'click',
+        event => {
+            event.stopPropagation();
+            clearCurrentMapToolContent();
+        }
+    );
+
+    container.append(
+        title,
+        clearButton
+    );
+}
+
+function activateEraserTool() {
+    buildEraserPopover();
+
+    const changed =
+        MAP_TOOL_STATE.tool !==
+        'eraser';
+
+    if (changed) {
+        setMapTool('eraser');
+        closeMapToolMenus(
+            'eraserPopover'
+        );
+        $('eraserPopover')
+            ?.classList.add('open');
+        updateMapToolsUI();
+        return;
+    }
+
+    toggleMapToolMenu(
+        'eraserPopover'
+    );
+}
+
 function closeMapToolMenus(except = null) {
-    ['pencilPalette', 'markerPicker', 'coordinateSearchPopover', 'mapLayersPopover', 'mapDataTransferPopover', 'fireAdjustmentPopover'].forEach(
+    ['pencilPalette', 'eraserPopover', 'markerPicker', 'coordinateSearchPopover', 'mapLayersPopover', 'mapDataTransferPopover', 'fireAdjustmentPopover'].forEach(
         id => {
             if (id === except) {
                 return;
@@ -1705,8 +1866,7 @@ function handleMapToolShortcut(event) {
     }
 
     if (key === shortcuts.eraser) {
-        closeMapToolMenus();
-        setMapTool('eraser');
+        activateEraserTool();
         return true;
     }
 
@@ -2095,6 +2255,7 @@ function ensureMapHistoryTools() {
 function updateMapToolsLocalization() {
     ensureMapShapeTools();
     ensureMapHistoryTools();
+    buildEraserPopover();
 
     const undoButton =
         $('mapToolUndoButton');
@@ -2252,8 +2413,7 @@ function initMapTools() {
         'click',
         event => {
             event.stopPropagation();
-            closeMapToolMenus();
-            setMapTool('eraser');
+            activateEraserTool();
         }
     );
 

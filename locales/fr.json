@@ -92,6 +92,7 @@
   "weaponRange": "Portée",
   "desktopVersion": "Version bureau",
   "mapToolEraser": "Gomme",
+  "mapToolEraseAll": "Tout effacer",
   "mapToolLayers": "Calques",
   "mapLayerCursorCoordinates": "Coordonnées du curseur",
   "mapToolDataTransfer": "Import / Export",

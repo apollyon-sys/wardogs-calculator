@@ -88,6 +88,7 @@
   "weaponRange": "Range",
   "desktopVersion": "Desktop version",
   "mapToolEraser": "Eraser",
+  "mapToolEraseAll": "Erase all",
   "mapToolLayers": "Layers",
   "mapLayerCursorCoordinates": "Cursor coordinates",
   "mapToolDataTransfer": "Import / Export",

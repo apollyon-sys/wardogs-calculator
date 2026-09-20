@@ -92,6 +92,7 @@
   "weaponRange": "Alcance",
   "desktopVersion": "Versión de escritorio",
   "mapToolEraser": "Borrador",
+  "mapToolEraseAll": "Borrar todo",
   "mapToolLayers": "Capas",
   "mapLayerCursorCoordinates": "Coordenadas del cursor",
   "mapToolDataTransfer": "Importar / Exportar",

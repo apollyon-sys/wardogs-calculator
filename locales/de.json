@@ -92,6 +92,7 @@
   "weaponRange": "Reichweite",
   "desktopVersion": "Desktop-Version",
   "mapToolEraser": "Radiergummi",
+  "mapToolEraseAll": "Alles löschen",
   "mapToolLayers": "Ebenen",
   "mapLayerCursorCoordinates": "Cursor-Koordinaten",
   "mapToolDataTransfer": "Import / Export",

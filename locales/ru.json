@@ -88,6 +88,7 @@
   "weaponRange": "Дальность",
   "desktopVersion": "Версия для ПК",
   "mapToolEraser": "Ластик",
+  "mapToolEraseAll": "Стереть всё",
   "mapToolLayers": "Слои",
   "mapLayerCursorCoordinates": "Координаты курсора",
   "mapToolDataTransfer": "Импорт / экспорт",
