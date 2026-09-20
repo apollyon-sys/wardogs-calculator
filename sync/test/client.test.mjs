@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import { Window } from 'happy-dom';
 import * as protocol from '../../js/collab/protocol.mjs';
 import * as replicaModule from '../../js/collab/replica.mjs';
+import { MAP_TOOL_SCRIPT_FILES } from '../../scripts/lib/application-assets.mjs';
 const enLocale = JSON.parse(await readFile(new URL('../../locales/en.json', import.meta.url), 'utf8'));
 const ruLocale = JSON.parse(await readFile(new URL('../../locales/ru.json', import.meta.url), 'utf8'));
 const lobbyLocaleKeys = Object.keys(enLocale).filter(key => key.startsWith('lobby'));
@@ -72,7 +73,14 @@ async function client(t, enabled = true, challenge = false) {
         __protocol: protocol, __replicaModule: replicaModule
     });
     const run = source => vm.runInContext(source, context);
-    for (const path of ['js/core/core.js', 'js/features/saved-targets.js', 'js/map/map-tools.js', 'js/ui/inputs.js']) {
+    const clientFiles = [
+        'js/core/core.js',
+        'js/features/saved-targets.js',
+        ...MAP_TOOL_SCRIPT_FILES,
+        'js/ui/inputs.js'
+    ];
+
+    for (const path of clientFiles) {
         run(await readFile(new URL(`../../${path}`, import.meta.url), 'utf8'));
     }
     run(`

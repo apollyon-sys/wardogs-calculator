@@ -31,284 +31,57 @@
         rerenderQueued: false
     };
 
-    const UI_TEXT = {
-        en: {
-            title: 'Experimental Terrain3D correction',
-            toggle: 'Use experimental Terrain3D correction',
-            note: 'Opt-in only. Platform/chassis tilt is not corrected. The flat table is used automatically whenever a candidate is not SAFE.',
-            table: 'Table',
-            terrain: 'Terrain3D',
-            low: 'LOW',
-            high: 'HIGH',
-            safe: 'SAFE',
-            fallback: 'TABLE FALLBACK',
-            unreachable: 'UNREACHABLE',
-            loading: 'Loading candidate data…',
-            unavailable: 'Terrain3D correction is unavailable for this firing solution.',
-            unsupported: 'No certified Terrain3D candidate for this arc.',
-            enabled: 'ON',
-            disabled: 'OFF',
-            applied: 'applied',
-            preview: 'preview',
-            statusOn: 'Experimental Terrain3D ON',
-            statusOff: 'Experimental Terrain3D OFF',
-            statusFallback: 'Table fallback',
-            candidateLoading: 'candidate loading'
-        },
-        ru: {
-            title: 'Экспериментальная Terrain3D-коррекция',
-            toggle: 'Использовать экспериментальную Terrain3D-коррекцию',
-            note: 'Только opt-in. Наклон платформы/корпуса не корректируется. Если кандидат не SAFE, автоматически используется табличное значение.',
-            table: 'Таблица',
-            terrain: 'Terrain3D',
-            low: 'LOW',
-            high: 'HIGH',
-            safe: 'SAFE',
-            fallback: 'ТАБЛИЧНЫЙ FALLBACK',
-            unreachable: 'НЕДОСТИЖИМО',
-            loading: 'Загрузка данных кандидата…',
-            unavailable: 'Terrain3D-коррекция недоступна для этого решения.',
-            unsupported: 'Для этой дуги нет сертифицированного Terrain3D-кандидата.',
-            enabled: 'ВКЛ',
-            disabled: 'ВЫКЛ',
-            applied: 'применено',
-            preview: 'предпросмотр',
-            statusOn: 'Экспериментальная Terrain3D ВКЛ',
-            statusOff: 'Экспериментальная Terrain3D ВЫКЛ',
-            statusFallback: 'Табличный fallback',
-            candidateLoading: 'загрузка кандидата'
-        },
-        uk: {
-            title: 'Експериментальна Terrain3D-корекція',
-            toggle: 'Використовувати експериментальну Terrain3D-корекцію',
-            note: 'Лише opt-in. Нахил платформи/корпусу не коригується. Якщо кандидат не SAFE, автоматично використовується табличне значення.',
-            table: 'Таблиця',
-            terrain: 'Terrain3D',
-            low: 'LOW',
-            high: 'HIGH',
-            safe: 'SAFE',
-            fallback: 'ТАБЛИЧНИЙ FALLBACK',
-            unreachable: 'НЕДОСЯЖНО',
-            loading: 'Завантаження даних кандидата…',
-            unavailable: 'Terrain3D-корекція недоступна для цього рішення.',
-            unsupported: 'Для цієї дуги немає сертифікованого Terrain3D-кандидата.',
-            enabled: 'УВІМК',
-            disabled: 'ВИМК',
-            applied: 'застосовано',
-            preview: 'попередній перегляд',
-            statusOn: 'Експериментальна Terrain3D УВІМК',
-            statusOff: 'Експериментальна Terrain3D ВИМК',
-            statusFallback: 'Табличний fallback',
-            candidateLoading: 'завантаження кандидата'
-        },
-        de: {
-            title: 'Experimentelle Terrain3D-Korrektur',
-            toggle: 'Experimentelle Terrain3D-Korrektur verwenden',
-            note: 'Nur Opt-in. Plattform-/Fahrzeugneigung wird nicht korrigiert. Ist ein Kandidat nicht SAFE, wird automatisch der Tabellenwert verwendet.',
-            table: 'Tabelle',
-            terrain: 'Terrain3D',
-            low: 'LOW',
-            high: 'HIGH',
-            safe: 'SAFE',
-            fallback: 'TABELLEN-FALLBACK',
-            unreachable: 'UNERREICHBAR',
-            loading: 'Kandidatendaten werden geladen…',
-            unavailable: 'Terrain3D-Korrektur ist für diese Feuerlösung nicht verfügbar.',
-            unsupported: 'Kein zertifizierter Terrain3D-Kandidat für diesen Bogen.',
-            enabled: 'AN',
-            disabled: 'AUS',
-            applied: 'angewendet',
-            preview: 'Vorschau',
-            statusOn: 'Experimentelles Terrain3D AN',
-            statusOff: 'Experimentelles Terrain3D AUS',
-            statusFallback: 'Tabellen-Fallback',
-            candidateLoading: 'Kandidat wird geladen'
-        },
-        fr: {
-            title: 'Correction Terrain3D expérimentale',
-            toggle: 'Utiliser la correction Terrain3D expérimentale',
-            note: 'Opt-in uniquement. L’inclinaison de la plateforme/du châssis n’est pas corrigée. Si un candidat n’est pas SAFE, la table est utilisée automatiquement.',
-            table: 'Table',
-            terrain: 'Terrain3D',
-            low: 'LOW',
-            high: 'HIGH',
-            safe: 'SAFE',
-            fallback: 'REPLI TABLE',
-            unreachable: 'HORS PORTÉE',
-            loading: 'Chargement des données candidates…',
-            unavailable: 'La correction Terrain3D est indisponible pour cette solution.',
-            unsupported: 'Aucun candidat Terrain3D certifié pour cet arc.',
-            enabled: 'ACTIVÉE',
-            disabled: 'DÉSACTIVÉE',
-            applied: 'appliqué',
-            preview: 'aperçu',
-            statusOn: 'Terrain3D expérimental ACTIVÉ',
-            statusOff: 'Terrain3D expérimental DÉSACTIVÉ',
-            statusFallback: 'Repli sur la table',
-            candidateLoading: 'chargement du candidat'
-        },
-        es: {
-            title: 'Corrección Terrain3D experimental',
-            toggle: 'Usar corrección Terrain3D experimental',
-            note: 'Solo opt-in. No se corrige la inclinación de la plataforma/chasis. Si un candidato no es SAFE, se usa automáticamente la tabla.',
-            table: 'Tabla',
-            terrain: 'Terrain3D',
-            low: 'LOW',
-            high: 'HIGH',
-            safe: 'SAFE',
-            fallback: 'FALLBACK DE TABLA',
-            unreachable: 'INALCANZABLE',
-            loading: 'Cargando datos candidatos…',
-            unavailable: 'La corrección Terrain3D no está disponible para esta solución.',
-            unsupported: 'No hay candidato Terrain3D certificado para este arco.',
-            enabled: 'ACTIVA',
-            disabled: 'INACTIVA',
-            applied: 'aplicado',
-            preview: 'vista previa',
-            statusOn: 'Terrain3D experimental ACTIVA',
-            statusOff: 'Terrain3D experimental INACTIVA',
-            statusFallback: 'Fallback de tabla',
-            candidateLoading: 'cargando candidato'
-        },
-        pl: {
-            title: 'Eksperymentalna korekta Terrain3D',
-            toggle: 'Użyj eksperymentalnej korekty Terrain3D',
-            note: 'Tylko opt-in. Nachylenie platformy/podwozia nie jest korygowane. Gdy kandydat nie jest SAFE, automatycznie używana jest tabela.',
-            table: 'Tabela',
-            terrain: 'Terrain3D',
-            low: 'LOW',
-            high: 'HIGH',
-            safe: 'SAFE',
-            fallback: 'FALLBACK TABELI',
-            unreachable: 'NIEOSIĄGALNE',
-            loading: 'Ładowanie danych kandydata…',
-            unavailable: 'Korekta Terrain3D jest niedostępna dla tego rozwiązania.',
-            unsupported: 'Brak certyfikowanego kandydata Terrain3D dla tego toru.',
-            enabled: 'WŁ.',
-            disabled: 'WYŁ.',
-            applied: 'zastosowano',
-            preview: 'podgląd',
-            statusOn: 'Eksperymentalne Terrain3D WŁ.',
-            statusOff: 'Eksperymentalne Terrain3D WYŁ.',
-            statusFallback: 'Fallback tabeli',
-            candidateLoading: 'ładowanie kandydata'
-        },
-        pt: {
-            title: 'Correção Terrain3D experimental',
-            toggle: 'Usar correção Terrain3D experimental',
-            note: 'Apenas opt-in. A inclinação da plataforma/chassis não é corrigida. Se um candidato não for SAFE, a tabela é usada automaticamente.',
-            table: 'Tabela',
-            terrain: 'Terrain3D',
-            low: 'LOW',
-            high: 'HIGH',
-            safe: 'SAFE',
-            fallback: 'FALLBACK DA TABELA',
-            unreachable: 'INALCANÇÁVEL',
-            loading: 'A carregar dados candidatos…',
-            unavailable: 'A correção Terrain3D não está disponível para esta solução.',
-            unsupported: 'Sem candidato Terrain3D certificado para este arco.',
-            enabled: 'LIGADA',
-            disabled: 'DESLIGADA',
-            applied: 'aplicado',
-            preview: 'pré-visualização',
-            statusOn: 'Terrain3D experimental LIGADA',
-            statusOff: 'Terrain3D experimental DESLIGADA',
-            statusFallback: 'Fallback da tabela',
-            candidateLoading: 'a carregar candidato'
-        },
-        ko: {
-            title: '실험적 Terrain3D 보정',
-            toggle: '실험적 Terrain3D 보정 사용',
-            note: '선택 기능입니다. 플랫폼/차체 기울기는 보정하지 않습니다. 후보가 SAFE가 아니면 자동으로 표 값을 사용합니다.',
-            table: '표',
-            terrain: 'Terrain3D',
-            low: 'LOW',
-            high: 'HIGH',
-            safe: 'SAFE',
-            fallback: '표 FALLBACK',
-            unreachable: '도달 불가',
-            loading: '후보 데이터 로딩 중…',
-            unavailable: '이 사격 해에는 Terrain3D 보정을 사용할 수 없습니다.',
-            unsupported: '이 탄도에는 인증된 Terrain3D 후보가 없습니다.',
-            enabled: '켜짐',
-            disabled: '꺼짐',
-            applied: '적용',
-            preview: '미리보기',
-            statusOn: '실험적 Terrain3D 켜짐',
-            statusOff: '실험적 Terrain3D 꺼짐',
-            statusFallback: '표 fallback',
-            candidateLoading: '후보 로딩 중'
-        },
-        'zh-cn': {
-            title: '实验性 Terrain3D 修正',
-            toggle: '使用实验性 Terrain3D 修正',
-            note: '仅在用户主动启用时生效。不修正平台/车体倾斜。候选不是 SAFE 时会自动回退到表格值。',
-            table: '表格',
-            terrain: 'Terrain3D',
-            low: 'LOW',
-            high: 'HIGH',
-            safe: 'SAFE',
-            fallback: '表格回退',
-            unreachable: '不可达',
-            loading: '正在加载候选数据…',
-            unavailable: '此射击解无法使用 Terrain3D 修正。',
-            unsupported: '此弹道没有已认证的 Terrain3D 候选。',
-            enabled: '开启',
-            disabled: '关闭',
-            applied: '已应用',
-            preview: '预览',
-            statusOn: '实验性 Terrain3D 已开启',
-            statusOff: '实验性 Terrain3D 已关闭',
-            statusFallback: '表格回退',
-            candidateLoading: '正在加载候选'
-        },
-        cs: {
-            title: 'Experimentální korekce Terrain3D',
-            toggle: 'Použít experimentální korekci Terrain3D',
-            note: 'Pouze po ručním zapnutí. Náklon plošiny ani podvozku se nekoriguje. Pokud kandidát není SAFE, automaticky se použije plochá tabulka.',
-            table: 'Tabulka',
-            terrain: 'Terrain3D',
-            low: 'PLOCHÁ',
-            high: 'HORNÍ',
-            safe: 'SAFE',
-            fallback: 'NÁVRAT K TABULCE',
-            unreachable: 'NEDOSAŽITELNÉ',
-            loading: 'Načítání dat kandidátů…',
-            unavailable: 'Korekce Terrain3D není pro toto palebné řešení dostupná.',
-            unsupported: 'Pro tuto dráhu není ověřený kandidát Terrain3D.',
-            enabled: 'ZAP',
-            disabled: 'VYP',
-            applied: 'použito',
-            preview: 'náhled',
-            statusOn: 'Experimentální Terrain3D ZAP',
-            statusOff: 'Experimentální Terrain3D VYP',
-            statusFallback: 'Návrat k tabulce',
-            candidateLoading: 'načítání kandidáta'
-        },
-        cat: {
-            title: 'EXPERIMENTAL TERRAIN3D MEOWGIC',
-            toggle: 'USE EXPERIMENTAL TERRAIN3D MEOWGIC',
-            note: 'OPT-IN PAWS ONLY. CAT TANK TILT IS NOT CORRECTED. UNSAFE MEOWGIC FALLS BACK TO THE TABLE.',
-            table: 'TABLE',
-            terrain: 'MEOW3D',
-            low: 'LOW',
-            high: 'HIGH',
-            safe: 'SAFE',
-            fallback: 'TABLE PAWS',
-            unreachable: 'NOPE',
-            loading: 'LOADING MEOWGIC…',
-            unavailable: 'NO TERRAIN MEOWGIC FOR THIS SHOT.',
-            unsupported: 'NO CERTIFIED MEOWGIC FOR THIS ARC.',
-            enabled: 'ON',
-            disabled: 'OFF',
-            applied: 'APPLIED',
-            preview: 'PREVIEW',
-            statusOn: 'EXPERIMENTAL MEOWGIC ON',
-            statusOff: 'EXPERIMENTAL MEOWGIC OFF',
-            statusFallback: 'TABLE PAWS',
-            candidateLoading: 'LOADING MEOWGIC'
-        }
-    };
+    const TERRAIN_TEXT_KEYS = Object.freeze({
+        title: 'experimentalTerrainCorrectionTitle',
+        toggle: 'experimentalTerrainCorrectionToggle',
+        note: 'experimentalTerrainCorrectionNote',
+        table: 'experimentalTerrainCorrectionTable',
+        terrain: 'experimentalTerrainCorrectionTerrain',
+        low: 'experimentalTerrainCorrectionLow',
+        high: 'experimentalTerrainCorrectionHigh',
+        safe: 'experimentalTerrainCorrectionSafe',
+        fallback: 'experimentalTerrainCorrectionFallback',
+        unreachable: 'experimentalTerrainCorrectionUnreachable',
+        loading: 'experimentalTerrainCorrectionLoading',
+        unavailable: 'experimentalTerrainCorrectionUnavailable',
+        unsupported: 'experimentalTerrainCorrectionUnsupported',
+        enabled: 'experimentalTerrainCorrectionEnabled',
+        disabled: 'experimentalTerrainCorrectionDisabled',
+        applied: 'experimentalTerrainCorrectionApplied',
+        preview: 'experimentalTerrainCorrectionPreview',
+        statusOn: 'experimentalTerrainCorrectionStatusOn',
+        statusOff: 'experimentalTerrainCorrectionStatusOff',
+        statusFallback: 'experimentalTerrainCorrectionStatusFallback',
+        candidateLoading: 'experimentalTerrainCorrectionCandidateLoading'
+    });
+
+    const TERRAIN_TEXT_FALLBACK = Object.freeze({
+        title: 'Experimental Terrain3D correction',
+        toggle: 'Use experimental Terrain3D correction',
+        note: 'Opt-in only. Platform/chassis tilt is not corrected. The flat table is used automatically whenever a candidate is not SAFE.',
+        table: 'Table',
+        terrain: 'Terrain3D',
+        low: 'LOW',
+        high: 'HIGH',
+        safe: 'SAFE',
+        fallback: 'TABLE FALLBACK',
+        unreachable: 'UNREACHABLE',
+        loading: 'Loading candidate data…',
+        unavailable: 'Terrain3D correction is unavailable for this firing solution.',
+        unsupported: 'No certified Terrain3D candidate for this arc.',
+        enabled: 'ON',
+        disabled: 'OFF',
+        applied: 'applied',
+        preview: 'preview',
+        statusOn: 'Experimental Terrain3D ON',
+        statusOff: 'Experimental Terrain3D OFF',
+        statusFallback: 'Table fallback',
+        candidateLoading: 'candidate loading'
+    });
+
+    let cachedTextLanguage = null;
+    let cachedTextTranslator = null;
+    let cachedText = null;
 
     function currentLanguage() {
         return (
@@ -321,10 +94,38 @@
     }
 
     function text() {
-        return (
-            UI_TEXT[currentLanguage()] ||
-            UI_TEXT.en
+        const language = currentLanguage();
+        const translator =
+            typeof tr === 'function'
+                ? tr
+                : null;
+
+        if (
+            cachedText &&
+            cachedTextLanguage === language &&
+            cachedTextTranslator === translator
+        ) {
+            return cachedText;
+        }
+
+        cachedTextLanguage = language;
+        cachedTextTranslator = translator;
+        cachedText = Object.fromEntries(
+            Object.entries(TERRAIN_TEXT_KEYS)
+                .map(([property, key]) => {
+                    const translated =
+                        translator?.(key);
+
+                    return [
+                        property,
+                        translated && translated !== key
+                            ? translated
+                            : TERRAIN_TEXT_FALLBACK[property]
+                    ];
+                })
         );
+
+        return cachedText;
     }
 
     function finite(value) {

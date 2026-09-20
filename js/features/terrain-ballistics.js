@@ -42,74 +42,24 @@
         }
     }
 
-    const UI_TEXT = {
-        en: {
-            terrainLoading: 'terrain loading',
-            terrainStatus: 'ΔZ {dz} m · MIL not auto-corrected',
-            warningTitle: 'LEVEL THE SPH-2 BEFORE FIRING',
-            warningBody: 'Vehicle tilt changes the actual range. Park the SPH-2 on the flattest ground available. In the gunner HUD, find the vehicle silhouette below STABILIZED / ASL: the two small side markers show lateral tilt. Reposition the vehicle until the markers are as centered and aligned as possible. Front/back slope also affects range, so avoid parking uphill or downhill.'
-        },
-        ru: {
-            terrainLoading: 'загрузка высот',
-            terrainStatus: 'ΔZ {dz} м · MIL без автокоррекции',
-            warningTitle: 'ВЫРОВНЯЙТЕ SPH-2 ПЕРЕД СТРЕЛЬБОЙ',
-            warningBody: 'Наклон машины меняет фактическую дальность. Ставьте SPH-2 на максимально ровную поверхность. В прицеле наводчика найдите силуэт машины под STABILIZED / ASL: две боковые засечки показывают боковой наклон. Переставляйте машину, пока засечки не будут максимально по центру и на одном уровне. Наклон вперёд-назад тоже влияет на дальность — не ставьте орудие на подъёме или спуске.'
-        },
-        uk: {
-            terrainLoading: 'завантаження висот',
-            terrainStatus: 'ΔZ {dz} м · MIL без автокорекції',
-            warningTitle: 'ВИРІВНЯЙТЕ SPH-2 ПЕРЕД ПОСТРІЛОМ',
-            warningBody: 'Нахил машини змінює фактичну дальність. Ставте SPH-2 на максимально рівну поверхню. У прицілі навідника знайдіть силует машини під STABILIZED / ASL: дві бокові позначки показують поперечний нахил. Переставляйте машину, доки позначки не будуть максимально по центру та на одному рівні. Нахил уперед-назад також впливає на дальність — уникайте стоянки на підйомі або спуску.'
-        },
-        de: {
-            terrainLoading: 'Höhendaten werden geladen',
-            terrainStatus: 'ΔZ {dz} m · MIL ohne Autokorrektur',
-            warningTitle: 'SPH-2 VOR DEM SCHUSS NIVELLIEREN',
-            warningBody: 'Die Fahrzeugneigung verändert die tatsächliche Reichweite. Stelle die SPH-2 auf möglichst ebenen Boden. Im Richtschützen-HUD befindet sich unter STABILIZED / ASL die Fahrzeugsilhouette; die beiden kleinen Seitenmarken zeigen die seitliche Neigung. Versetze das Fahrzeug, bis die Marken möglichst mittig und auf gleicher Höhe stehen. Auch Neigung nach vorn/hinten beeinflusst die Reichweite — vermeide Steigungen und Gefälle.'
-        },
-        fr: {
-            terrainLoading: 'chargement des altitudes',
-            terrainStatus: 'ΔZ {dz} m · MIL sans correction auto',
-            warningTitle: 'METTEZ LE SPH-2 À NIVEAU AVANT DE TIRER',
-            warningBody: 'L’inclinaison du véhicule modifie la portée réelle. Placez le SPH-2 sur le terrain le plus plat possible. Dans le HUD du tireur, repérez la silhouette du véhicule sous STABILIZED / ASL : les deux petits repères latéraux indiquent l’inclinaison latérale. Repositionnez le véhicule jusqu’à ce que les repères soient aussi centrés et alignés que possible. La pente avant/arrière affecte aussi la portée — évitez de stationner en montée ou en descente.'
-        },
-        es: {
-            terrainLoading: 'cargando alturas',
-            terrainStatus: 'ΔZ {dz} m · MIL sin corrección automática',
-            warningTitle: 'NIVELA EL SPH-2 ANTES DE DISPARAR',
-            warningBody: 'La inclinación del vehículo cambia el alcance real. Coloca el SPH-2 en el terreno más plano posible. En el HUD del artillero, busca la silueta del vehículo bajo STABILIZED / ASL: las dos pequeñas marcas laterales muestran la inclinación lateral. Reposiciona el vehículo hasta que las marcas estén lo más centradas y alineadas posible. La pendiente hacia delante/atrás también afecta al alcance; evita aparcar cuesta arriba o cuesta abajo.'
-        },
-        pl: {
-            terrainLoading: 'ładowanie wysokości',
-            terrainStatus: 'ΔZ {dz} m · MIL bez autokorekty',
-            warningTitle: 'WYPOZIOMUJ SPH-2 PRZED STRZAŁEM',
-            warningBody: 'Przechył pojazdu zmienia rzeczywisty zasięg. Ustaw SPH-2 na możliwie płaskim terenie. W HUD celowniczego znajdź sylwetkę pojazdu pod STABILIZED / ASL: dwie małe boczne kreski pokazują przechył boczny. Przestaw pojazd, aż znaczniki będą możliwie wycentrowane i na tej samej wysokości. Nachylenie przód/tył również wpływa na zasięg — unikaj ustawiania działa pod górę lub z górki.'
-        },
-        pt: {
-            terrainLoading: 'a carregar altitudes',
-            terrainStatus: 'ΔZ {dz} m · MIL sem correção automática',
-            warningTitle: 'NIVELA O SPH-2 ANTES DE DISPARAR',
-            warningBody: 'A inclinação do veículo altera o alcance real. Coloca o SPH-2 no terreno mais plano possível. No HUD do artilheiro, procura a silhueta do veículo por baixo de STABILIZED / ASL: as duas pequenas marcas laterais mostram a inclinação lateral. Reposiciona o veículo até as marcas ficarem o mais centradas e alinhadas possível. A inclinação para a frente/trás também afeta o alcance — evita estacionar numa subida ou descida.'
-        },
-        'zh-cn': {
-            terrainLoading: '正在加载地形高程',
-            terrainStatus: 'ΔZ {dz} m · MIL 未自动修正',
-            warningTitle: '射击前请将 SPH-2 调平',
-            warningBody: '车体倾斜会改变实际射程。请尽量将 SPH-2 停在平坦地面上。在炮手 HUD 中找到 STABILIZED / ASL 下方的车辆轮廓；两侧的小标记显示横向倾斜。重新调整车辆位置，直到标记尽可能居中并处于同一水平。前后坡度同样会影响射程，因此避免在上坡或下坡位置停车。'
-        },
-        cs: {
-            terrainLoading: 'načítání výšek',
-            terrainStatus: 'ΔZ {dz} m · MIL bez automatické korekce',
-            warningTitle: 'PŘED VÝSTŘELEM SPH-2 VYROVNEJTE',
-            warningBody: 'Náklon vozidla mění skutečný dostřel. Postavte SPH-2 na co nejrovnější terén. V HUD střelce najděte siluetu vozidla pod STABILIZED / ASL: dvě malé značky po stranách ukazují příčný náklon. Přeparkujte vozidlo, dokud nebudou značky co nejvíce vystředěné a ve stejné výšce. Podélný sklon dostřel také ovlivňuje, proto se vyhněte postavení do stoupání nebo klesání.'
-        },
-        cat: {
-            terrainLoading: 'LOADING HEIGHT MEOWGIC',
-            terrainStatus: 'ΔZ {dz} m · NO AUTO-MIL MEOWGIC',
-            warningTitle: 'LEVEL THE MEOWTILLERY BEFORE FIRING',
-            warningBody: 'TILTED CAT TANK = WEIRD RANGE. PARK THE SPH-2 ON THE FLATTEST GROUND YOU CAN FIND. IN THE GUNNER HUD, LOOK UNDER STABILIZED / ASL FOR THE VEHICLE SILHOUETTE: THE TWO LITTLE SIDE TICKS SHOW SIDE TILT. MOVE THE BIG CAT UNTIL THE TICKS ARE AS CENTERED AND LEVEL AS POSSIBLE. NOSE-UP / NOSE-DOWN SLOPE ALSO CHANGES RANGE. MEOW.'
-        }
-    };
+    const TERRAIN_TEXT_KEYS = Object.freeze({
+        terrainLoading: 'terrainLoading',
+        terrainStatus: 'terrainStatus',
+        warningTitle: 'sphLevelWarningTitle',
+        warningBody: 'sphLevelWarningBody'
+    });
+
+    const TERRAIN_TEXT_FALLBACK = Object.freeze({
+        terrainLoading: 'terrain loading',
+        terrainStatus: 'ΔZ {dz} m · MIL not auto-corrected',
+        warningTitle: 'LEVEL THE SPH-2 BEFORE FIRING',
+        warningBody:
+            'Vehicle tilt changes the actual range. Park the SPH-2 on the flattest ground available. In the gunner HUD, find the vehicle silhouette below STABILIZED / ASL: the two small side markers show lateral tilt. Reposition the vehicle until the markers are as centered and aligned as possible. Front/back slope also affects range, so avoid parking uphill or downhill.'
+    });
+
+    let cachedTextLanguage = null;
+    let cachedTextTranslator = null;
+    let cachedText = null;
 
     function currentLanguage() {
         return (
@@ -120,7 +70,38 @@
     }
 
     function uiText() {
-        return UI_TEXT[currentLanguage()] || UI_TEXT.en;
+        const language = currentLanguage();
+        const translator =
+            typeof tr === 'function'
+                ? tr
+                : null;
+
+        if (
+            cachedText &&
+            cachedTextLanguage === language &&
+            cachedTextTranslator === translator
+        ) {
+            return cachedText;
+        }
+
+        cachedTextLanguage = language;
+        cachedTextTranslator = translator;
+        cachedText = Object.fromEntries(
+            Object.entries(TERRAIN_TEXT_KEYS)
+                .map(([property, key]) => {
+                    const translated =
+                        translator?.(key);
+
+                    return [
+                        property,
+                        translated && translated !== key
+                            ? translated
+                            : TERRAIN_TEXT_FALLBACK[property]
+                    ];
+                })
+        );
+
+        return cachedText;
     }
 
     function installWarningStyle() {

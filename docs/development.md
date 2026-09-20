@@ -18,9 +18,11 @@ wardogs-calculator/
 │   ├── core/
 │   ├── features/
 │   ├── map/
+│   │   └── tools/
 │   ├── mobile/
 │   ├── map-landing-language.js
 │   └── ui/
+│       └── layout/
 ├── locales/
 │   ├── index.json
 │   └── *.json
@@ -33,6 +35,7 @@ wardogs-calculator/
 │   ├── map-landing-pages.mjs
 │   ├── map-landing-locales.mjs
 │   ├── version-assets.mjs
+│   ├── lib/application-assets.mjs
 │   └── dev-server.mjs
 ├── src/pages/
 │   └── maps/template.html
@@ -52,6 +55,13 @@ wardogs-calculator/
 CSS source is split into focused modules under `styles/desktop/` and `styles/mobile/`. The root `style.css` and `mobile.css` files are development entry points; production receives bundled `dist/style.css` and `dist/mobile.css`.
 
 The application intentionally uses no frontend framework. Runtime code is HTML5, modular CSS, Vanilla JavaScript, Canvas, Pointer Events, Fetch API, JSON and browser storage. Node.js is used only for build/development scripts.
+
+The browser runtime remains a set of ordered classic scripts so source mode works without a bundler. The order is defined once in `scripts/lib/application-assets.mjs` and is reused by the production bundler and tests. Large UI areas are split by responsibility:
+
+- `js/map/tools/` — state/import/export, controls, pointer interactions and rendering;
+- `js/ui/layout/` — shared state, accessibility, desktop sidebar, mobile menu, SPH warning, saved-target panel and the layout coordinator.
+
+Files inside each group intentionally share the existing browser global scope. Their manifest order is therefore part of the runtime contract; add or reorder them through `application-assets.mjs`, then update the source page templates.
 
 ## Running Locally
 
@@ -86,8 +96,10 @@ The source dev server continues to serve legacy static desktop locale shells. **
 Before committing or deploying, run:
 
 ```bash
-npm run build
+npm run check
 ```
+
+`npm run check` runs client/build-script tests, creates the production artifact, verifies its security and SEO contracts, and runs the Worker test suite. Run `npm ci` in `sync/` once before the first full check.
 
 The build pipeline is:
 

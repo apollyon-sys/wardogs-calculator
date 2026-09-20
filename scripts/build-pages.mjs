@@ -9,6 +9,10 @@ import {
     renderMapLandingPage
 } from './map-landing-pages.mjs';
 import { SEO_ALTERNATE_NAMES, SEO_PAGE_CONTENT } from './seo-content.mjs';
+import {
+    DESKTOP_SCRIPT_FILES,
+    MOBILE_SCRIPT_FILES
+} from './lib/application-assets.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -77,71 +81,8 @@ const mobileStyleFiles = [
     'styles/mobile/accessibility.css'
 ];
 
-const desktopScriptFiles = [
-    'js/core/core.js',
-    'js/core/resources.js',
-    'js/core/config.js',
-    'js/core/analytics.js',
-    'js/core/file-transfer.js',
-    'js/ui/i18n.js',
-    'js/ui/theme.js',
-    'js/ui/footer.js',
-    'js/ui/layout.js',
-    'js/features/saved-targets.js',
-    'js/features/motd.js',
-    'js/features/weapons.js',
-    'js/map/assets.js',
-    'js/map/maps.js',
-    'js/map/map-view.js',
-    'js/map/camera-keys.js',
-    'js/map/tiles.js',
-    'js/map/contours.js',
-    'js/map/overlays.js',
-    'js/map/map-tools.js',
-    'js/map/grid.js',
-    'js/map/renderer.js',
-    'js/features/coordinates.js',
-    'js/features/point-locks.js',
-    'js/features/fire-adjustment.js',
-    'js/features/results.js',
-    'js/ui/inputs.js',
-    'js/ui/cursor.js',
-    'js/events.js',
-    'js/main.js'
-];
-
-const mobileScriptFiles = [
-    'js/core/core.js',
-    'js/core/resources.js',
-    'js/core/config.js',
-    'js/core/analytics.js',
-    'js/core/file-transfer.js',
-    'js/ui/i18n.js',
-    'js/ui/theme.js',
-    'js/ui/footer.js',
-    'js/ui/layout.js',
-    'js/features/saved-targets.js',
-    'js/features/motd.js',
-    'js/features/weapons.js',
-    'js/map/assets.js',
-    'js/map/maps.js',
-    'js/map/map-view.js',
-    'js/map/tiles.js',
-    'js/map/contours.js',
-    'js/map/overlays.js',
-    'js/map/map-tools.js',
-    'js/map/grid.js',
-    'js/map/renderer.js',
-    'js/features/coordinates.js',
-    'js/features/point-locks.js',
-    'js/features/fire-adjustment.js',
-    'js/features/results.js',
-    'js/ui/inputs.js',
-    'js/ui/cursor.js',
-    'js/events.js',
-    'js/mobile/mobile.js',
-    'js/main.js'
-];
+const desktopScriptFiles = DESKTOP_SCRIPT_FILES;
+const mobileScriptFiles = MOBILE_SCRIPT_FILES;
 
 const ASSET_CDN_ORIGIN =
     'https://assets.wardogs-artillery.com';

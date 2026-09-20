@@ -1,11 +1,16 @@
 {
   "name": "wardogs-artillery-calculator",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "node scripts/build-pages.mjs && node scripts/sync-locales.mjs && node scripts/version-assets.mjs",
     "dev": "node scripts/dev-server.mjs",
     "build-contours": "node scripts/build-contours.mjs",
-    "test:scripts": "node --test scripts/lib/contours.test.mjs scripts/lib/dev-server-security.test.mjs",
-    "test:build": "node scripts/verify-build.mjs"
+    "test": "npm run test:scripts",
+    "test:scripts": "node --test scripts/lib/*.test.mjs",
+    "test:build": "node scripts/verify-build.mjs",
+    "check": "npm run test:scripts && npm run build && npm run test:build && npm --prefix sync test"
   }
 }
