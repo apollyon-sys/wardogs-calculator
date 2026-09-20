@@ -89,6 +89,20 @@ footer {
     min-height: 40px;
 }
 
+/* Keep the map-tool color swatches square when larger controls are enabled.
+ * This mirrors the existing mobile accessibility sizing for the same palette. */
+:root[data-a11y-large-controls="true"] .map-tool-color {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    flex: 0 0 44px;
+}
+
+:root[data-a11y-large-controls="true"] .map-tool-palette {
+    grid-template-columns: repeat(5, 44px);
+}
+
 :root[data-a11y-large-controls="true"] .donation-provider-link,
 :root[data-a11y-large-controls="true"] .footer-source-code-link {
     min-height: 44px;
