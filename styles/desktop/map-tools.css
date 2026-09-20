@@ -15,6 +15,9 @@
 
     gap: 8px;
 
+    /* Keep every desktop tool popover inside the actual map viewport. */
+    max-height: calc(100% - 28px);
+
     pointer-events: none;
 }
 
@@ -41,6 +44,8 @@
             rgba(0, 0, 0, .24);
 
     backdrop-filter: blur(8px);
+
+    flex: 0 0 auto;
 
     pointer-events: auto;
 }
@@ -331,6 +336,15 @@ canvas.map-tool-eraser-active {
     width: 252px;
     gap: 7px;
     padding: 10px;
+
+    /* The parent stack is capped to the map height; Layers is the
+       flexible scrolling child when accessibility makes it taller. */
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
 }
 
 .map-tool-layers .map-tool-popover-title {
