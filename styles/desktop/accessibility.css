@@ -89,7 +89,8 @@ footer {
     min-height: 40px;
 }
 
-:root[data-a11y-large-controls="true"] .donation-provider-link {
+:root[data-a11y-large-controls="true"] .donation-provider-link,
+:root[data-a11y-large-controls="true"] .footer-source-code-link {
     min-height: 44px;
 }
 
