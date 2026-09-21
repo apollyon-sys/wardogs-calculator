@@ -626,8 +626,9 @@ function createMobileCreditsBlock() {
         );
 
     authorLink.href =
-        config.authorUrl ||
-        '#';
+        normalizeConfiguredHttpUrl(
+            config.authorUrl
+        ) || '#';
 
     authorLink.target =
         '_blank';
@@ -1183,5 +1184,3 @@ function initMobileSideMenu() {
         false
     );
 }
-
-

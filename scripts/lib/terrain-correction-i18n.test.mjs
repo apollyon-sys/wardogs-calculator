@@ -51,6 +51,17 @@ test('Terrain3D runtime uses the shared localization pipeline', async () => {
     }
 });
 
+test('Terrain3D payload verification fails closed and result copy avoids HTML interpolation', async () => {
+    const source = await readFile(
+        new URL('../../js/features/experimental-terrain-correction.js', import.meta.url),
+        'utf8'
+    );
+
+    assert.match(source, /SHA256 verification is unavailable/);
+    assert.match(source, /arcs\.replaceChildren\(\.\.\.rows\)/);
+    assert.doesNotMatch(source, /\$\{candidate\.(?:value|detail|className)\}/);
+});
+
 test('terrain status resolves through the active locale', async () => {
     const runtime = await readFile(
         new URL('../../js/features/terrain-ballistics.js', import.meta.url),

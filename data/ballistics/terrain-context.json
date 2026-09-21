@@ -20,7 +20,7 @@
   "releasePolicy": {
     "automaticMilCorrection": false,
     "flatTableAuthoritative": true,
-    "reason": "Default firing solutions remain the flat table. Terrain3D correction is exposed only as an explicit experimental opt-in and applies per arc only when the canonical resolver returns SAFE_CONSENSUS. All other states fall back to the flat table. Platform/chassis tilt correction remains disabled."
+    "reason": "Default firing solutions remain the flat table. Terrain3D correction is exposed only as an explicit experimental opt-in and applies per arc only when the canonical resolver returns SAFE_CONSENSUS. All other states fall back to the flat table. Automatic platform/chassis tilt correction remains disabled; the separate manual hull-heading experiment is controlled by config/app.json."
   },
   "experimentalCorrection": {
     "available": true,

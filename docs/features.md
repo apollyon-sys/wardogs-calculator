@@ -188,7 +188,9 @@ Bakurani can provide terrain height at the Artillery and Target coordinates. Whe
 
 A positive value means the target is above the artillery position. A negative value means the target is below it.
 
-Terrain elevation is currently **informational**. The v1.6.0 release does not automatically change MIL from Terrain3D or vehicle attitude. Existing firing tables remain authoritative.
+Terrain elevation remains informational by default. The optional Terrain3D correction is off by default and changes an arc only after the verified resolver returns `SAFE_CONSENSUS`; every other state keeps the firing-table value.
+
+The separate SPH-2 hull-heading experiment is controlled by `features.sphPlatformCorrection.enabled` in `config/app.json`. When enabled, it does not alter MIL until the user enters a hull direction. Until that opt-in, the normal low- and high-angle solutions remain visible.
 
 SPH-2 accuracy is also affected by vehicle attitude. A visible warning is shown under the result when SPH-2 is selected. In the gunner HUD, the two small side markers around the vehicle silhouette below `STABILIZED / ASL` indicate lateral tilt. For best accuracy, reposition the vehicle until those markers are as centered and aligned as possible and avoid parking on an obvious uphill/downhill slope.
 

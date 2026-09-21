@@ -9,11 +9,20 @@ const source = await readFile(
 );
 
 function createContext() {
+    const quietConsole = {
+        ...console,
+        warn: () => {}
+    };
     const context = vm.createContext({
-        console,
+        console: quietConsole,
         Date,
         Math,
         structuredClone,
+        lobby: null,
+        localStorage: {
+            getItem: () => null,
+            setItem: () => {}
+        },
         S: { map: 'bakurani' },
         getMarkerAsset: icon => icon === 'valid' ? { placeable: true } : null
     });
@@ -82,5 +91,56 @@ test('map tool import normalization rejects empty and malformed payloads', () =>
             markers: [{ icon: 'blocked', x: 1, y: 2 }]
         }),
         /No supported map changes found/
+    );
+});
+
+test('map tool imports enforce cumulative collection limits', () => {
+    const context = createContext();
+    vm.runInContext(
+        `MAP_TOOL_STATE.drawings = Array.from(
+            { length: MAP_TOOLS_IMPORT_LIMITS.drawings },
+            (_, index) => ({ id: String(index), mapId: 'bakurani', points: [] })
+        )`,
+        context
+    );
+
+    context.imported = {
+        drawings: [{ id: 'extra', mapId: 'bakurani', points: [] }],
+        zones: [],
+        polygons: [],
+        markers: [],
+        layers: null
+    };
+
+    assert.throws(
+        () => vm.runInContext('applyImportedMapToolChanges(imported)', context),
+        /drawings limit exceeded/
+    );
+    assert.equal(
+        vm.runInContext('MAP_TOOL_STATE.drawings.length', context),
+        2000
+    );
+});
+
+test('failed map tool persistence does not partially apply an import', () => {
+    const context = createContext();
+    context.localStorage.setItem = () => {
+        throw new Error('quota');
+    };
+    context.imported = {
+        drawings: [{ id: 'extra', mapId: 'bakurani', points: [] }],
+        zones: [],
+        polygons: [],
+        markers: [],
+        layers: null
+    };
+
+    assert.throws(
+        () => vm.runInContext('applyImportedMapToolChanges(imported)', context),
+        /could not be persisted/
+    );
+    assert.equal(
+        vm.runInContext('MAP_TOOL_STATE.drawings.length', context),
+        0
     );
 });

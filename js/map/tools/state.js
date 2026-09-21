@@ -258,24 +258,26 @@ function matchesConfiguredCombo(event, combo) {
         event.shiftKey === parts.includes('shift');
 }
 
-function saveMapToolState() {
-    if (lobby?.active) { lobby.capture(); return; }
+function saveMapToolState(state = MAP_TOOL_STATE) {
+    if (lobby?.active) { lobby.capture(); return true; }
     try {
         localStorage.setItem(
             MAP_TOOLS_STORAGE_KEY,
             JSON.stringify({
-                drawings: MAP_TOOL_STATE.drawings,
-                zones: MAP_TOOL_STATE.zones,
-                polygons: MAP_TOOL_STATE.polygons,
-                markers: MAP_TOOL_STATE.markers,
-                layers: MAP_TOOL_STATE.layers
+                drawings: state.drawings,
+                zones: state.zones,
+                polygons: state.polygons,
+                markers: state.markers,
+                layers: state.layers
             })
         );
+        return true;
     } catch (error) {
         console.warn(
             'Failed to save map tools state:',
             error
         );
+        return false;
     }
 }
 
@@ -290,30 +292,16 @@ function loadMapToolState() {
             return;
         }
 
-        const parsed =
-            JSON.parse(raw);
+        const parsed = normalizeImportedMapToolPayload(
+            JSON.parse(raw)
+        );
 
-        MAP_TOOL_STATE.drawings =
-            Array.isArray(parsed?.drawings)
-                ? parsed.drawings
-                : [];
+        MAP_TOOL_STATE.drawings = parsed.drawings;
+        MAP_TOOL_STATE.zones = parsed.zones;
+        MAP_TOOL_STATE.polygons = parsed.polygons;
+        MAP_TOOL_STATE.markers = parsed.markers;
 
-        MAP_TOOL_STATE.zones =
-            Array.isArray(parsed?.zones)
-                ? parsed.zones
-                : [];
-
-        MAP_TOOL_STATE.polygons =
-            Array.isArray(parsed?.polygons)
-                ? parsed.polygons
-                : [];
-
-        MAP_TOOL_STATE.markers =
-            Array.isArray(parsed?.markers)
-                ? parsed.markers
-                : [];
-
-        if (parsed?.layers && typeof parsed.layers === 'object') {
+        if (parsed.layers) {
             MAP_TOOL_STATE.layers = {
                 ...MAP_TOOL_STATE.layers,
                 ...parsed.layers
@@ -598,6 +586,43 @@ function normalizeImportedMapToolPayload(payload) {
 }
 
 function applyImportedMapToolChanges(imported) {
+    const next = {
+        drawings: [
+            ...MAP_TOOL_STATE.drawings,
+            ...imported.drawings
+        ],
+        zones: [
+            ...MAP_TOOL_STATE.zones,
+            ...imported.zones
+        ],
+        polygons: [
+            ...MAP_TOOL_STATE.polygons,
+            ...imported.polygons
+        ],
+        markers: [
+            ...MAP_TOOL_STATE.markers,
+            ...imported.markers
+        ],
+        layers: imported.layers
+            ? {
+                ...MAP_TOOL_STATE.layers,
+                ...imported.layers
+            }
+            : MAP_TOOL_STATE.layers
+    };
+
+    for (const name of ['drawings', 'zones', 'polygons', 'markers']) {
+        if (next[name].length > MAP_TOOLS_IMPORT_LIMITS[name]) {
+            throw new Error(`Map tool ${name} limit exceeded`);
+        }
+    }
+
+    const collaborative = lobby?.active === true;
+
+    if (!collaborative && !saveMapToolState(next)) {
+        throw new Error('Map changes could not be persisted');
+    }
+
     if (
         imported.drawings.length ||
         imported.zones.length ||
@@ -607,16 +632,14 @@ function applyImportedMapToolChanges(imported) {
         pushMapToolHistory();
     }
 
-    MAP_TOOL_STATE.drawings.push(...imported.drawings);
-    MAP_TOOL_STATE.zones.push(...imported.zones);
-    MAP_TOOL_STATE.polygons.push(...imported.polygons);
-    MAP_TOOL_STATE.markers.push(...imported.markers);
+    MAP_TOOL_STATE.drawings = next.drawings;
+    MAP_TOOL_STATE.zones = next.zones;
+    MAP_TOOL_STATE.polygons = next.polygons;
+    MAP_TOOL_STATE.markers = next.markers;
+    MAP_TOOL_STATE.layers = next.layers;
 
-    if (imported.layers) {
-        MAP_TOOL_STATE.layers = {
-            ...MAP_TOOL_STATE.layers,
-            ...imported.layers
-        };
+    if (collaborative) {
+        lobby.capture();
     }
 
     MAP_TOOL_STATE.hoverPathId = null;
@@ -625,7 +648,6 @@ function applyImportedMapToolChanges(imported) {
     MAP_TOOL_STATE.hoverShapeId = null;
     MAP_TOOL_STATE.hoverMarkerId = null;
 
-    saveMapToolState();
     buildMapLayers();
     updateMapToolsUI();
     draw();
@@ -706,4 +728,3 @@ function clearCurrentMapToolContent() {
 
     return true;
 }
-

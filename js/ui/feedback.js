@@ -210,9 +210,19 @@ function feedbackCopy() {
 }
 
 function feedbackServerUrl() {
-    return String(
+    const configured =
         APP_CONFIG?.feedback?.serverUrl ||
         APP_CONFIG?.collab?.serverUrl ||
+        '';
+
+    return (
+        normalizeConfiguredHttpUrl(
+            configured,
+            {
+                allowLocalhost: true,
+                allowSearchAndHash: false
+            }
+        ) ||
         ''
     ).replace(/\/+$/, '');
 }

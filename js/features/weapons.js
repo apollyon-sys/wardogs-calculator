@@ -49,7 +49,7 @@ function normalizeBallistics(ballistics) {
 }
 
 function normalizeWeapon(item) {
-    if (!item || typeof item.id !== 'string' || !item.id.trim()) {
+    if (!item || !isValidRegistryId(item.id?.trim())) {
         return null;
     }
 
@@ -265,7 +265,7 @@ async function loadWeapons() {
         throw new Error('No weapons found in data/weapons.json');
     }
 
-    WEAPONS = {};
+    WEAPONS = createSafeRegistry();
 
     source
         .map(normalizeWeapon)
@@ -281,11 +281,12 @@ async function loadWeapons() {
     }
 
     DEFAULT_WEAPON =
-        typeof data?.default === 'string' && WEAPONS[data.default]
+        typeof data?.default === 'string' &&
+        hasRegistryEntry(WEAPONS, data.default)
             ? data.default
             : ids[0];
 
-    if (!S.weapon || !WEAPONS[S.weapon]) {
+    if (!S.weapon || !hasRegistryEntry(WEAPONS, S.weapon)) {
         S.weapon = DEFAULT_WEAPON;
     }
 

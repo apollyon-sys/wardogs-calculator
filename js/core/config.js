@@ -3,6 +3,12 @@
    ========================= */
 
 const DEFAULT_APP_CONFIG = {
+    features: {
+        sphPlatformCorrection: {
+            enabled: false
+        }
+    },
+
     map: {
         camera: {
             maxZoom: 100,
@@ -79,6 +85,15 @@ function mergeAppConfig(base, override) {
                 ...base.mapTools.shortcuts,
                 ...(override?.mapTools?.shortcuts || {})
             }
+        },
+
+        features: {
+            ...base.features,
+            ...(override?.features || {}),
+            sphPlatformCorrection: {
+                ...base.features.sphPlatformCorrection,
+                ...(override?.features?.sphPlatformCorrection || {})
+            }
         }
     };
 }
@@ -118,6 +133,58 @@ function getMapToolShortcut(action) {
     )
         .trim()
         .toLowerCase();
+}
+
+function isSphPlatformCorrectionEnabled() {
+    return (
+        APP_CONFIG
+            ?.features
+            ?.sphPlatformCorrection
+            ?.enabled === true
+    );
+}
+
+function normalizeConfiguredHttpUrl(
+    value,
+    {
+        allowLocalhost = false,
+        allowSearchAndHash = true
+    } = {}
+) {
+    try {
+        const url = new URL(
+            String(value || '').trim(),
+            document.baseURI
+        );
+
+        const localHttp =
+            allowLocalhost &&
+            url.protocol === 'http:' &&
+            (
+                url.hostname === 'localhost' ||
+                url.hostname === '127.0.0.1' ||
+                url.hostname === '[::1]'
+            );
+
+        if (url.protocol !== 'https:' && !localHttp) {
+            return null;
+        }
+
+        if (url.username || url.password) {
+            return null;
+        }
+
+        if (
+            !allowSearchAndHash &&
+            (url.search || url.hash)
+        ) {
+            return null;
+        }
+
+        return url.href;
+    } catch {
+        return null;
+    }
 }
 
 function getCameraPanSpeed() {

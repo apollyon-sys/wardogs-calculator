@@ -249,19 +249,28 @@
         const raw =
             await response.text();
 
-        if (expectedSha) {
-            const actualSha =
-                await sha256Hex(raw);
+        if (!/^[0-9a-f]{64}$/i.test(String(expectedSha || ''))) {
+            throw new Error(
+                `Missing or invalid ${label} SHA256`
+            );
+        }
 
-            if (
-                actualSha &&
-                actualSha.toLowerCase() !==
-                String(expectedSha).toLowerCase()
-            ) {
-                throw new Error(
-                    `${label} SHA256 mismatch: ${actualSha}`
-                );
-            }
+        const actualSha =
+            await sha256Hex(raw);
+
+        if (!actualSha) {
+            throw new Error(
+                `${label} SHA256 verification is unavailable`
+            );
+        }
+
+        if (
+            actualSha.toLowerCase() !==
+            String(expectedSha).toLowerCase()
+        ) {
+            throw new Error(
+                `${label} SHA256 mismatch: ${actualSha}`
+            );
         }
 
         return JSON.parse(raw);
@@ -2635,21 +2644,47 @@
                     : '—'
             );
 
-        return `
-            <div class="experimental-terrain-arc">
-                <span class="experimental-terrain-arc-name">${name}</span>
-                <span class="experimental-terrain-value">
-                    <span class="experimental-terrain-value-label">${copy.table}</span>
-                    <strong>${tableDisplay}</strong>
-                    <small>mrad</small>
-                </span>
-                <span class="experimental-terrain-value ${candidate.className}">
-                    <span class="experimental-terrain-value-label">${copy.terrain}</span>
-                    <strong>${candidate.value}</strong>
-                    <small>${candidate.detail}</small>
-                </span>
-            </div>
-        `;
+        const row = document.createElement('div');
+        row.className = 'experimental-terrain-arc';
+
+        const arcName = document.createElement('span');
+        arcName.className = 'experimental-terrain-arc-name';
+        arcName.textContent = name;
+
+        const value = (label, primary, detail, stateClass = '') => {
+            const item = document.createElement('span');
+            item.className = 'experimental-terrain-value';
+
+            if (/^is-[a-z-]+$/.test(stateClass)) {
+                item.classList.add(stateClass);
+            }
+
+            const labelElement = document.createElement('span');
+            labelElement.className = 'experimental-terrain-value-label';
+            labelElement.textContent = label;
+
+            const primaryElement = document.createElement('strong');
+            primaryElement.textContent = primary;
+
+            const detailElement = document.createElement('small');
+            detailElement.textContent = detail;
+
+            item.append(labelElement, primaryElement, detailElement);
+            return item;
+        };
+
+        row.append(
+            arcName,
+            value(copy.table, tableDisplay, 'mrad'),
+            value(
+                copy.terrain,
+                candidate.value,
+                candidate.detail,
+                candidate.className
+            )
+        );
+
+        return row;
     }
 
     function syncPanel() {
@@ -2790,23 +2825,21 @@
         }
 
         if (arcs) {
-            arcs.innerHTML =
-                (
-                    arcData.low
-                        ? renderArc(
-                            copy.low,
-                            arcData.low
-                        )
-                        : ''
-                ) +
-                (
-                    arcData.high
-                        ? renderArc(
-                            copy.high,
-                            arcData.high
-                        )
-                        : ''
+            const rows = [];
+
+            if (arcData.low) {
+                rows.push(
+                    renderArc(copy.low, arcData.low)
                 );
+            }
+
+            if (arcData.high) {
+                rows.push(
+                    renderArc(copy.high, arcData.high)
+                );
+            }
+
+            arcs.replaceChildren(...rows);
         }
 
         if (status) {

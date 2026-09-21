@@ -1,4 +1,31 @@
-let WEAPONS = {};
+const REGISTRY_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/i;
+const RESERVED_REGISTRY_IDS = new Set([
+    ...Object.getOwnPropertyNames(Object.prototype),
+    'prototype'
+].map(value => value.toLowerCase()));
+
+function createSafeRegistry() {
+    return Object.create(null);
+}
+
+function isValidRegistryId(value) {
+    return (
+        typeof value === 'string' &&
+        REGISTRY_ID_PATTERN.test(value) &&
+        !RESERVED_REGISTRY_IDS.has(value.toLowerCase())
+    );
+}
+
+function hasRegistryEntry(registry, id) {
+    return (
+        registry !== null &&
+        typeof registry === 'object' &&
+        typeof id === 'string' &&
+        Object.hasOwn(registry, id)
+    );
+}
+
+let WEAPONS = createSafeRegistry();
 let APP_CONFIG = {};
 // The optional lobby runtime is never loaded when collaboration is disabled.
 let lobby = null;
@@ -36,8 +63,8 @@ let DEFAULT_LANG = 'en';
 
 let LANGUAGES = [];
 let I18N = {};
-let MAPS = {};
-let MAP_ASSETS = {};
+let MAPS = createSafeRegistry();
+let MAP_ASSETS = createSafeRegistry();
 
 let drag = null;
 let pan = null;

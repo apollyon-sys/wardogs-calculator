@@ -262,7 +262,8 @@ function sphPlatformApplyManualMilToSolutionSet(solutions) {
 function sphPlatformSelectArcSolutions(solutions) {
     if (
         !solutions ||
-        S.weapon !== SPH_PLATFORM_CORRECTION.weaponId
+        S.weapon !== SPH_PLATFORM_CORRECTION.weaponId ||
+        !sphPlatformCorrectionIsActive()
     ) {
         return solutions;
     }
@@ -1502,95 +1503,80 @@ function initSphPlatformCorrection() {
         return;
     }
 
-    sphPlatformCorrectionInitialized =
-        true;
+    if (
+        typeof registerElevationSolutionTransform !== 'function' ||
+        typeof registerResultRenderHook !== 'function'
+    ) {
+        throw new Error('SPH platform correction hooks are unavailable');
+    }
 
     sphPlatformLoadHullHeading();
     sphPlatformLoadArc();
     sphPlatformLoadManualMilAdjustment();
     sphPlatformEnsureControls();
 
-    const originalResolveElevationSolutions =
-        resolveElevationSolutions;
-
-    resolveElevationSolutions = function(
-        weapon,
-        distanceMeters,
-        solutions
-    ) {
-        const baseResolved =
-            originalResolveElevationSolutions(
-                weapon,
-                distanceMeters,
-                solutions
-            );
-
-        let resolvedSolutions =
-            sphPlatformSelectArcSolutions(
-                baseResolved.solutions
-            );
-
-        sphPlatformLastAimMeta =
-            null;
-
-        const targetAzimuthDeg =
-            sphPlatformGetTargetAzimuth();
-
-        if (
-            sphPlatformCorrectionIsActive(
-                weapon
-            ) &&
-            Number.isFinite(targetAzimuthDeg)
-        ) {
-            const corrected =
-                sphPlatformCorrectSolutionSet(
-                    resolvedSolutions,
-                    targetAzimuthDeg
+    registerElevationSolutionTransform(
+        ({ weapon, solutions }) => {
+            let resolvedSolutions =
+                sphPlatformSelectArcSolutions(
+                    solutions
                 );
 
-            resolvedSolutions =
-                corrected.solutions;
-
             sphPlatformLastAimMeta =
-                corrected.aim;
-        }
+                null;
 
-        resolvedSolutions =
-            sphPlatformApplyManualMilToSolutionSet(
-                resolvedSolutions
-            );
+            const targetAzimuthDeg =
+                sphPlatformGetTargetAzimuth();
 
-        return {
-            ...baseResolved,
-            solutions:
-                resolvedSolutions,
-            platformHeadingCorrection: {
-                hullHeadingDeg:
-                    sphPlatformHullHeadingDeg,
-                baselinePitchDeg:
-                    SPH_PLATFORM_CORRECTION.baselinePitchDeg,
-                baselineRollDeg:
-                    SPH_PLATFORM_CORRECTION.baselineRollDeg,
-                manualMilAdjustment:
-                    sphPlatformManualMilAdjustment,
-                aim:
-                    sphPlatformLastAimMeta
+            if (
+                sphPlatformCorrectionIsActive(
+                    weapon
+                ) &&
+                Number.isFinite(targetAzimuthDeg)
+            ) {
+                const corrected =
+                    sphPlatformCorrectSolutionSet(
+                        resolvedSolutions,
+                        targetAzimuthDeg
+                    );
+
+                resolvedSolutions =
+                    corrected.solutions;
+
+                sphPlatformLastAimMeta =
+                    corrected.aim;
             }
-        };
-    };
 
-    const originalResult =
-        result;
+            resolvedSolutions =
+                sphPlatformApplyManualMilToSolutionSet(
+                    resolvedSolutions
+                );
 
-    result = function() {
-        sphPlatformLastAimMeta =
-            null;
+            return {
+                solutions: resolvedSolutions,
+                platformHeadingCorrection: {
+                    hullHeadingDeg:
+                        sphPlatformHullHeadingDeg,
+                    baselinePitchDeg:
+                        SPH_PLATFORM_CORRECTION.baselinePitchDeg,
+                    baselineRollDeg:
+                        SPH_PLATFORM_CORRECTION.baselineRollDeg,
+                    manualMilAdjustment:
+                        sphPlatformManualMilAdjustment,
+                    aim:
+                        sphPlatformLastAimMeta
+                }
+            };
+        }
+    );
 
-        originalResult();
-
+    registerResultRenderHook(() => {
         sphPlatformRenderCorrectedAim();
         sphPlatformSyncControls();
-    };
+    });
+
+    sphPlatformCorrectionInitialized =
+        true;
 
     $('weapon')
         ?.addEventListener(

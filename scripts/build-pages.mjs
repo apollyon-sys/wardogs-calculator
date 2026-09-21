@@ -117,6 +117,7 @@ async function getLanguageDefinitions() {
 
 function addProductionSecurityMeta(html, appConfig) {
     const collab = appConfig.collab || {};
+    const feedback = appConfig.feedback || {};
     const turnstileEnabled = collab.turnstile?.enabled === true;
     const connectSources = new Set([
         "'self'",
@@ -125,11 +126,28 @@ function addProductionSecurityMeta(html, appConfig) {
         'https://gateway.umami.is'
     ]);
 
-    if (collab.serverUrl) {
-        const server = new URL(collab.serverUrl);
+    const addEndpoint = (value, label, websocket = false) => {
+        if (!value) return;
+
+        const server = new URL(value);
+        if (
+            server.protocol !== 'https:' ||
+            server.username ||
+            server.password ||
+            server.search ||
+            server.hash
+        ) {
+            throw new Error(
+                `Production ${label} must be a credential-free HTTPS base URL`
+            );
+        }
+
         connectSources.add(server.origin);
-        if (server.protocol === 'https:') connectSources.add(`wss://${server.host}`);
-    }
+        if (websocket) connectSources.add(`wss://${server.host}`);
+    };
+
+    addEndpoint(collab.serverUrl, 'collab.serverUrl', true);
+    addEndpoint(feedback.serverUrl, 'feedback.serverUrl');
     if (turnstileEnabled) connectSources.add('https://challenges.cloudflare.com');
 
     const scriptSources = ["'self'", 'https://cloud.umami.is'];

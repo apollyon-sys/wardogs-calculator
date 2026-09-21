@@ -286,9 +286,9 @@ In the SPH-2 gunner HUD:
 3. Those side markers indicate lateral vehicle tilt.
 4. Reposition the SPH-2 until the markers are as centered and aligned as possible.
 
-Front/back slope also affects real range. There is currently no reliable numeric front/back tilt value available to the calculator, so for precision fire the vehicle should be parked on the flattest ground available and obvious uphill/downhill positions should be avoided.
+Front/back slope also affects real range. There is currently no live numeric tilt value available to the calculator, so for precision fire the vehicle should be parked on the flattest ground available and obvious uphill/downhill positions should be avoided.
 
-The warning is guidance, not an automatic correction input.
+The visual warning is guidance, not an automatic correction input. A separate experimental hull-heading control can be enabled with `features.sphPlatformCorrection.enabled` in `config/app.json`; it remains inactive until the user explicitly enters the hull direction, and it does not infer the actual chassis tilt.
 
 ---
 

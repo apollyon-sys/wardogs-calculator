@@ -158,7 +158,7 @@ artillery coordinate -> artillery elevation
 
 Terrain data is deliberately independent from the tile pyramid. Replacing or recalibrating map imagery does not change terrain samples unless the terrain coordinate mapping itself is changed.
 
-In v1.6.0, Terrain3D does **not** automatically modify the firing-table MIL value. If a manifest, chunk, or terrain sample is unavailable, the calculator keeps the normal firing solution instead of treating terrain as a hard dependency.
+Terrain3D does **not** modify the firing-table MIL value by default. Its experimental correction is an explicit opt-in and applies only to a verified safe arc. If a manifest, chunk, or terrain sample is unavailable, the calculator keeps the normal firing solution instead of treating terrain as a hard dependency.
 
 See [Terrain Elevation & SPH-2 Setup](terrain.md) for runtime and validation details.
 

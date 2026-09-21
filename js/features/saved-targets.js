@@ -11,6 +11,7 @@ const SAVED_TARGETS_EXPORT_TYPE =
 const SAVED_TARGET_EXPORT_VERSION = 1;
 
 const SAVED_TARGET_IMPORT_LIMIT = 500;
+const SAVED_TARGET_TOTAL_LIMIT = 2000;
 
 /*
  * Both sides of the comparison have been through clamp(), which rounds
@@ -126,21 +127,42 @@ function loadSavedTargets() {
 
         savedTargets =
             parsed
+                .slice(0, SAVED_TARGET_TOTAL_LIMIT)
                 .filter(
                     target =>
                         target &&
                         typeof target.id === 'string' &&
-                        typeof target.x === 'number' &&
-                        typeof target.y === 'number'
+                        Number.isFinite(Number(target.x)) &&
+                        Number.isFinite(Number(target.y))
                 )
                 .map(target => ({
-                    ...target,
+                    id: target.id.slice(0, 128),
+                    x: Number(target.x),
+                    y: Number(target.y),
 
                     name:
                         typeof target.name === 'string' &&
                         target.name.trim()
-                            ? target.name
-                            : createTargetName()
+                            ? target.name.trim().slice(0, 120)
+                            : createTargetName(),
+
+                    saveArtillery: Boolean(
+                        target.saveArtillery &&
+                        target.origin &&
+                        Number.isFinite(Number(target.origin.x)) &&
+                        Number.isFinite(Number(target.origin.y))
+                    ),
+
+                    origin:
+                        target.saveArtillery &&
+                        target.origin &&
+                        Number.isFinite(Number(target.origin.x)) &&
+                        Number.isFinite(Number(target.origin.y))
+                            ? {
+                                x: Number(target.origin.x),
+                                y: Number(target.origin.y)
+                            }
+                            : null
                 }));
 
     } catch (error) {
@@ -154,15 +176,19 @@ function loadSavedTargets() {
     }
 }
 
-function persistSavedTargets() {
-    if (lobby?.active) { lobby.capture(); return; }
+function persistSavedTargets(targets = savedTargets) {
+    if (lobby?.active) { lobby.capture(); return true; }
 
-    localStorage.setItem(
-        SAVED_TARGETS_KEY,
-        JSON.stringify(
-            savedTargets
-        )
-    );
+    try {
+        localStorage.setItem(
+            SAVED_TARGETS_KEY,
+            JSON.stringify(targets)
+        );
+        return true;
+    } catch (error) {
+        console.warn('Failed to save targets:', error);
+        return false;
+    }
 }
 
 /* =========================
@@ -727,11 +753,26 @@ async function importSavedTargets() {
                 payload
             );
 
-        savedTargets.push(
+        const nextTargets = [
+            ...savedTargets,
             ...imported.targets
-        );
+        ];
 
-        persistSavedTargets();
+        if (nextTargets.length > SAVED_TARGET_TOTAL_LIMIT) {
+            throw new Error('Saved target limit exceeded');
+        }
+
+        const collaborative = lobby?.active === true;
+
+        if (!collaborative && !persistSavedTargets(nextTargets)) {
+            throw new Error('Saved targets could not be persisted');
+        }
+
+        savedTargets = nextTargets;
+
+        if (collaborative) {
+            lobby.capture();
+        }
         renderSavedTargets();
 
         savedTargetTransferStatus(
@@ -808,11 +849,24 @@ function saveCurrentTarget() {
                 : null
     };
 
-    savedTargets.push(
-        target
-    );
+    if (savedTargets.length >= SAVED_TARGET_TOTAL_LIMIT) {
+        return;
+    }
 
-    persistSavedTargets();
+    const nextTargets = [
+        ...savedTargets,
+        target
+    ];
+
+    if (!lobby?.active && !persistSavedTargets(nextTargets)) {
+        return;
+    }
+
+    savedTargets = nextTargets;
+
+    if (lobby?.active) {
+        lobby.capture();
+    }
 
     if (
         typeof trackAnalytics ===
@@ -842,12 +896,19 @@ function deleteTarget(id) {
         return;
     }
 
-    savedTargets.splice(
-        index,
-        1
+    const nextTargets = savedTargets.filter(
+        (_, targetIndex) => targetIndex !== index
     );
 
-    persistSavedTargets();
+    if (!lobby?.active && !persistSavedTargets(nextTargets)) {
+        return;
+    }
+
+    savedTargets = nextTargets;
+
+    if (lobby?.active) {
+        lobby.capture();
+    }
 
     renderSavedTargets();
 }
@@ -881,10 +942,24 @@ function editTargetName(id) {
         return;
     }
 
-    target.name =
-        trimmed;
+    const nextTargets = savedTargets.map(item => (
+        item.id === id
+            ? {
+                ...item,
+                name: trimmed.slice(0, 120)
+            }
+            : item
+    ));
 
-    persistSavedTargets();
+    if (!lobby?.active && !persistSavedTargets(nextTargets)) {
+        return;
+    }
+
+    savedTargets = nextTargets;
+
+    if (lobby?.active) {
+        lobby.capture();
+    }
 
     renderSavedTargets();
 }

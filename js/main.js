@@ -258,6 +258,13 @@ function requestTerrainBallisticsForCurrentState() {
 }
 
 async function loadSphPlatformCorrectionRuntime() {
+    if (
+        typeof isSphPlatformCorrectionEnabled !== 'function' ||
+        !isSphPlatformCorrectionEnabled()
+    ) {
+        return false;
+    }
+
     try {
         await loadRuntimeScript({
             selector: 'script[data-sph-platform-correction]',
@@ -267,11 +274,15 @@ async function loadSphPlatformCorrectionRuntime() {
                 typeof initSphPlatformCorrection ===
                 'function'
         });
+
+        return true;
     } catch (error) {
         console.warn(
             '[sph-platform] Experimental hull correction runtime unavailable; base calculator remains active.',
             error
         );
+
+        return false;
     }
 }
 
@@ -430,7 +441,8 @@ async function init() {
             loadMaps()
         ]);
 
-        await loadSphPlatformCorrectionRuntime();
+        const sphPlatformRuntimeLoaded =
+            await loadSphPlatformCorrectionRuntime();
 
         applyMapQuerySelection();
 
@@ -452,7 +464,7 @@ async function init() {
          */
         if (
             S.map !== 'custom' &&
-            MAPS[S.map]
+            hasRegistryEntry(MAPS, S.map)
         ) {
 
             S.w =
@@ -471,6 +483,7 @@ async function init() {
         bindEvents();
 
         if (
+            sphPlatformRuntimeLoaded &&
             typeof initSphPlatformCorrection ===
                 'function'
         ) {

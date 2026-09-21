@@ -161,14 +161,14 @@ function normalizeMap(map) {
                     : DEFAULT_TILE_EXTENSION
         };
 
-        const tileStyles = {};
+        const tileStyles = createSafeRegistry();
 
         Object.entries(
             map.tiles.styles || {}
         ).forEach(
             ([styleId, style]) => {
                 if (
-                    !styleId ||
+                    !isValidRegistryId(styleId) ||
                     !isValidTileConfig(style)
                 ) {
                     return;
@@ -292,10 +292,10 @@ async function loadMaps() {
                             `maps/${file}`
                         );
 
-                    if (!map.id) {
+                    if (!isValidRegistryId(map.id)) {
 
                         throw new Error(
-                            `Map ${file} has no id`
+                            `Map ${file} has an invalid id`
                         );
                     }
 
@@ -347,7 +347,7 @@ async function loadMaps() {
         );
     }
 
-    MAPS = {};
+    MAPS = createSafeRegistry();
 
     loaded
         .forEach(
@@ -657,7 +657,7 @@ function populateMapSelect() {
      */
     if (
         S.map !== 'custom' &&
-        !MAPS[S.map]
+        !hasRegistryEntry(MAPS, S.map)
     ) {
 
         const firstMap =

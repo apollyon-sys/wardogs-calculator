@@ -7,6 +7,10 @@ function normalizeMarkerAsset(
     asset
 ) {
 
+    if (!isValidRegistryId(id)) {
+        return null;
+    }
+
     if (
         typeof asset === 'string'
     ) {
@@ -98,7 +102,7 @@ async function loadMapAssets() {
          * after fetchJSON() exhausts its retry, keep the calculator usable
          * without user-placeable marker icons.
          */
-        MAP_ASSETS = {};
+        MAP_ASSETS = createSafeRegistry();
 
         console.warn(
             'Map marker assets unavailable; continuing without marker assets.',
@@ -115,7 +119,7 @@ async function loadMapAssets() {
             ? data.markerIcons
             : {};
 
-    MAP_ASSETS = {};
+    MAP_ASSETS = createSafeRegistry();
 
     Object.entries(source)
         .forEach(
@@ -145,8 +149,9 @@ function getMarkerAsset(id) {
     }
 
     return (
-        MAP_ASSETS[id] ||
-        null
+        hasRegistryEntry(MAP_ASSETS, id)
+            ? MAP_ASSETS[id]
+            : null
     );
 }
 

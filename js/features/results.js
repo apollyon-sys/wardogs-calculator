@@ -2,6 +2,81 @@
    RESULT
    ========================= */
 
+const ELEVATION_SOLUTION_TRANSFORMS = [];
+const RESULT_RENDER_HOOKS = [];
+
+function registerElevationSolutionTransform(transform) {
+    if (typeof transform !== 'function') {
+        throw new TypeError('Elevation solution transform must be a function');
+    }
+
+    ELEVATION_SOLUTION_TRANSFORMS.push(transform);
+
+    return () => {
+        const index = ELEVATION_SOLUTION_TRANSFORMS.indexOf(transform);
+        if (index >= 0) ELEVATION_SOLUTION_TRANSFORMS.splice(index, 1);
+    };
+}
+
+function registerResultRenderHook(hook) {
+    if (typeof hook !== 'function') {
+        throw new TypeError('Result render hook must be a function');
+    }
+
+    RESULT_RENDER_HOOKS.push(hook);
+
+    return () => {
+        const index = RESULT_RENDER_HOOKS.indexOf(hook);
+        if (index >= 0) RESULT_RENDER_HOOKS.splice(index, 1);
+    };
+}
+
+function applyElevationSolutionTransforms(context, resolved) {
+    return ELEVATION_SOLUTION_TRANSFORMS.reduce(
+        (current, transform) => {
+            try {
+                const transformed = transform({
+                    ...context,
+                    solutions: current.solutions,
+                    terrainMeta: current.terrainMeta
+                });
+
+                if (!transformed) return current;
+
+                if (transformed.solutions) {
+                    return {
+                        ...current,
+                        ...transformed,
+                        solutions: transformed.solutions
+                    };
+                }
+
+                return {
+                    ...current,
+                    solutions: transformed
+                };
+            } catch (error) {
+                console.warn(
+                    '[results] Elevation solution transform failed; keeping the previous solution.',
+                    error
+                );
+                return current;
+            }
+        },
+        resolved
+    );
+}
+
+function runResultRenderHooks() {
+    RESULT_RENDER_HOOKS.forEach(hook => {
+        try {
+            hook();
+        } catch (error) {
+            console.warn('[results] Result render hook failed.', error);
+        }
+    });
+}
+
 function formatMilSolution(solution) {
     if (!solution) {
         return null;
@@ -22,33 +97,39 @@ function resolveElevationSolutions(
     distanceMeters,
     solutions
 ) {
+    const context = {
+        weapon,
+        distanceMeters,
+        mapId: S.map,
+        origin: S.origin,
+        target: S.target
+    };
+
+    let resolved = {
+        solutions,
+        terrainMeta: null
+    };
+
     if (
         typeof getTerrainBallisticSolutions !==
         'function'
     ) {
-        return {
-            solutions,
-            terrainMeta: null
-        };
+        return applyElevationSolutionTransforms(context, resolved);
     }
 
     try {
-        const resolved =
+        const terrainResolved =
             getTerrainBallisticSolutions({
-                weapon,
-                distanceMeters,
+                ...context,
                 solutions,
-                mapId: S.map,
-                origin: S.origin,
-                target: S.target
             });
 
-        return {
+        resolved = {
             solutions:
-                resolved?.solutions ??
+                terrainResolved?.solutions ??
                 solutions,
             terrainMeta:
-                resolved?.meta ??
+                terrainResolved?.meta ??
                 null
         };
     } catch (error) {
@@ -57,11 +138,9 @@ function resolveElevationSolutions(
             error
         );
 
-        return {
-            solutions,
-            terrainMeta: null
-        };
     }
+
+    return applyElevationSolutionTransforms(context, resolved);
 }
 
 function formatTerrainBallisticDetail(meta) {
@@ -331,6 +410,8 @@ function result() {
             inRange
         );
     }
+
+    runResultRenderHooks();
 }
 
 

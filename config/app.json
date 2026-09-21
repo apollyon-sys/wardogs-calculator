@@ -1,4 +1,9 @@
 {
+  "features": {
+    "sphPlatformCorrection": {
+      "enabled": true
+    }
+  },
   "collab": {
     "enabled": true,
     "serverUrl": "https://lobby.wardogs-artillery.com",

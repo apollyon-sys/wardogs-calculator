@@ -581,7 +581,15 @@ let feedbackRuntimePromise = null;
 
 function feedbackFeatureEnabled() {
     return APP_CONFIG?.feedback?.enabled === true &&
-        Boolean(String(APP_CONFIG?.feedback?.serverUrl || '').trim());
+        Boolean(
+            normalizeConfiguredHttpUrl(
+                APP_CONFIG?.feedback?.serverUrl,
+                {
+                    allowLocalhost: true,
+                    allowSearchAndHash: false
+                }
+            )
+        );
 }
 
 function feedbackLauncherLabel() {
@@ -691,10 +699,12 @@ function createSourceCodeLink(placement = 'footer') {
     const link = document.createElement('a');
 
     link.href =
-        APP_CONFIG
-            ?.site
-            ?.footer
-            ?.sourceCodeUrl ||
+        normalizeConfiguredHttpUrl(
+            APP_CONFIG
+                ?.site
+                ?.footer
+                ?.sourceCodeUrl
+        ) ||
         'https://github.com/apollyon-sys/wardogs-calculator';
 
     link.target = '_blank';
@@ -843,7 +853,9 @@ function renderFooter() {
         );
 
     link.href =
-        config.authorUrl || '#';
+        normalizeConfiguredHttpUrl(
+            config.authorUrl
+        ) || '#';
 
     link.target =
         '_blank';
