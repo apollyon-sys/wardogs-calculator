@@ -52,7 +52,7 @@
     }
   },
   "site": {
-    "lastModified": "2026-09-18",
+    "lastModified": "2026-09-21",
     "footer": {
       "disclaimer": "Unofficial community project. Not affiliated with or endorsed by BULKHEAD or the WARDOGS development team.",
       "productName": "WARDOGS Artillery Calculator",
@@ -60,7 +60,7 @@
       "authorName": "Apollyon",
       "authorUrl": "https://discord.com/users/202109460238434304",
       "sourceCodeUrl": "https://github.com/apollyon-sys/wardogs-calculator",
-      "version": "1.9.2"
+      "version": "1.9.3"
     }
   },
   "map": {
