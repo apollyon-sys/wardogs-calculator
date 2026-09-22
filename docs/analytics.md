@@ -125,7 +125,7 @@ The allowed lobby event values are deliberately bounded:
 |---|---|
 | `method` / `operation` | `create`, `join`, `reconnect` |
 | `reason` | `invalid-invite`, `admission-limit`, `daily-limit`, `rate-limited`, `security`, `connection` |
-| `map` | Current public map id or `custom` |
+| `map` | Current public map id |
 | `withSavedTargets` | Boolean creation option; it does not report target count or contents |
 
 Presence updates, roster changes, WebSocket heartbeats, shared-state batches, acknowledgements, drawing changes and pointer movement do not generate lobby analytics events.

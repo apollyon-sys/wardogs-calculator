@@ -1,12 +1,7 @@
 {
   "title": "WARDOGS // 炮兵计算器",
-  "gridInfo": "1 km → 10×10 个 100 m 网格",
   "map": "地图",
   "presetMap": "预设地图",
-  "customMap": "自定义地图",
-  "width": "宽度，km",
-  "height": "高度，km",
-  "apply": "应用",
   "weapon": "武器",
   "weaponType": "武器类型",
   "maxRange": "最大射程",
@@ -41,7 +36,6 @@
   "point": "位置",
   "grid": "网格",
   "majorGrid": "主网格线",
-  "customMapStatus": "自定义地图",
   "mapLocked": "已选择预设地图 — 网格尺寸已锁定",
   "mapToolRuler": "测距尺",
   "mapToolPencil": "绘图",
@@ -81,7 +75,6 @@
   "motdTitle": "今日消息",
   "motdDontShowAgain": "不再显示",
   "motdClose": "关闭",
-  "mapToolFullscreen": "全屏",
   "mapToolExitFullscreen": "退出全屏",
   "sidebarHide": "隐藏侧栏",
   "sidebarShow": "显示侧栏",
@@ -252,5 +245,13 @@
   "experimentalTerrainCorrectionStatusOn": "实验性 Terrain3D 已开启",
   "experimentalTerrainCorrectionStatusOff": "实验性 Terrain3D 已关闭",
   "experimentalTerrainCorrectionStatusFallback": "表格回退",
-  "experimentalTerrainCorrectionCandidateLoading": "正在加载候选"
+  "experimentalTerrainCorrectionCandidateLoading": "正在加载候选",
+  "sidebarSetup": "设置",
+  "sidebarCoordinates": "坐标",
+  "firingSolution": "射击诸元",
+  "solutionSupportPrompt": "觉得有用？帮助项目持续运行",
+  "placingOnMap": "正在地图上放置",
+  "clickToPlace": "点击放置",
+  "guideAndFaq": "指南与常见问题",
+  "guideAndFaqDescription": "计算器、地图和 SPH-2"
 }

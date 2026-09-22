@@ -285,10 +285,8 @@ function scheduleAccessibilityResultAnnouncement({
                     WEAPONS[S.weapon];
 
                 const mapName =
-                    S.map === 'custom'
-                        ? tr('customMap')
-                        : MAPS[S.map]?.name ||
-                            S.map;
+                    MAPS[S.map]?.name ||
+                    S.map;
 
                 const mil =
                     $('mil')?.textContent ||

@@ -190,7 +190,7 @@ function closeMapToolMenus(except = null) {
     /*
      * Keep toolbar highlight state synchronized
      * when menus are closed by outside clicks,
-     * Escape, fullscreen, or another tool.
+     * Escape or another tool.
      */
     if (
         typeof updateMapToolsUI ===
@@ -1203,121 +1203,6 @@ function handleMapToolShortcut(event) {
     return false;
 }
 
-/* =========================
-   FULLSCREEN
-   ========================= */
-
-function getMapFullscreenElement() {
-
-    /*
-     * Fullscreen the whole calculator layout instead
-     * of only the map so the sidebar/calculator
-     * controls remain available in fullscreen mode.
-     */
-    return document.querySelector(
-        'main'
-    );
-}
-
-function isMapFullscreen() {
-
-    const map =
-        getMapFullscreenElement();
-
-    return Boolean(
-        map &&
-        (
-            document.fullscreenElement ===
-            map ||
-            document.webkitFullscreenElement ===
-            map
-        )
-    );
-}
-
-function updateMapFullscreenButton() {
-
-    const button =
-        $('mapToolFullscreen');
-
-    if (!button) {
-        return;
-    }
-
-    const active =
-        isMapFullscreen();
-
-    const label =
-        active
-            ? tr('mapToolExitFullscreen')
-            : tr('mapToolFullscreen');
-
-    button.title =
-        label;
-
-    button.setAttribute(
-        'aria-label',
-        label
-    );
-
-    button.classList.toggle(
-        'active',
-        active
-    );
-}
-
-async function toggleMapFullscreen() {
-
-    const map =
-        getMapFullscreenElement();
-
-    if (!map) {
-        return;
-    }
-
-    try {
-
-        if (isMapFullscreen()) {
-
-            if (
-                document.exitFullscreen
-            ) {
-
-                await document
-                    .exitFullscreen();
-
-            } else if (
-                document.webkitExitFullscreen
-            ) {
-
-                document
-                    .webkitExitFullscreen();
-            }
-
-        } else if (
-            map.requestFullscreen
-        ) {
-
-            await map
-                .requestFullscreen();
-
-        } else if (
-            map.webkitRequestFullscreen
-        ) {
-
-            map
-                .webkitRequestFullscreen();
-        }
-
-    } catch (error) {
-
-        console.warn(
-            'Failed to toggle map fullscreen:',
-            error
-        );
-    }
-}
-
 function ensureMapShapeTools() {
     const bar =
         document.querySelector(
@@ -1567,7 +1452,6 @@ function updateMapToolsLocalization() {
     const searchButton = $('mapToolCoordinateSearch');
     const layersButton = $('mapToolLayers');
     const dataTransferButton = $('mapToolDataTransfer');
-    const fullscreenButton = $('mapToolFullscreen');
     const mobileToolsToggle = $('mobileMapToolsToggle');
 
     setToolButtonLabel(
@@ -1592,10 +1476,6 @@ function updateMapToolsLocalization() {
     setToolButtonLabel(layersButton, 'mapToolLayers', 'layers');
     setToolButtonLabel(dataTransferButton, 'mapToolDataTransfer');
     setToolButtonLabel(mobileToolsToggle, 'mapToolsToggle');
-
-    if (fullscreenButton) {
-        updateMapFullscreenButton();
-    }
 
     buildPencilPalette();
     buildMarkerPicker();
@@ -1649,8 +1529,6 @@ function initMapTools() {
         $('mapToolLayers');
     const dataTransferButton =
         $('mapToolDataTransfer');
-    const fullscreenButton =
-        $('mapToolFullscreen');
     const mobileToolsToggle =
         $('mobileMapToolsToggle');
 
@@ -1758,41 +1636,6 @@ function initMapTools() {
             updateMapToolsUI();
             buildMapDataTransfer();
             toggleMapToolMenu('mapDataTransferPopover');
-        }
-    );
-
-    fullscreenButton?.addEventListener(
-        'click',
-        event => {
-            event.stopPropagation();
-            closeMapToolMenus();
-            toggleMapFullscreen();
-        }
-    );
-
-    document.addEventListener(
-        'fullscreenchange',
-        () => {
-            updateMapFullscreenButton();
-            if (
-                typeof resize ===
-                'function'
-            ) {
-                resize();
-            }
-        }
-    );
-
-    document.addEventListener(
-        'webkitfullscreenchange',
-        () => {
-            updateMapFullscreenButton();
-            if (
-                typeof resize ===
-                'function'
-            ) {
-                resize();
-            }
         }
     );
 

@@ -186,33 +186,6 @@ async function loadTerrainBallisticsRuntime() {
             await initTerrainBallistics();
         }
 
-        /*
-         * The experimental layer wraps the verified Terrain3D endpoint
-         * runtime. It is safe-by-default: disabled unless the user opts in,
-         * and it keeps the flat-table solution for every non-SAFE arc.
-         */
-        await loadRuntimeScript({
-            selector:
-                'script[data-experimental-terrain-correction]',
-            dataAttribute:
-                'experimentalTerrainCorrection',
-            url:
-                'js/features/experimental-terrain-correction.js',
-            ready:
-                () =>
-                    typeof initExperimentalTerrainCorrection ===
-                    'function',
-            attempts: 2,
-            retryDelay: 500
-        });
-
-        if (
-            typeof initExperimentalTerrainCorrection ===
-            'function'
-        ) {
-            await initExperimentalTerrainCorrection();
-        }
-
     } catch (error) {
         if (
             typeof trackOperationalFailure ===
@@ -248,8 +221,7 @@ function requestTerrainBallisticsForCurrentState() {
     if (
         typeof S !== 'object' ||
         !S ||
-        S.weapon !== 'spg' ||
-        S.map === 'custom'
+        S.weapon !== 'spg'
     ) {
         return null;
     }
@@ -463,7 +435,6 @@ async function init() {
          * map JSON files are available.
          */
         if (
-            S.map !== 'custom' &&
             hasRegistryEntry(MAPS, S.map)
         ) {
 
@@ -499,7 +470,7 @@ async function init() {
 
         loadSaveArtilleryPreference();
 
-        updatePresetLock();
+        syncMapStyleSelect();
         updatePointLocksUI();
 
         applyLanguage();

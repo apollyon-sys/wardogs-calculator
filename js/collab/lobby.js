@@ -200,7 +200,7 @@ async function initLobby() {
             }
             observed = P.normalizeDocument(rawDocument());
             needsRender = false;
-            updatePresetLock();
+            if (typeof syncMapStyleSelect === 'function') syncMapStyleSelect();
             inputs();
             renderSavedTargets();
         } finally { applying = false; }
@@ -333,7 +333,7 @@ async function initLobby() {
         clearTimeout(mapPointsWriteTimer); mapPointsWriteTimer = null;
         writeMapPoints();
         backup = { state: structuredClone(S), tools: structuredClone(MAP_TOOL_STATE), targets: structuredClone(savedTargets), disabled: {} };
-        for (const id of ['mapSelect', 'apply', 'w', 'h']) {
+        for (const id of ['mapSelect']) {
             if ($(id)) { backup.disabled[id] = $(id).disabled; $(id).disabled = true; }
         }
         setLobbyMapLockHint(true);
@@ -359,7 +359,8 @@ async function initLobby() {
             for (const [id, disabled] of Object.entries(backup.disabled)) $(id).disabled = disabled;
             setLobbyMapLockHint(false);
             // Keep active until rendering finishes: no personal write hook sees room data.
-            updatePresetLock(); inputs(); renderSavedTargets();
+            if (typeof syncMapStyleSelect === 'function') syncMapStyleSelect();
+            inputs(); renderSavedTargets();
             lobby.active = false; applying = false; backup = null;
             updateMapToolsUI(); updateMapToolHistoryUI(); draw();
         }

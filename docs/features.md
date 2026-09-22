@@ -27,7 +27,7 @@
 - Touch pinch zoom on mobile
 - Mouse/touch map panning
 - Fullscreen mode on desktop
-- Preset and custom maps
+- Calibrated Bakurani, Ozeti and Zestafona maps
 - JSON-defined markers, zones, and polygons
 - Configurable map layers
 - Per-marker minimum and maximum camera zoom visibility

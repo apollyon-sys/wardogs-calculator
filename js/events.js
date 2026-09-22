@@ -30,11 +30,29 @@ function setPointPlacementMode(mode) {
             mode === 'origin'
         );
 
+    $('originMode')
+        ?.setAttribute(
+            'aria-pressed',
+            mode === 'origin' ? 'true' : 'false'
+        );
+
     $('targetMode')
         ?.classList.toggle(
             'active',
             mode === 'target'
         );
+
+    $('targetMode')
+        ?.setAttribute(
+            'aria-pressed',
+            mode === 'target' ? 'true' : 'false'
+        );
+
+    document.querySelector('[data-point="origin"]')
+        ?.classList.toggle('is-active', mode === 'origin');
+
+    document.querySelector('[data-point="target"]')
+        ?.classList.toggle('is-active', mode === 'target');
 
     return true;
 }
@@ -89,28 +107,13 @@ function handleAppShortcut(event) {
             ? getKeyboardShortcutKey(event)
             : String(event.key || '').toLowerCase();
 
-    /*
-     * Never steal Tab from form controls. This keeps normal browser focus
-     * navigation between coordinate X/Y fields and other editable controls.
-     * The legacy desktop Tab shortcut is kept only when page focus is not on
-     * an interactive form element.
-     */
+    /* Never steal shortcuts from editable controls. */
     if (
         isAppShortcutInputTarget(
             event.target
         )
     ) {
         return false;
-    }
-
-    if (
-        key === 'tab' &&
-        !event.shiftKey &&
-        !document.body.classList.contains('mobile-app') &&
-        typeof toggleSidebar === 'function'
-    ) {
-        toggleSidebar();
-        return true;
     }
 
     if (key === '1') {
@@ -177,34 +180,19 @@ function bindEvents() {
             const key =
                 $('mapSelect').value;
 
-            if (
-                key !==
-                'custom'
-            ) {
-
-                S.map =
-                    key;
-
-                S.w =
-                    MAPS[key].w;
-
-                S.h =
-                    MAPS[key].h;
-
-            } else {
-
-                S.map =
-                    'custom';
-
-                const customSize =
-                    getSavedCustomMapSize();
-
-                S.w =
-                    customSize.w;
-
-                S.h =
-                    customSize.h;
+            if (!hasRegistryEntry(MAPS, key)) {
+                $('mapSelect').value = S.map;
+                return;
             }
+
+            S.map =
+                key;
+
+            S.w =
+                MAPS[key].w;
+
+            S.h =
+                MAPS[key].h;
 
             if (
                 typeof loadMapPoints ===
@@ -233,7 +221,7 @@ function bindEvents() {
                 0;
 
             resetMapToolHistory();
-            updatePresetLock();
+            syncMapStyleSelect();
 
             if (
                 typeof requestTerrainBallisticsForCurrentState ===
@@ -321,64 +309,6 @@ function bindEvents() {
         }
     );
 
-    $('apply').addEventListener(
-        'click',
-        () => {
-            if (lobby?.active) return;
-
-            S.map =
-                'custom';
-
-            S.w =
-                Math.max(
-                    1,
-                    Math.min(
-                        100,
-                        Number(
-                            $('w').value
-                        ) ||
-                        10
-                    )
-                );
-
-            S.h =
-                Math.max(
-                    1,
-                    Math.min(
-                        100,
-                        Number(
-                            $('h').value
-                        ) ||
-                        10
-                    )
-                );
-
-            persistAppSelections();
-
-            clamp(
-                S.origin
-            );
-
-            clamp(
-                S.target
-            );
-
-            S.zoom =
-                1;
-
-            S.panX =
-                0;
-
-            S.panY =
-                0;
-
-            resetMapToolHistory();
-            updatePresetLock();
-
-            inputs();
-        }
-    );
-
     $('originMode').addEventListener(
         'click',
         () => setPointPlacementMode('origin')
@@ -421,6 +351,7 @@ function bindEvents() {
             () => copyPointCoordinates('origin')
         );
 
+    /* The mobile sheet still exposes per-point paste actions. */
     $('coordinateOriginPaste')
         ?.addEventListener(
             'click',
@@ -458,7 +389,7 @@ function bindEvents() {
         bindFireAdjustment();
     }
 
-    $('zoomIn').addEventListener(
+    $('zoomIn')?.addEventListener(
         'click',
         () => {
 
@@ -473,7 +404,7 @@ function bindEvents() {
         }
     );
 
-    $('zoomOut').addEventListener(
+    $('zoomOut')?.addEventListener(
         'click',
         () => {
 
@@ -488,7 +419,7 @@ function bindEvents() {
         }
     );
 
-    $('fit').addEventListener(
+    $('fit')?.addEventListener(
         'click',
         () => {
 

@@ -1,7 +1,6 @@
 export const LAYOUT_SCRIPT_FILES = Object.freeze([
     'js/ui/layout/state.js',
     'js/ui/layout/accessibility.js',
-    'js/ui/layout/sidebar.js',
     'js/ui/layout/mobile-menu.js',
     'js/ui/layout/mobile-warning.js',
     'js/ui/layout/saved-targets-panel.js',

@@ -331,6 +331,13 @@ function result() {
         dMeters
     );
 
+    setText(
+        $('solutionSummary'),
+        `${Math.round(dMeters)} m · ` +
+        `${$('mil')?.textContent || '—'} MIL · ` +
+        `${a.toFixed(1)}°`
+    );
+
     if (
         typeof syncSphLevelWarning ===
         'function'
@@ -372,12 +379,15 @@ function result() {
             : '#d86666'
     );
 
+    $('rangeStatus')
+        ?.classList.toggle(
+            'is-out-of-range',
+            !inRange
+        );
+
     const mapName =
-        S.map ===
-        'custom'
-            ? tr('customMap')
-            : MAPS[S.map]?.name ||
-            S.map;
+        MAPS[S.map]?.name ||
+        S.map;
 
     setText(
         $('status'),

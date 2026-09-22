@@ -447,10 +447,17 @@ function ensureMapStyleControl() {
         select
     );
 
-    mapSelect.insertAdjacentElement(
-        'afterend',
-        control
-    );
+    const slot =
+        $('mapStyleSlot');
+
+    if (slot) {
+        slot.appendChild(control);
+    } else {
+        mapSelect.insertAdjacentElement(
+            'afterend',
+            control
+        );
+    }
 
     return control;
 }
@@ -470,9 +477,7 @@ function syncMapStyleSelect() {
     }
 
     const map =
-        S.map !== 'custom'
-            ? MAPS[S.map]
-            : null;
+        MAPS[S.map] || null;
 
     const styles =
         getAvailableMapTileStyleIds(
@@ -633,30 +638,11 @@ function populateMapSelect() {
         );
 
     /*
-     * Custom map always last.
-     */
-    const custom =
-        document.createElement(
-            'option'
-        );
-
-    custom.value =
-        'custom';
-
-    custom.textContent =
-        tr('customMap');
-
-    select.appendChild(
-        custom
-    );
-
-    /*
      * If configured default map doesn't
      * exist for some reason, fall back
      * to the first available map.
      */
     if (
-        S.map !== 'custom' &&
         !hasRegistryEntry(MAPS, S.map)
     ) {
 
@@ -668,7 +654,7 @@ function populateMapSelect() {
         S.map =
             firstMap
                 ? firstMap.id
-                : 'custom';
+                : '';
     }
 
     select.value =

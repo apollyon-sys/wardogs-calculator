@@ -111,21 +111,6 @@
     color: var(--accent);
 }
 
-.map-tool-fullscreen-icon {
-    display: block;
-
-    font-size: 19px;
-    line-height: 1;
-
-    transition:
-        transform .18s ease;
-}
-
-.map-tool-fullscreen-button.active
-.map-tool-fullscreen-icon {
-    transform: scale(.88);
-}
-
 .map-tool-popover {
     display: none;
 

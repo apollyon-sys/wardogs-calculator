@@ -767,7 +767,7 @@ function applyLanguage() {
 
     applyStaticLanguage();
 
-    updatePresetLock();
+    syncMapStyleSelect();
 
     if (
         typeof populateWeaponSelect ===

@@ -1,12 +1,7 @@
 {
   "title": "WARDOGS // ARTILLERY CALCULATOR",
-  "gridInfo": "1 km → 10×10 cells of 100 m",
   "map": "Map",
   "presetMap": "Preset map",
-  "customMap": "Custom map",
-  "width": "Width, km",
-  "height": "Height, km",
-  "apply": "Apply",
   "weapon": "Weapon",
   "weaponType": "Weapon type",
   "maxRange": "Max range",
@@ -41,7 +36,6 @@
   "point": "point",
   "grid": "grid",
   "majorGrid": "major line",
-  "customMapStatus": "Custom map",
   "mapLocked": "Preset map selected — grid size is locked",
   "mapToolRuler": "Ruler",
   "mapToolPencil": "Pencil",
@@ -81,7 +75,6 @@
   "motdTitle": "Message of the Day",
   "motdDontShowAgain": "Don't show again",
   "motdClose": "Close",
-  "mapToolFullscreen": "Fullscreen",
   "mapToolExitFullscreen": "Exit fullscreen",
   "sidebarHide": "Hide sidebar",
   "sidebarShow": "Show sidebar",
@@ -240,5 +233,13 @@
   "terrainLoading": "terrain loading",
   "terrainStatus": "ΔZ {dz} m · MIL not auto-corrected",
   "sphLevelWarningTitle": "LEVEL THE SPH-2 BEFORE FIRING",
-  "sphLevelWarningBody": "Vehicle tilt changes the actual range. Park the SPH-2 on the flattest ground available. In the gunner HUD, find the vehicle silhouette below STABILIZED / ASL: the two small side markers show lateral tilt. Reposition the vehicle until the markers are as centered and aligned as possible. Front/back slope also affects range, so avoid parking uphill or downhill."
+  "sphLevelWarningBody": "Vehicle tilt changes the actual range. Park the SPH-2 on the flattest ground available. In the gunner HUD, find the vehicle silhouette below STABILIZED / ASL: the two small side markers show lateral tilt. Reposition the vehicle until the markers are as centered and aligned as possible. Front/back slope also affects range, so avoid parking uphill or downhill.",
+  "sidebarSetup": "Setup",
+  "sidebarCoordinates": "Coordinates",
+  "firingSolution": "Firing solution",
+  "solutionSupportPrompt": "Useful? Help keep the project online",
+  "placingOnMap": "Placing on map",
+  "clickToPlace": "Click to place",
+  "guideAndFaq": "Guide & FAQ",
+  "guideAndFaqDescription": "Calculator, maps and SPH-2"
 }

@@ -30,6 +30,8 @@ import {
     mapLandingPageById,
     renderMapLandingPage
 } from './map-landing-pages.mjs';
+import { SEO_PAGE_CONTENT } from './seo-content.mjs';
+import { renderSeoGuideContent } from './lib/seo-guide-render.mjs';
 
 const __dirname = dirname(
     fileURLToPath(import.meta.url)
@@ -327,6 +329,29 @@ function prepareDevHTML(html) {
     return (
         `${prepared}\n` +
         LIVE_RELOAD_CLIENT
+    );
+}
+
+function renderDesktopGuideLocale(html, language) {
+    const copy =
+        SEO_PAGE_CONTENT[language] ||
+        SEO_PAGE_CONTENT.en;
+
+    const withContent = html.replace(
+        '<!-- SEO_GUIDE_CONTENT -->',
+        renderSeoGuideContent(copy)
+    );
+
+    const guideStyles =
+        '<link href="styles/desktop/seo.css" rel="stylesheet"/>';
+
+    if (withContent.includes(guideStyles)) {
+        return withContent;
+    }
+
+    return withContent.replace(
+        '</head>',
+        `${guideStyles}\n</head>`
     );
 }
 
@@ -833,7 +858,12 @@ async function createRequestHandler() {
                         'src',
                         'pages',
                         'index.html'
-                    )
+                    ),
+                    template =>
+                        renderDesktopGuideLocale(
+                            template,
+                            'en'
+                        )
                 );
 
                 return;
@@ -954,7 +984,12 @@ async function createRequestHandler() {
                     ) {
                         await sendHTML(
                             response,
-                            localePath
+                            localePath,
+                            template =>
+                                renderDesktopGuideLocale(
+                                    template,
+                                    language
+                                )
                         );
 
                         return;

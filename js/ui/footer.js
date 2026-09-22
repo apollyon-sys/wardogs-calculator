@@ -910,4 +910,22 @@ function renderFooter() {
     footer.appendChild(
         meta
     );
+
+    const solutionSupport =
+        $('solutionSupport');
+
+    if (
+        solutionSupport &&
+        solutionSupport.dataset.donationBound !== 'true'
+    ) {
+        solutionSupport.dataset.donationBound =
+            'true';
+
+        solutionSupport.addEventListener(
+            'click',
+            () => openDonationDialog(
+                'firing-solution'
+            )
+        );
+    }
 }

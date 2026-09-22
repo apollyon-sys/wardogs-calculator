@@ -280,42 +280,6 @@ select:disabled {
     line-height: 1.15;
 }
 
-.solution-secondary-grid {
-    margin-top: 7px;
-
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-}
-
-.solution-secondary-item {
-    min-width: 0;
-    padding: 6px 8px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background:
-        color-mix(
-            in srgb,
-            var(--input-bg) 42%,
-            transparent
-        );
-
-    color: var(--muted);
-    font-size: 10px;
-}
-
-.solution-secondary-item b {
-    color: var(--text);
-    font-size: 10px;
-    text-align: right;
-}
-
 .unit {
     font-size: 10px;
     color: var(--muted);

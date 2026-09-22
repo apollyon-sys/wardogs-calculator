@@ -38,14 +38,18 @@ label,
 .hint,
 .status,
 .section h2,
+.sidebar-section-title,
+.firing-solution-title,
 footer {
     font-size: calc(11px * var(--a11y-text-scale));
 }
 
 .footer-feedback-button,
 .accessibility-launcher,
-.solution-secondary-item,
-.solution-secondary-item b,
+.sidebar-section-summary,
+.firing-solution-summary,
+.firing-solution-range,
+.solution-support-prompt,
 .unit {
     font-size: calc(10px * var(--a11y-text-scale));
 }
@@ -79,6 +83,7 @@ footer {
 }
 
 :root[data-a11y-large-controls="true"] .map-tool-button,
+:root[data-a11y-large-controls="true"] .map-zoom-controls button,
 :root[data-a11y-large-controls="true"] .theme-toggle,
 :root[data-a11y-large-controls="true"] .language-picker-button {
     min-width: 44px;
@@ -87,6 +92,11 @@ footer {
 
 :root[data-a11y-large-controls="true"] .point-coordinate-actions button {
     min-height: 40px;
+}
+
+:root[data-a11y-large-controls="true"] .sidebar-section > summary,
+:root[data-a11y-large-controls="true"] .firing-solution-panel > summary {
+    min-height: 48px;
 }
 
 /* Keep the map-tool color swatches square when larger controls are enabled.

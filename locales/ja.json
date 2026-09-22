@@ -1,12 +1,7 @@
 {
   "title": "WARDOGS // 砲兵用弾道計算機",
-  "gridInfo": "1 km → 100 m マス 10×10",
   "map": "マップ",
   "presetMap": "プリセットマップ",
-  "customMap": "カスタムマップ",
-  "width": "幅 (km)",
-  "height": "高さ (km)",
-  "apply": "適用",
   "weapon": "火器",
   "weaponType": "火器種別",
   "maxRange": "最大射程",
@@ -41,7 +36,6 @@
   "point": "地点",
   "grid": "グリッド",
   "majorGrid": "主グリッド線",
-  "customMapStatus": "カスタムマップ",
   "mapLocked": "プリセットマップ選択中 — グリッドサイズは固定されます",
   "mapToolRuler": "計測",
   "mapToolPencil": "ペン",
@@ -81,7 +75,6 @@
   "motdTitle": "お知らせ",
   "motdDontShowAgain": "今後表示しない",
   "motdClose": "閉じる",
-  "mapToolFullscreen": "全画面",
   "mapToolExitFullscreen": "全画面を終了",
   "sidebarHide": "サイドバーを隠す",
   "sidebarShow": "サイドバーを表示",
@@ -240,5 +233,13 @@
   "terrainLoading": "terrain loading",
   "terrainStatus": "ΔZ {dz} m · MIL not auto-corrected",
   "sphLevelWarningTitle": "LEVEL THE SPH-2 BEFORE FIRING",
-  "sphLevelWarningBody": "Vehicle tilt changes the actual range. Park the SPH-2 on the flattest ground available. In the gunner HUD, find the vehicle silhouette below STABILIZED / ASL: the two small side markers show lateral tilt. Reposition the vehicle until the markers are as centered and aligned as possible. Front/back slope also affects range, so avoid parking uphill or downhill."
+  "sphLevelWarningBody": "Vehicle tilt changes the actual range. Park the SPH-2 on the flattest ground available. In the gunner HUD, find the vehicle silhouette below STABILIZED / ASL: the two small side markers show lateral tilt. Reposition the vehicle until the markers are as centered and aligned as possible. Front/back slope also affects range, so avoid parking uphill or downhill.",
+  "sidebarSetup": "設定",
+  "sidebarCoordinates": "座標",
+  "firingSolution": "射撃諸元",
+  "solutionSupportPrompt": "役に立ちましたか？プロジェクトの運営を支援する",
+  "placingOnMap": "マップ上に配置中",
+  "clickToPlace": "クリックして配置",
+  "guideAndFaq": "ガイドとFAQ",
+  "guideAndFaqDescription": "計算機、マップ、SPH-2"
 }

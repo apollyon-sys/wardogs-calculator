@@ -69,7 +69,6 @@
 <div class="header-title">
 <img alt="" aria-hidden="true" class="header-brand-icon" src="assets/favicon.png"/>
 <h1 data-i18n="title">WARDOGS // 炮兵计算器</h1>
-<span data-i18n="gridInfo">1 km → 10×10 个 100 m 网格</span>
 </div>
 <div class="header-controls">
 <button aria-label="Toggle theme" class="theme-toggle" id="themeToggle" title="Toggle theme" type="button">
@@ -79,78 +78,72 @@
 </div>
 </header>
 <main>
-<aside>
-<!-- MAP -->
-<div class="section">
-<h2 data-i18n="map">地图</h2>
-<label data-i18n="presetMap">预设地图</label>
-<select id="mapSelect"></select>
-<div id="customMapSizing">
-<div class="grid2" style="margin-top:7px">
-<div>
-<label data-i18n="width">宽度，km</label>
-<input id="w" max="100" min="1" type="number" value="10"/>
+<!-- WORKSPACE -->
+<section class="workspace">
+<div class="toolbar">
+<span class="status" id="status"></span>
 </div>
-<div>
-<label data-i18n="height">高度，km</label>
-<input id="h" max="100" min="1" type="number" value="10"/>
+<div class="map">
+<canvas id="canvas"></canvas>
+<aside class="control-dock" aria-label="操作">
+<details class="sidebar-section" open>
+<summary><span class="sidebar-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg></span><span class="sidebar-section-title" data-i18n="sidebarSetup">设置</span><span class="sidebar-section-summary">地图 · 武器</span><span class="sidebar-section-chevron" aria-hidden="true">⌄</span></summary>
+<div class="sidebar-section-body">
+<div class="map-choice-grid"><div class="sidebar-field"><label for="mapSelect" data-i18n="presetMap">预设地图</label><select id="mapSelect"></select></div><div id="mapStyleSlot"></div></div>
+<div class="sidebar-field"><label for="weapon" data-i18n="weaponType">武器类型</label><select id="weapon"></select></div>
+</div>
+</details>
+<details class="sidebar-section" open>
+<summary><span class="sidebar-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span><span class="sidebar-section-title" data-i18n="sidebarCoordinates">坐标</span><span class="sidebar-section-summary" id="coordinateSectionSummary">2000, 2000 → 2500, 2500</span><span class="sidebar-section-chevron" aria-hidden="true">⌄</span></summary>
+<div class="sidebar-section-body">
+<div class="coordinate-point is-active" data-point="origin">
+<div class="coordinate-point-header">
+<button aria-pressed="true" class="coordinate-point-select active" id="originMode" type="button">
+<span class="coordinate-point-marker" aria-hidden="true">A</span>
+<span class="coordinate-point-label"><strong data-i18n="artillery">炮位</strong><small><span class="coordinate-placement-active" data-i18n="placingOnMap">正在地图上放置</span><span class="coordinate-placement-inactive" data-i18n="clickToPlace">点击放置</span></small></span>
+</button>
+<div class="point-coordinate-actions"><button aria-label="复制" class="coordinate-icon-button" id="coordinateOriginCopy" title="复制" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span class="sr-only" data-i18n="copyCoordinates">复制</span></button>
+<button aria-label="粘贴" class="coordinate-icon-button coordinate-paste-button" id="coordinateOriginPaste" title="粘贴" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v13h14V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M12 10v7m-3-3 3 3 3-3"/></svg><span class="sr-only" data-i18n="pasteCoordinates">粘贴</span></button>
+<button aria-label="锁定" aria-pressed="false" class="coordinate-icon-button point-lock-button" id="coordinateOriginLock" title="锁定此位置，防止地图点击或拖动修改" type="button"></button></div>
+</div>
+<div class="coordinate-inputs">
+<input aria-label="炮位 X" id="ox" inputmode="decimal" step="0.01" type="number" value="2000"/>
+<input aria-label="炮位 Y" id="oy" inputmode="decimal" step="0.01" type="number" value="2000"/>
 </div>
 </div>
-<button class="primary" data-i18n="apply" id="apply" style="margin-top:8px">应用</button>
+<div class="coordinate-point" data-point="target">
+<div class="coordinate-point-header">
+<button aria-pressed="false" class="coordinate-point-select" id="targetMode" type="button">
+<span class="coordinate-point-marker" aria-hidden="true">T</span>
+<span class="coordinate-point-label"><strong data-i18n="target">目标</strong><small><span class="coordinate-placement-active" data-i18n="placingOnMap">正在地图上放置</span><span class="coordinate-placement-inactive" data-i18n="clickToPlace">点击放置</span></small></span>
+</button>
+<div class="point-coordinate-actions"><button aria-label="复制" class="coordinate-icon-button" id="coordinateTargetCopy" title="复制" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span class="sr-only" data-i18n="copyCoordinates">复制</span></button>
+<button aria-label="粘贴" class="coordinate-icon-button coordinate-paste-button" id="coordinateTargetPaste" title="粘贴" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v13h14V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M12 10v7m-3-3 3 3 3-3"/></svg><span class="sr-only" data-i18n="pasteCoordinates">粘贴</span></button>
+<button aria-label="锁定" aria-pressed="false" class="coordinate-icon-button point-lock-button" id="coordinateTargetLock" title="锁定此位置，防止地图点击或拖动修改" type="button"></button></div>
+</div>
+<div class="coordinate-inputs">
+<input aria-label="目标 X" id="tx" inputmode="decimal" step="0.01" type="number" value="2500"/>
+<input aria-label="目标 Y" id="ty" inputmode="decimal" step="0.01" type="number" value="2500"/>
 </div>
 </div>
-<!-- WEAPON -->
-<div class="section">
-<h2 data-i18n="weapon">武器</h2>
-<label data-i18n="weaponType">武器类型</label>
-<select id="weapon"></select>
-<div class="result" style="margin-top:8px">
-<div class="row">
+<div class="sidebar-quick-actions"><button data-i18n="swap" id="swap" type="button">交换位置</button><button class="sidebar-reset-button" data-i18n="clear" id="clear" type="button">重置</button></div>
+</div>
+</details>
+<details class="sidebar-section firing-solution-panel">
+<summary>
+<span class="firing-solution-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+</span>
+<span class="firing-solution-title" data-i18n="firingSolution">射击诸元</span>
+<span class="firing-solution-summary" id="solutionSummary">707 m · — MIL · 45.0°</span>
+<strong class="firing-solution-status" id="rangeStatus">射程内</strong>
+<span class="firing-solution-chevron" aria-hidden="true">⌄</span>
+</summary>
+<div class="firing-solution-body">
+<div class="firing-solution-range">
 <span data-i18n="weaponRange">射程</span>
-<b id="range">
-                        600 m
-                    </b>
+<strong id="range">600 m</strong>
 </div>
-<div class="row">
-<span data-i18n="targetStatus">目标状态</span>
-<b id="rangeStatus">
-                        In range
-                    </b>
-</div>
-</div>
-<p class="hint" data-i18n="rangeHint">圆圈表示所选武器相对于炮位的最小和最大射程。</p>
-</div>
-<!-- POINT SELECTION -->
-<div class="section">
-<h2 data-i18n="pointSelection">位置选择</h2>
-<div class="mode">
-<button class="active" data-i18n="artillery" id="originMode">炮位</button>
-<button data-i18n="target" id="targetMode">目标</button>
-</div>
-<label data-i18n="artilleryXY">炮位 X / Y</label>
-<div class="grid2">
-<input id="ox" step="0.01" type="number" value="2000"/>
-<input id="oy" step="0.01" type="number" value="2000"/>
-</div>
-<div class="point-coordinate-actions">
-<button data-i18n="copyCoordinates" id="coordinateOriginCopy" type="button">复制</button>
-<button data-i18n="pasteCoordinates" id="coordinateOriginPaste" type="button">粘贴</button>
-<button aria-pressed="false" class="point-lock-button" id="coordinateOriginLock" type="button">Lock</button>
-</div>
-<label data-i18n="targetXY">目标 X / Y</label>
-<div class="grid2">
-<input id="tx" step="0.01" type="number" value="2500"/>
-<input id="ty" step="0.01" type="number" value="2500"/>
-</div>
-<div class="point-coordinate-actions">
-<button data-i18n="copyCoordinates" id="coordinateTargetCopy" type="button">复制</button>
-<button data-i18n="pasteCoordinates" id="coordinateTargetPaste" type="button">粘贴</button>
-<button aria-pressed="false" class="point-lock-button" id="coordinateTargetLock" type="button">Lock</button>
-</div>
-</div>
-<!-- RESULT -->
-<div class="section">
-<h2 data-i18n="result">射击解算</h2>
 <div class="result solution-result">
 <div class="solution-primary-grid">
 <div class="solution-metric">
@@ -169,39 +162,24 @@
 <span class="solution-metric-sub solution-metric-spacer" aria-hidden="true">&nbsp;</span>
 </div>
 </div>
-<div class="solution-secondary-grid">
-<div class="solution-secondary-item"><span>ΔX</span><b id="dx">+500 m</b></div>
-<div class="solution-secondary-item"><span>ΔY</span><b id="dy">+500 m</b></div>
 </div>
-</div>
-<p class="hint" data-i18n="azimuthHint">方位角：0° 北，90° 东，180° 南，270° 西。</p>
-</div>
-<!-- CONTROLS -->
-<div class="section">
-<h2 data-i18n="controls">控制</h2>
-<div class="grid2">
-<button id="zoomOut">
-                    −
-                </button>
-<button id="zoomIn">
-                    +
-                </button>
-</div>
-<button data-i18n="fit" id="fit" style="margin-top:7px">适应地图</button>
-<button data-i18n="swap" id="swap" style="margin-top:7px">交换位置</button>
-<button data-i18n="clear" id="clear" style="margin-top:7px">重置</button>
-</div>
-</aside>
-<button aria-label="Hide sidebar" aria-expanded="true" class="sidebar-toggle" id="sidebarToggle" title="Hide sidebar" type="button">
-<span aria-hidden="true" class="sidebar-toggle-icon">‹</span>
+<button class="solution-support-prompt" id="solutionSupport" type="button">
+<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
+<span data-i18n="solutionSupportPrompt">觉得有用？帮助项目持续运行</span>
 </button>
-<!-- WORKSPACE -->
-<section class="workspace">
-<div class="toolbar">
-<span class="status" id="status"></span>
 </div>
-<div class="map">
-<canvas id="canvas"></canvas>
+</details>
+<button aria-controls="guideFaqDrawer" aria-expanded="false" class="guide-faq-button" id="guideFaqButton" type="button">
+<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5Z"/></svg>
+<span class="guide-faq-button-copy"><strong data-i18n="guideAndFaq">指南与常见问题</strong><small data-i18n="guideAndFaqDescription">计算器、地图和 SPH-2</small></span>
+<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+</button>
+</aside>
+<aside aria-hidden="true" aria-labelledby="guideFaqTitle" class="guide-faq-drawer" id="guideFaqDrawer" inert>
+<div class="guide-faq-header"><h2 data-i18n="guideAndFaq" id="guideFaqTitle">指南与常见问题</h2><button aria-label="关闭" class="guide-faq-close" id="guideFaqClose" title="关闭" type="button">×</button></div>
+<div class="guide-faq-scroll"><!-- SEO_GUIDE_CONTENT --></div>
+</aside>
+
 <!-- CURSOR -->
 <div class="cursor-coords" id="cursorCoords">
 <span class="cursor-y">
@@ -292,11 +270,6 @@
 <button aria-label="Import / Export" class="map-tool-button" data-tool="dataTransfer" id="mapToolDataTransfer" title="Import / Export" type="button">
 <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v10"/><path d="m4 11 3 3 3-3"/><path d="M17 20V10"/><path d="m14 13 3-3 3 3"/></svg>
 </button>
-<button aria-label="Fullscreen" class="map-tool-button map-tool-fullscreen-button" id="mapToolFullscreen" title="Fullscreen" type="button">
-<svg aria-hidden="true" class="map-tool-fullscreen-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-<path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4"/>
-</svg>
-</button>
 </div>
 </div>
 </div>
@@ -312,7 +285,6 @@
 <script src="js/ui/theme.js"></script><script src="js/ui/footer.js"></script>
 <script src="js/ui/layout/state.js"></script>
 <script src="js/ui/layout/accessibility.js"></script>
-<script src="js/ui/layout/sidebar.js"></script>
 <script src="js/ui/layout/mobile-menu.js"></script>
 <script src="js/ui/layout/mobile-warning.js"></script>
 <script src="js/ui/layout/saved-targets-panel.js"></script>

@@ -18,11 +18,13 @@ function inputs() {
 
     $('ty').value = formatGameCoordinate(S.target.y);
 
-    $('w').value =
-        S.w;
+    const coordinateSummary = $('coordinateSectionSummary');
 
-    $('h').value =
-        S.h;
+    if (coordinateSummary) {
+        coordinateSummary.textContent =
+            `${formatGameCoordinate(S.origin.x)}, ${formatGameCoordinate(S.origin.y)} → ` +
+            `${formatGameCoordinate(S.target.x)}, ${formatGameCoordinate(S.target.y)}`;
+    }
 
     /*
      * Origin and target are written from six different places (map drags,
@@ -113,23 +115,4 @@ function inputPoint(type) {
     );
 
     inputs();
-}
-
-function updatePresetLock() {
-
-    const locked =
-        $('mapSelect').value !==
-        'custom';
-
-    $('customMapSizing').style.display =
-        locked
-            ? 'none'
-            : '';
-
-    if (
-        typeof syncMapStyleSelect ===
-            'function'
-    ) {
-        syncMapStyleSelect();
-    }
 }

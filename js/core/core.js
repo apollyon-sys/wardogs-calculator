@@ -86,16 +86,6 @@ const APP_SELECTIONS_KEY =
 const MAP_STYLE_STORAGE_KEY =
     'wardogs-map-style';
 
-const DEFAULT_CUSTOM_MAP_SIZE = {
-    w: 10,
-    h: 10
-};
-
-let savedCustomMapSize = {
-    ...DEFAULT_CUSTOM_MAP_SIZE
-};
-
-
 /* =========================
    PERSISTED APP SELECTIONS
    ========================= */
@@ -134,30 +124,6 @@ function loadAppSelections() {
                 parsed.weapon.trim();
         }
 
-        const customWidth =
-            Number(parsed?.customMap?.w);
-
-        const customHeight =
-            Number(parsed?.customMap?.h);
-
-        if (
-            Number.isFinite(customWidth) &&
-            Number.isFinite(customHeight) &&
-            customWidth >= 1 &&
-            customWidth <= 100 &&
-            customHeight >= 1 &&
-            customHeight <= 100
-        ) {
-            savedCustomMapSize = {
-                w: customWidth,
-                h: customHeight
-            };
-        }
-
-        if (S.map === 'custom') {
-            S.w = savedCustomMapSize.w;
-            S.h = savedCustomMapSize.h;
-        }
     } catch (error) {
         console.warn(
             'Failed to load app selections:',
@@ -169,21 +135,11 @@ function loadAppSelections() {
 function persistAppSelections() {
     if (lobby?.active) { lobby.capture(); return; }
     try {
-        if (S.map === 'custom') {
-            savedCustomMapSize = {
-                w: S.w,
-                h: S.h
-            };
-        }
-
         localStorage.setItem(
             APP_SELECTIONS_KEY,
             JSON.stringify({
                 map: S.map,
-                weapon: S.weapon,
-                customMap: {
-                    ...savedCustomMapSize
-                }
+                weapon: S.weapon
             })
         );
     } catch (error) {
@@ -192,12 +148,6 @@ function persistAppSelections() {
             error
         );
     }
-}
-
-function getSavedCustomMapSize() {
-    return {
-        ...savedCustomMapSize
-    };
 }
 
 

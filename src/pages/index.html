@@ -68,7 +68,6 @@
 <div class="header-title">
 <img alt="" aria-hidden="true" class="header-brand-icon" src="assets/favicon.png"/>
 <h1 data-i18n="title">WARDOGS // ARTILLERY CALCULATOR</h1>
-<span data-i18n="gridInfo">1 km → 10×10 cells of 100 m</span>
 </div>
 <div class="header-controls">
 <button aria-label="Toggle theme" class="theme-toggle" id="themeToggle" title="Toggle theme" type="button">
@@ -78,78 +77,72 @@
 </div>
 </header>
 <main>
-<aside>
-<!-- MAP -->
-<div class="section">
-<h2 data-i18n="map">Map</h2>
-<label data-i18n="presetMap">Preset map</label>
-<select id="mapSelect"></select>
-<div id="customMapSizing">
-<div class="grid2" style="margin-top:7px">
-<div>
-<label data-i18n="width">Width, km</label>
-<input id="w" max="100" min="1" type="number" value="10"/>
+<!-- WORKSPACE -->
+<section class="workspace">
+<div class="toolbar">
+<span class="status" id="status"></span>
 </div>
-<div>
-<label data-i18n="height">Height, km</label>
-<input id="h" max="100" min="1" type="number" value="10"/>
+<div class="map">
+<canvas id="canvas"></canvas>
+<aside class="control-dock" aria-label="Controls">
+<details class="sidebar-section" open>
+<summary><span class="sidebar-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg></span><span class="sidebar-section-title" data-i18n="sidebarSetup">Setup</span><span class="sidebar-section-summary">Map · Weapon</span><span class="sidebar-section-chevron" aria-hidden="true">⌄</span></summary>
+<div class="sidebar-section-body">
+<div class="map-choice-grid"><div class="sidebar-field"><label for="mapSelect" data-i18n="presetMap">Preset map</label><select id="mapSelect"></select></div><div id="mapStyleSlot"></div></div>
+<div class="sidebar-field"><label for="weapon" data-i18n="weaponType">Weapon type</label><select id="weapon"></select></div>
 </div>
+</details>
+<details class="sidebar-section" open>
+<summary><span class="sidebar-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg></span><span class="sidebar-section-title" data-i18n="sidebarCoordinates">Coordinates</span><span class="sidebar-section-summary" id="coordinateSectionSummary">2000, 2000 → 2500, 2500</span><span class="sidebar-section-chevron" aria-hidden="true">⌄</span></summary>
+<div class="sidebar-section-body">
+<div class="coordinate-point is-active" data-point="origin">
+<div class="coordinate-point-header">
+<button aria-pressed="true" class="coordinate-point-select active" id="originMode" type="button">
+<span class="coordinate-point-marker" aria-hidden="true">A</span>
+<span class="coordinate-point-label"><strong data-i18n="artillery">Artillery</strong><small><span class="coordinate-placement-active" data-i18n="placingOnMap">Placing on map</span><span class="coordinate-placement-inactive" data-i18n="clickToPlace">Click to place</span></small></span>
+</button>
+<div class="point-coordinate-actions"><button aria-label="Copy" class="coordinate-icon-button" id="coordinateOriginCopy" title="Copy" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span class="sr-only" data-i18n="copyCoordinates">Copy</span></button>
+<button aria-label="Paste" class="coordinate-icon-button coordinate-paste-button" id="coordinateOriginPaste" title="Paste" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v13h14V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M12 10v7m-3-3 3 3 3-3"/></svg><span class="sr-only" data-i18n="pasteCoordinates">Paste</span></button>
+<button aria-label="Lock" aria-pressed="false" class="coordinate-icon-button point-lock-button" id="coordinateOriginLock" title="Lock this position against map clicks and dragging" type="button"></button></div>
 </div>
-<button class="primary" data-i18n="apply" id="apply" style="margin-top:8px">Apply</button>
-</div>
-</div>
-<!-- WEAPON -->
-<div class="section">
-<h2 data-i18n="weapon">Weapon</h2>
-<label data-i18n="weaponType">Weapon type</label>
-<select id="weapon"></select>
-<div class="result" style="margin-top:8px">
-<div class="row">
-<span data-i18n="weaponRange">Max range</span>
-<b id="range">
-                        600 m
-                    </b>
-</div>
-<div class="row">
-<span data-i18n="targetStatus">Target status</span>
-<b id="rangeStatus">
-                        In range
-                    </b>
+<div class="coordinate-inputs">
+<input aria-label="Artillery X" id="ox" inputmode="decimal" step="0.01" type="number" value="2000"/>
+<input aria-label="Artillery Y" id="oy" inputmode="decimal" step="0.01" type="number" value="2000"/>
 </div>
 </div>
-<p class="hint" data-i18n="rangeHint">The circle shows the maximum range of the selected weapon from the artillery position.</p>
+<div class="coordinate-point" data-point="target">
+<div class="coordinate-point-header">
+<button aria-pressed="false" class="coordinate-point-select" id="targetMode" type="button">
+<span class="coordinate-point-marker" aria-hidden="true">T</span>
+<span class="coordinate-point-label"><strong data-i18n="target">Target</strong><small><span class="coordinate-placement-active" data-i18n="placingOnMap">Placing on map</span><span class="coordinate-placement-inactive" data-i18n="clickToPlace">Click to place</span></small></span>
+</button>
+<div class="point-coordinate-actions"><button aria-label="Copy" class="coordinate-icon-button" id="coordinateTargetCopy" title="Copy" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span class="sr-only" data-i18n="copyCoordinates">Copy</span></button>
+<button aria-label="Paste" class="coordinate-icon-button coordinate-paste-button" id="coordinateTargetPaste" title="Paste" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v13h14V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M12 10v7m-3-3 3 3 3-3"/></svg><span class="sr-only" data-i18n="pasteCoordinates">Paste</span></button>
+<button aria-label="Lock" aria-pressed="false" class="coordinate-icon-button point-lock-button" id="coordinateTargetLock" title="Lock this position against map clicks and dragging" type="button"></button></div>
 </div>
-<!-- POINT SELECTION -->
-<div class="section">
-<h2 data-i18n="pointSelection">Point selection</h2>
-<div class="mode">
-<button class="active" data-i18n="artillery" id="originMode">Artillery</button>
-<button data-i18n="target" id="targetMode">Target</button>
-</div>
-<label data-i18n="artilleryXY">Artillery X / Y</label>
-<div class="grid2">
-<input id="ox" step="0.01" type="number" value="2000"/>
-<input id="oy" step="0.01" type="number" value="2000"/>
-</div>
-<div class="point-coordinate-actions">
-<button data-i18n="copyCoordinates" id="coordinateOriginCopy" type="button">Copy</button>
-<button data-i18n="pasteCoordinates" id="coordinateOriginPaste" type="button">Paste</button>
-<button aria-pressed="false" class="point-lock-button" id="coordinateOriginLock" type="button">Lock</button>
-</div>
-<label data-i18n="targetXY">Target X / Y</label>
-<div class="grid2">
-<input id="tx" step="0.01" type="number" value="2500"/>
-<input id="ty" step="0.01" type="number" value="2500"/>
-</div>
-<div class="point-coordinate-actions">
-<button data-i18n="copyCoordinates" id="coordinateTargetCopy" type="button">Copy</button>
-<button data-i18n="pasteCoordinates" id="coordinateTargetPaste" type="button">Paste</button>
-<button aria-pressed="false" class="point-lock-button" id="coordinateTargetLock" type="button">Lock</button>
+<div class="coordinate-inputs">
+<input aria-label="Target X" id="tx" inputmode="decimal" step="0.01" type="number" value="2500"/>
+<input aria-label="Target Y" id="ty" inputmode="decimal" step="0.01" type="number" value="2500"/>
 </div>
 </div>
-<!-- RESULT -->
-<div class="section">
-<h2 data-i18n="result">Result</h2>
+<div class="sidebar-quick-actions"><button data-i18n="swap" id="swap" type="button">Swap points</button><button class="sidebar-reset-button" data-i18n="clear" id="clear" type="button">Reset</button></div>
+</div>
+</details>
+<details class="sidebar-section firing-solution-panel">
+<summary>
+<span class="firing-solution-icon" aria-hidden="true">
+<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+</span>
+<span class="firing-solution-title" data-i18n="firingSolution">Firing solution</span>
+<span class="firing-solution-summary" id="solutionSummary">707 m · — MIL · 45.0°</span>
+<strong class="firing-solution-status" id="rangeStatus">In range</strong>
+<span class="firing-solution-chevron" aria-hidden="true">⌄</span>
+</summary>
+<div class="firing-solution-body">
+<div class="firing-solution-range">
+<span data-i18n="weaponRange">Range</span>
+<strong id="range">600 m</strong>
+</div>
 <div class="result solution-result">
 <div class="solution-primary-grid">
 <div class="solution-metric">
@@ -168,39 +161,24 @@
 <span class="solution-metric-sub solution-metric-spacer" aria-hidden="true">&nbsp;</span>
 </div>
 </div>
-<div class="solution-secondary-grid">
-<div class="solution-secondary-item"><span>ΔX</span><b id="dx">+500 m</b></div>
-<div class="solution-secondary-item"><span>ΔY</span><b id="dy">+500 m</b></div>
 </div>
-</div>
-<p class="hint" data-i18n="azimuthHint">Azimuth: 0° north, 90° east, 180° south, 270° west.</p>
-</div>
-<!-- CONTROLS -->
-<div class="section">
-<h2 data-i18n="controls">Controls</h2>
-<div class="grid2">
-<button id="zoomOut">
-                    −
-                </button>
-<button id="zoomIn">
-                    +
-                </button>
-</div>
-<button data-i18n="fit" id="fit" style="margin-top:7px">Fit map</button>
-<button data-i18n="swap" id="swap" style="margin-top:7px">Swap points</button>
-<button data-i18n="clear" id="clear" style="margin-top:7px">Reset</button>
-</div>
-</aside>
-<button aria-label="Hide sidebar" aria-expanded="true" class="sidebar-toggle" id="sidebarToggle" title="Hide sidebar" type="button">
-<span aria-hidden="true" class="sidebar-toggle-icon">‹</span>
+<button class="solution-support-prompt" id="solutionSupport" type="button">
+<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
+<span data-i18n="solutionSupportPrompt">Useful? Help keep the project online</span>
 </button>
-<!-- WORKSPACE -->
-<section class="workspace">
-<div class="toolbar">
-<span class="status" id="status"></span>
 </div>
-<div class="map">
-<canvas id="canvas"></canvas>
+</details>
+<button aria-controls="guideFaqDrawer" aria-expanded="false" class="guide-faq-button" id="guideFaqButton" type="button">
+<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5Z"/></svg>
+<span class="guide-faq-button-copy"><strong data-i18n="guideAndFaq">Guide &amp; FAQ</strong><small data-i18n="guideAndFaqDescription">Calculator, maps and SPH-2</small></span>
+<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+</button>
+</aside>
+<aside aria-hidden="true" aria-labelledby="guideFaqTitle" class="guide-faq-drawer" id="guideFaqDrawer" inert>
+<div class="guide-faq-header"><h2 data-i18n="guideAndFaq" id="guideFaqTitle">Guide &amp; FAQ</h2><button aria-label="Close" class="guide-faq-close" id="guideFaqClose" title="Close" type="button">×</button></div>
+<div class="guide-faq-scroll"><!-- SEO_GUIDE_CONTENT --></div>
+</aside>
+
 <!-- CURSOR -->
 <div class="cursor-coords" id="cursorCoords">
 <span class="cursor-y">
@@ -291,11 +269,6 @@
 <button aria-label="Import / Export" class="map-tool-button" data-tool="dataTransfer" id="mapToolDataTransfer" title="Import / Export" type="button">
 <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v10"/><path d="m4 11 3 3 3-3"/><path d="M17 20V10"/><path d="m14 13 3-3 3 3"/></svg>
 </button>
-<button aria-label="Fullscreen" class="map-tool-button map-tool-fullscreen-button" id="mapToolFullscreen" title="Fullscreen" type="button">
-<svg aria-hidden="true" class="map-tool-fullscreen-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-<path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4"/>
-</svg>
-</button>
 </div>
 </div>
 </div>
@@ -311,7 +284,6 @@
 <script src="js/ui/theme.js"></script><script src="js/ui/footer.js"></script>
 <script src="js/ui/layout/state.js"></script>
 <script src="js/ui/layout/accessibility.js"></script>
-<script src="js/ui/layout/sidebar.js"></script>
 <script src="js/ui/layout/mobile-menu.js"></script>
 <script src="js/ui/layout/mobile-warning.js"></script>
 <script src="js/ui/layout/saved-targets-panel.js"></script>

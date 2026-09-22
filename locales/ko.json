@@ -1,12 +1,7 @@
 {
   "title": "WARDOGS // 포병 계산기",
-  "gridInfo": "1 km → 100 m 격자 10×10",
   "map": "지도",
   "presetMap": "프리셋 지도",
-  "customMap": "사용자 지정 지도",
-  "width": "너비, km",
-  "height": "높이, km",
-  "apply": "적용",
   "weapon": "무기",
   "weaponType": "무기 종류",
   "maxRange": "최대 사거리",
@@ -41,7 +36,6 @@
   "point": "지점",
   "grid": "격자",
   "majorGrid": "주요 격자선",
-  "customMapStatus": "사용자 지정 지도",
   "mapLocked": "프리셋 지도가 선택되어 격자 크기가 고정되었습니다",
   "mapToolRuler": "거리 측정",
   "mapToolPencil": "그리기",
@@ -81,7 +75,6 @@
   "motdTitle": "오늘의 메시지",
   "motdDontShowAgain": "다시 표시하지 않기",
   "motdClose": "닫기",
-  "mapToolFullscreen": "전체 화면",
   "mapToolExitFullscreen": "전체 화면 종료",
   "sidebarHide": "사이드바 숨기기",
   "sidebarShow": "사이드바 표시",
@@ -240,5 +233,13 @@
   "terrainLoading": "terrain loading",
   "terrainStatus": "ΔZ {dz} m · MIL not auto-corrected",
   "sphLevelWarningTitle": "LEVEL THE SPH-2 BEFORE FIRING",
-  "sphLevelWarningBody": "Vehicle tilt changes the actual range. Park the SPH-2 on the flattest ground available. In the gunner HUD, find the vehicle silhouette below STABILIZED / ASL: the two small side markers show lateral tilt. Reposition the vehicle until the markers are as centered and aligned as possible. Front/back slope also affects range, so avoid parking uphill or downhill."
+  "sphLevelWarningBody": "Vehicle tilt changes the actual range. Park the SPH-2 on the flattest ground available. In the gunner HUD, find the vehicle silhouette below STABILIZED / ASL: the two small side markers show lateral tilt. Reposition the vehicle until the markers are as centered and aligned as possible. Front/back slope also affects range, so avoid parking uphill or downhill.",
+  "sidebarSetup": "설정",
+  "sidebarCoordinates": "좌표",
+  "firingSolution": "사격 제원",
+  "solutionSupportPrompt": "도움이 되나요? 프로젝트 운영을 지원해 주세요",
+  "placingOnMap": "지도에 배치 중",
+  "clickToPlace": "클릭하여 배치",
+  "guideAndFaq": "가이드 및 FAQ",
+  "guideAndFaqDescription": "계산기, 지도 및 SPH-2"
 }

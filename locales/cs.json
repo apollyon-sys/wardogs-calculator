@@ -1,12 +1,7 @@
 {
   "title": "WARDOGS // ARTILERIJNÍ KALKULÁTOR",
-  "gridInfo": "1 km → 10×10 polí po 100 m",
   "map": "Mapa",
   "presetMap": "Přednastavená mapa",
-  "customMap": "Vlastní mapa",
-  "width": "Šířka, km",
-  "height": "Výška, km",
-  "apply": "Použít",
   "weapon": "Zbraň",
   "weaponType": "Typ zbraně",
   "maxRange": "Maximální dostřel",
@@ -41,7 +36,6 @@
   "point": "bod",
   "grid": "mřížka",
   "majorGrid": "hlavní linie",
-  "customMapStatus": "Vlastní mapa",
   "mapLocked": "Je vybrána přednastavená mapa — velikost mřížky je uzamčena",
   "mapToolRuler": "Pravítko",
   "mapToolPencil": "Tužka",
@@ -81,7 +75,6 @@
   "motdTitle": "Zpráva dne",
   "motdDontShowAgain": "Příště nezobrazovat",
   "motdClose": "Zavřít",
-  "mapToolFullscreen": "Celá obrazovka",
   "mapToolExitFullscreen": "Ukončit celou obrazovku",
   "sidebarHide": "Skrýt panel",
   "sidebarShow": "Zobrazit panel",
@@ -240,5 +233,13 @@
   "terrainLoading": "načítání výšek",
   "terrainStatus": "ΔZ {dz} m · MIL bez automatické korekce",
   "sphLevelWarningTitle": "PŘED VÝSTŘELEM SPH-2 VYROVNEJTE",
-  "sphLevelWarningBody": "Náklon vozidla mění skutečný dostřel. Postavte SPH-2 na co nejrovnější terén. V HUD střelce najděte siluetu vozidla pod STABILIZED / ASL: dvě malé značky po stranách ukazují příčný náklon. Přeparkujte vozidlo, dokud nebudou značky co nejvíce vystředěné a ve stejné výšce. Podélný sklon dostřel také ovlivňuje, proto se vyhněte postavení do stoupání nebo klesání."
+  "sphLevelWarningBody": "Náklon vozidla mění skutečný dostřel. Postavte SPH-2 na co nejrovnější terén. V HUD střelce najděte siluetu vozidla pod STABILIZED / ASL: dvě malé značky po stranách ukazují příčný náklon. Přeparkujte vozidlo, dokud nebudou značky co nejvíce vystředěné a ve stejné výšce. Podélný sklon dostřel také ovlivňuje, proto se vyhněte postavení do stoupání nebo klesání.",
+  "sidebarSetup": "Nastavení",
+  "sidebarCoordinates": "Souřadnice",
+  "firingSolution": "Palebné řešení",
+  "solutionSupportPrompt": "Je to užitečné? Pomozte udržet projekt online",
+  "placingOnMap": "Umisťování na mapu",
+  "clickToPlace": "Kliknutím umístíte",
+  "guideAndFaq": "Průvodce a FAQ",
+  "guideAndFaqDescription": "Kalkulačka, mapy a SPH-2"
 }

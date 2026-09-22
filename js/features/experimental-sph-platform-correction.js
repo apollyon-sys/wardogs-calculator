@@ -726,6 +726,22 @@ function sphPlatformEnsureStyles() {
         'sphPlatformCorrectionStyles';
 
     style.textContent = `
+        .sph-platform-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 34px;
+            margin-bottom: 7px;
+        }
+
+        .sph-platform-card-header .coordinate-point-label {
+            flex: 1;
+        }
+
+        .sph-platform-card .hint {
+            margin-top: 7px;
+        }
+
         .sph-platform-grid {
             display: grid;
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -975,15 +991,21 @@ function sphPlatformEnsureControls() {
         return;
     }
 
+    const desktopTargetCard =
+        document.querySelector(
+            '.control-dock .coordinate-point[data-point="target"]'
+        );
+
     const originActions =
         $('coordinateOriginLock')
             ?.closest('.point-coordinate-actions');
 
     const originGrid =
         $('ox')
-            ?.closest('.grid2');
+            ?.closest('.coordinate-inputs, .grid2');
 
     const anchor =
+        desktopTargetCard ||
         originActions ||
         originGrid;
 
@@ -997,8 +1019,61 @@ function sphPlatformEnsureControls() {
     controls.id =
         'sphPlatformCorrectionControls';
 
-    controls.style.marginTop =
-        '8px';
+    if (desktopTargetCard) {
+        controls.className =
+            'coordinate-point sph-platform-card';
+    } else {
+        controls.style.marginTop =
+            '8px';
+    }
+
+    const cardHeader =
+        document.createElement('div');
+
+    cardHeader.className =
+        'sph-platform-card-header';
+
+    const cardMarker =
+        document.createElement('span');
+
+    cardMarker.className =
+        'coordinate-point-marker';
+
+    cardMarker.setAttribute(
+        'aria-hidden',
+        'true'
+    );
+
+    cardMarker.textContent =
+        'H';
+
+    const cardCopy =
+        document.createElement('span');
+
+    cardCopy.className =
+        'coordinate-point-label';
+
+    const cardTitle =
+        document.createElement('strong');
+
+    cardTitle.textContent =
+        'SPH-2';
+
+    const cardSubtitle =
+        document.createElement('small');
+
+    cardSubtitle.id =
+        'sphPlatformCardSubtitle';
+
+    cardCopy.append(
+        cardTitle,
+        cardSubtitle
+    );
+
+    cardHeader.append(
+        cardMarker,
+        cardCopy
+    );
 
     const grid =
         document.createElement('div');
@@ -1260,6 +1335,9 @@ function sphPlatformEnsureControls() {
         '0';
 
     controls.append(
+        ...(desktopTargetCard
+            ? [cardHeader]
+            : []),
         grid,
         hint
     );
@@ -1365,6 +1443,9 @@ function sphPlatformSyncControls() {
     const arcLabel =
         $('sphArcSelectLabel');
 
+    const cardSubtitle =
+        $('sphPlatformCardSubtitle');
+
     const manualMilLabel =
         $('sphPlatformManualMilLabel');
 
@@ -1422,6 +1503,11 @@ function sphPlatformSyncControls() {
     if (arcLabel) {
         arcLabel.textContent =
             labels.arc;
+    }
+
+    if (cardSubtitle) {
+        cardSubtitle.textContent =
+            `${labels.hullDirection} · ${labels.arc}`;
     }
 
     if (manualMilLabel) {

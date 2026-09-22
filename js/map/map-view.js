@@ -3,13 +3,6 @@
    ========================= */
 
 function getCurrentMap() {
-
-    if (
-        S.map === 'custom'
-    ) {
-        return null;
-    }
-
     return (
         MAPS[S.map] ||
         null

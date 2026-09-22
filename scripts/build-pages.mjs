@@ -9,6 +9,7 @@ import {
     renderMapLandingPage
 } from './map-landing-pages.mjs';
 import { SEO_ALTERNATE_NAMES, SEO_PAGE_CONTENT } from './seo-content.mjs';
+import { renderSeoGuideContent } from './lib/seo-guide-render.mjs';
 import {
     DESKTOP_SCRIPT_FILES,
     MOBILE_SCRIPT_FILES
@@ -398,7 +399,8 @@ function normalizeDesktopRuntimePlaceholders(html) {
         'dist',
         'angle',
         'dx',
-        'dy'
+        'dy',
+        'solutionSummary'
     ];
 
     let output = html;
@@ -592,139 +594,14 @@ function injectFaqStructuredData(
     );
 }
 
-function renderSeoTopicLinks(cluster, faq, faqLabel = 'FAQ') {
-    const links = [
-        {
-            id: 'wardogs-artillery-calculator',
-            label: cluster.heading
-        },
-        ...cluster.sections.map(section => ({
-            id: section.id,
-            label: section.heading,
-            href: section.href
-        }))
-    ];
-
-    if (Array.isArray(faq) && faq.length) {
-        links.push({
-            id: 'wardogs-calculator-faq',
-            label: faqLabel
-        });
-    }
-
-    return links
-        .map(link => (
-            `<a href="${link.href ? escapeSeoHtml(link.href) : `#${escapeSeoHtml(link.id)}`}">${escapeSeoHtml(link.label)}</a>`
-        ))
-        .join('');
-}
-
-function renderSeoFaq(faq, heading = 'WARDOGS Artillery Calculator FAQ') {
-    if (!Array.isArray(faq) || !faq.length) {
-        return '';
-    }
-
-    const items = faq
-        .map(item => [
-            '<details class="seo-faq-item">',
-            `<summary>${escapeSeoHtml(item.question)}</summary>`,
-            `<p>${escapeSeoHtml(item.answer)}</p>`,
-            '</details>'
-        ].join('\n'))
-        .join('\n');
-
-    return [
-        '<section class="seo-faq" id="wardogs-calculator-faq">',
-        `<h3>${escapeSeoHtml(heading)}</h3>`,
-        items,
-        '</section>'
-    ].join('\n');
-}
-
-function injectSeoContentCluster(
-    html,
-    copy
-) {
-    const cluster = copy.cluster;
-
-    if (
-        !cluster ||
-        !Array.isArray(cluster.sections) ||
-        !cluster.sections.length ||
-        html.includes('class="seo-content-cluster"')
-    ) {
+function injectSeoGuideContent(html, copy) {
+    if (!html.includes('<!-- SEO_GUIDE_CONTENT -->')) {
         return html;
     }
 
-    const sections = cluster.sections
-        .map(section => {
-            const heading = section.href
-                ? `<a href="${escapeSeoHtml(section.href)}">${escapeSeoHtml(section.heading)}</a>`
-                : escapeSeoHtml(section.heading);
-
-            return [
-                `<section class="seo-topic" id="${escapeSeoHtml(section.id)}">`,
-                `<h3>${heading}</h3>`,
-                `<p>${escapeSeoHtml(section.body)}</p>`,
-                '</section>'
-            ].join('\n');
-        })
-        .join('\n');
-
-    const block = [
-        '<div class="section seo-content-cluster">',
-        `<h2 id="wardogs-artillery-calculator">${escapeSeoHtml(cluster.heading)}</h2>`,
-        `<p class="seo-content-lead">${escapeSeoHtml(cluster.intro)}</p>`,
-        `<nav aria-label="${escapeSeoHtml(cluster.navLabel)}" class="seo-topic-nav">`,
-        renderSeoTopicLinks(
-            cluster,
-            copy.faq,
-            copy.faqLabel || 'FAQ'
-        ),
-        '</nav>',
-        '<div class="seo-topic-list">',
-        sections,
-        '</div>',
-        renderSeoFaq(
-            copy.faq,
-            copy.faqHeading || 'WARDOGS Artillery Calculator FAQ'
-        ),
-        '</div>'
-    ].join('\n');
-
     return html.replace(
-        /<\/aside>/i,
-        `${block}\n</aside>`
-    );
-}
-
-function injectSeoAbout(
-    html,
-    copy
-) {
-    if (
-        html.includes(
-            'class="seo-about"'
-        )
-    ) {
-        return html;
-    }
-
-    const block = [
-        '<div class="section seo-about-section">',
-        '<details class="seo-about">',
-        `<summary>${escapeSeoHtml(copy.heading)}</summary>`,
-        '<div class="seo-about-copy">',
-        `<p>${escapeSeoHtml(copy.intro)}</p>`,
-        `<p>${escapeSeoHtml(copy.usage)}</p>`,
-        '</div>',
-        '</details>',
-        '</div>'
-    ].join('\n');
-
-    return html.replace(
-        /<\/aside>/i,
-        `${block}\n</aside>`
+        '<!-- SEO_GUIDE_CONTENT -->',
+        renderSeoGuideContent(copy)
     );
 }
 
@@ -803,25 +680,17 @@ function applySeoV2(
             language
         );
 
-    if (copy.cluster) {
-        output =
-            injectSeoContentCluster(
-                output,
-                copy
-            );
+    output =
+        injectSeoGuideContent(
+            output,
+            copy
+        );
 
-        output =
-            injectFaqStructuredData(
-                output,
-                copy.faq
-            );
-    } else {
-        output =
-            injectSeoAbout(
-                output,
-                copy
-            );
-    }
+    output =
+        injectFaqStructuredData(
+            output,
+            copy.faq
+        );
 
     return output;
 }

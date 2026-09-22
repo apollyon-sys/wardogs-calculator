@@ -42,7 +42,7 @@ export const SEO_PAGE_CONTENT = {
                 {
                     "id": "how-to-use",
                     "heading": "使用方法",
-                    "body": "选择 Bakurani、Ozeti、Zestafona 或自定义地图，再选择 L81 迫击炮或 SPH-2，设置炮位和目标，即可读取距离、方位角与 MIL。若要与小队协作，可创建或加入房间并分享邀请，同时让每位玩家保留独立的当前射击解算。对于支持 Terrain3D 的 SPH-2 射击，可手动开启实验性修正。"
+                    "body": "选择 Bakurani、Ozeti 或 Zestafona，再选择 L81 迫击炮或 SPH-2，设置炮位和目标，即可读取距离、方位角与 MIL。使用 SPH-2 时，还需输入驾驶员罗盘显示的车体方向并选择 LOW 或 HIGH 弹道。若要与小队协作，可创建或加入房间并分享邀请，同时让每位玩家保留独立的当前射击解算。"
                 }
             ]
         },
@@ -59,7 +59,7 @@ export const SEO_PAGE_CONTENT = {
             },
             {
                 "question": "支持哪些 WARDOGS 地图？",
-                "answer": "目前包含 Bakurani、Ozeti 和 Zestafona 互动地图，并提供自定义地图模式。三张预设地图均使用校准后的游戏坐标，支持战术地图工具和地形等高线，并在 Terrain3D 数据覆盖范围内提供高程信息。"
+                "answer": "目前包含 Bakurani、Ozeti 和 Zestafona 互动地图。三张地图均使用校准后的游戏坐标，支持战术地图工具和地形等高线，并在 Terrain3D 数据覆盖范围内提供高程信息。"
             },
             {
                 "question": "WARDOGS 小队可以一起使用战术地图吗？",
@@ -92,7 +92,7 @@ export const SEO_PAGE_CONTENT = {
         description: 'Free WARDOGS L81 Mortar and SPH-2 artillery calculator with live team lobbies, Bakurani, Ozeti and Zestafona maps, Terrain3D MIL correction and tactical tools.',
         heading: 'About this calculator',
         intro: 'WARDOGS Artillery Calculator is a free, open-source community tool for L81 Mortar and SPH-2 firing solutions. It includes interactive tactical maps for Bakurani, Ozeti and Zestafona, live team map lobbies, coordinate-based targeting, distance, azimuth and MIL calculations, terrain contours, and experimental Terrain3D MIL correction for SPH-2 where supported.',
-        usage: 'Select a map and weapon, place the artillery and target positions, then read the firing solution. Create or join a lobby to synchronise drawings, zones, polygons and tactical markers with a squad while every player keeps a separate weapon, artillery point, target and range circle. Teammates see each other as labelled artillery-to-target overlays without extra range circles. Experimental Terrain3D correction is opt-in and off by default; only SAFE SPH-2 candidates are applied, while uncertain or unsupported cases automatically use the normal firing table. Platform and chassis tilt correction is not enabled.',
+        usage: 'Select a map and weapon, place the artillery and target positions, then open Firing solution to read distance, azimuth and MIL. For SPH-2, enter the hull direction shown by the driver compass and choose LOW or HIGH arc. Create or join a lobby to synchronise drawings, zones, polygons and tactical markers while every player keeps a separate firing solution. Experimental Terrain3D correction is opt-in; uncertain or unsupported cases use the normal firing table.',
         features: [
             'WARDOGS L81 Mortar calculator and firing solutions',
             'SPH-2 LOW and HIGH firing solutions',
@@ -118,7 +118,7 @@ export const SEO_PAGE_CONTENT = {
                 {
                     id: 'wardogs-sph-2-calculator',
                     heading: 'WARDOGS SPH-2 Calculator',
-                    body: 'Choose SPH-2 to calculate distance, azimuth and the available LOW/HIGH firing solutions. On supported Terrain3D maps, an experimental opt-in correction can compare the normal table value with a terrain-adjusted MIL candidate. It is off by default and only SAFE candidates are applied; uncertain, unsupported or unreachable cases automatically fall back to the normal firing table. Platform and chassis tilt correction is not included.'
+                    body: 'Choose SPH-2 to calculate distance, azimuth and the available LOW/HIGH firing solutions. Enter the hull direction from the driver compass so the heading-dependent platform model can adjust MIL, then select the required arc. This is not a vehicle tilt sensor, so park on level ground. On supported Terrain3D maps, the opt-in correction only applies SAFE candidates and otherwise falls back to the normal firing table.'
                 },
                 {
                     id: 'wardogs-live-team-map-lobbies',
@@ -146,7 +146,7 @@ export const SEO_PAGE_CONTENT = {
                 {
                     id: 'how-to-use',
                     heading: 'How to use',
-                    body: 'Select Bakurani, Ozeti, Zestafona or a custom map, choose L81 Mortar or SPH-2, place the artillery position and target, then read distance, azimuth and MIL. To plan with a squad, create or join a lobby and share its invite while keeping each player’s active firing solution separate. For SPH-2 on supported maps, experimental Terrain3D correction can be enabled manually to compare a SAFE terrain-adjusted candidate with the normal firing-table value.'
+                    body: 'Select Bakurani, Ozeti or Zestafona, choose L81 Mortar or SPH-2, and place or type the artillery and target coordinates. For SPH-2, enter hull direction from the driver compass and choose LOW or HIGH arc. Open Firing solution to read distance, azimuth and MIL. Create or join a lobby to share tactical planning while each player keeps an independent firing solution.'
                 }
             ]
         },
@@ -161,7 +161,7 @@ export const SEO_PAGE_CONTENT = {
             },
             {
                 question: 'Which WARDOGS maps are available?',
-                answer: 'The calculator includes interactive maps for Bakurani, Ozeti and Zestafona, plus a custom-map mode. All three preset maps use calibrated game-coordinate mapping, support tactical map tools and terrain contour layers, and provide Terrain3D elevation data where coverage is available.'
+                answer: 'The calculator includes calibrated interactive maps for Bakurani, Ozeti and Zestafona. All three maps support tactical map tools and terrain contour layers, and provide Terrain3D elevation data where coverage is available.'
             },
             {
                 question: 'Can a WARDOGS squad use the tactical map together?',
@@ -169,7 +169,7 @@ export const SEO_PAGE_CONTENT = {
             },
             {
                 question: 'Does Terrain3D correct SPH-2 MIL for elevation?',
-                answer: 'Experimental Terrain3D MIL correction is available as an opt-in feature for SPH-2 on supported terrain. It is off by default, shows the normal table value alongside the Terrain3D candidate, and only applies candidates classified as SAFE. Other cases automatically fall back to the normal firing table. Vehicle or chassis tilt is not corrected.'
+                answer: 'Experimental Terrain3D MIL correction is available as an opt-in feature for SPH-2 on supported terrain. It only applies candidates classified as SAFE; other cases fall back to the normal firing table. Hull direction correction models a heading-dependent platform offset, but it does not measure actual vehicle tilt, so park on level ground.'
             },
             {
                 question: 'Does the WARDOGS map show terrain contours?',
@@ -404,3 +404,305 @@ export const SEO_ALTERNATE_NAMES = [
     'WARDOGS Arty Calc',
     'WARDOGS L81 Mortar Calculator'
 ];
+
+const SEO_GUIDES = {
+    en: {
+        heading: 'How to use the WARDOGS artillery calculator',
+        navLabel: 'Step-by-step guide',
+        intro: 'Use these steps for an L81 Mortar or SPH-2 firing solution. Coordinates may be entered manually, pasted from the clipboard, or placed directly on the tactical map.',
+        featuresHeading: 'Calculator and tactical map features',
+        tipsHeading: 'Accuracy and workflow tips',
+        faqHeading: 'WARDOGS calculator questions',
+        categories: {
+            start: 'Getting started',
+            weapons: 'Weapons and firing',
+            maps: 'Tactical maps',
+            tools: 'Team and map tools',
+            faq: 'Frequently asked questions'
+        },
+        steps: [
+            { heading: '1. Select the map and weapon', body: 'Choose Bakurani, Ozeti or Zestafona, select a map style, then choose L81 Mortar or SPH-2. The supported range and firing table update with the weapon.' },
+            { heading: '2. Set artillery and target coordinates', body: 'Click Artillery or Target and place the point on the map, or type X and Y. Copy exports a point, Paste imports a coordinate pair, and Lock prevents accidental movement.' },
+            { heading: '3. Configure SPH-2 hull and arc', body: 'For SPH-2, enter the hull direction shown on the driver-seat compass and select LOW or HIGH arc in the third coordinate card. Park on level ground: hull direction correction does not measure vehicle tilt.' },
+            { heading: '4. Read the firing solution', body: 'Open Firing solution in the left menu. Check range status, distance, MIL and azimuth before firing. Out of range means the selected weapon table has no valid solution for that distance.' },
+            { heading: '5. Save and share tactical work', body: 'Save frequently used targets, use the ruler and drawing tools for planning, or create a lobby to synchronise drawings, zones, polygons and markers with the squad.' }
+        ],
+        tips: [
+            'Confirm that the selected map matches the current server map before placing points.',
+            'Use Lock after setting artillery so target placement cannot move it accidentally.',
+            'Treat experimental Terrain3D values as an aid; unsupported or uncertain cases fall back to the normal firing table.'
+        ],
+        faq: [
+            { question: 'What should I enter as SPH-2 hull direction?', answer: 'Use the heading shown by the driver-seat compass for the front of the hull, from 0 to 359 degrees. It is separate from the firing azimuth.' },
+            { question: 'Should I choose LOW or HIGH arc for SPH-2?', answer: 'Choose the arc available for the intended shot and terrain. LOW is the flatter trajectory; HIGH is the steeper trajectory. The calculator displays the corresponding MIL solution.' },
+            { question: 'Why are Paste and Lock shown for each point?', answer: 'Each coordinate row is independent. Paste updates only that artillery or target point, while Lock protects that point from map clicks and dragging.' }
+        ]
+    },
+    ru: {
+        heading: 'Как пользоваться артиллерийским калькулятором WARDOGS',
+        navLabel: 'Пошаговая инструкция',
+        intro: 'Инструкция подходит для расчётов L81 Mortar и SPH-2. Координаты можно ввести вручную, вставить из буфера или поставить непосредственно на тактической карте.',
+        featuresHeading: 'Возможности калькулятора и карты',
+        tipsHeading: 'Советы по точности',
+        faqHeading: 'Вопросы о калькуляторе WARDOGS',
+        categories: {
+            start: 'Начало работы',
+            weapons: 'Оружие и стрельба',
+            maps: 'Тактические карты',
+            tools: 'Командные инструменты',
+            faq: 'Частые вопросы'
+        },
+        steps: [
+            { heading: '1. Выберите карту и оружие', body: 'Выберите Bakurani, Ozeti или Zestafona, стиль карты и затем L81 Mortar или SPH-2. Диапазон дальности и таблица стрельбы обновятся автоматически.' },
+            { heading: '2. Укажите артиллерию и цель', body: 'Выберите Артиллерия или Цель и поставьте точку на карте либо введите X и Y. Copy копирует точку, Paste вставляет пару координат, а Lock защищает её от случайного перемещения.' },
+            { heading: '3. Настройте корпус и дугу SPH-2', body: 'В третьей карточке введите направление корпуса по компасу с места водителя и выберите LOW или HIGH. Ставьте машину ровно: направление корпуса не измеряет реальный наклон техники.' },
+            { heading: '4. Прочитайте решение', body: 'Откройте Firing solution в левом меню и проверьте статус дальности, дистанцию, MIL и азимут. Out of range означает, что для этой дистанции нет решения в таблице выбранного оружия.' },
+            { heading: '5. Сохраните или передайте план', body: 'Сохраняйте нужные цели, используйте линейку и рисунки или создайте лобби для синхронизации зон, полигонов и меток с отрядом.' }
+        ],
+        tips: [
+            'Перед установкой точек проверьте, что выбрана карта текущего сервера.',
+            'После установки артиллерии включите Lock, чтобы не сдвинуть её при выборе цели.',
+            'Terrain3D — экспериментальная подсказка; при недостаточных данных используется обычная таблица.'
+        ],
+        faq: [
+            { question: 'Что вводить в поле направления корпуса SPH-2?', answer: 'Введите направление передней части корпуса по компасу с места водителя: от 0 до 359 градусов. Это значение не равно азимуту выстрела.' },
+            { question: 'Как выбрать LOW или HIGH для SPH-2?', answer: 'LOW соответствует более настильной, а HIGH — более крутой траектории. Выберите доступную для нужного выстрела дугу, и калькулятор покажет соответствующий MIL.' },
+            { question: 'Чем отличаются Paste и Lock рядом с координатами?', answer: 'Paste вставляет координаты только в выбранную строку артиллерии или цели. Lock блокирует изменение этой точки кликами и перетаскиванием на карте.' }
+        ]
+    },
+    'zh-cn': {
+        heading: 'WARDOGS 炮兵计算器使用指南',
+        navLabel: '分步指南',
+        intro: '以下步骤适用于 L81 迫击炮和 SPH-2。坐标可以手动输入、从剪贴板粘贴，或直接在战术地图上放置。',
+        featuresHeading: '计算器与战术地图功能',
+        tipsHeading: '精度与操作建议',
+        faqHeading: 'WARDOGS 计算器常见问题',
+        categories: {
+            start: '快速开始',
+            weapons: '武器与射击',
+            maps: '战术地图',
+            tools: '团队与地图工具',
+            faq: '常见问题'
+        },
+        steps: [
+            { heading: '1. 选择地图和武器', body: '选择 Bakurani、Ozeti 或 Zestafona，再选择地图样式以及 L81 迫击炮或 SPH-2。射程和射表会随武器更新。' },
+            { heading: '2. 设置炮位和目标', body: '选择炮位或目标后在地图放置，或输入 X、Y。Copy 用于复制，Paste 仅粘贴该点坐标，Lock 可防止误移动。' },
+            { heading: '3. 设置 SPH-2 车体与弹道', body: '在第三张坐标卡中输入驾驶员罗盘显示的车头方向，并选择 LOW 或 HIGH。请将车辆停在平地；车体方向修正不会测量实际倾斜。' },
+            { heading: '4. 查看射击解算', body: '在左侧菜单打开 Firing solution，确认射程状态、距离、MIL 和方位角。Out of range 表示当前距离没有有效射表解算。' },
+            { heading: '5. 保存并共享战术规划', body: '保存常用目标，使用测距尺和绘图工具，或创建房间与小队同步区域、多边形和标记。' }
+        ],
+        tips: ['放置坐标前确认所选地图与服务器地图一致。', '设置炮位后使用 Lock，避免放置目标时误移动炮位。', 'Terrain3D 属于实验性辅助；数据不确定时会使用标准射表。'],
+        faq: [
+            { question: 'SPH-2 车体方向应输入什么？', answer: '输入驾驶员座位罗盘显示的车头方向，范围为 0–359 度。该值与射击方位角不同。' },
+            { question: 'SPH-2 应选择 LOW 还是 HIGH？', answer: 'LOW 是较平的弹道，HIGH 是较陡的弹道。根据射击和地形选择可用弹道，计算器会显示对应 MIL。' },
+            { question: '坐标旁的 Paste 和 Lock 有什么区别？', answer: 'Paste 只更新对应的炮位或目标坐标；Lock 会阻止地图点击和拖动改变该点。' }
+        ]
+    }
+};
+
+const LOCALIZED_GUIDE_LABELS = {
+    uk: ['Як користуватися артилерійським калькулятором WARDOGS', 'Покрокова інструкція', 'Можливості калькулятора й мапи', 'Поради щодо точності', 'Питання про калькулятор WARDOGS', 'Початок роботи', 'Зброя і стрільба', 'Тактичні мапи', 'Командні інструменти', 'Часті питання'],
+    de: ['WARDOGS-Artillerierechner verwenden', 'Schritt-für-Schritt-Anleitung', 'Funktionen von Rechner und Karte', 'Tipps für Genauigkeit', 'Fragen zum WARDOGS-Rechner', 'Erste Schritte', 'Waffen und Feuerlösung', 'Taktische Karten', 'Teamwerkzeuge', 'Häufige Fragen'],
+    fr: ['Utiliser le calculateur d’artillerie WARDOGS', 'Guide étape par étape', 'Fonctions du calculateur et de la carte', 'Conseils de précision', 'Questions sur le calculateur WARDOGS', 'Bien démarrer', 'Armes et tir', 'Cartes tactiques', 'Outils d’équipe', 'Questions fréquentes'],
+    es: ['Cómo usar la calculadora de artillería WARDOGS', 'Guía paso a paso', 'Funciones de la calculadora y el mapa', 'Consejos de precisión', 'Preguntas sobre la calculadora WARDOGS', 'Primeros pasos', 'Armas y tiro', 'Mapas tácticos', 'Herramientas de equipo', 'Preguntas frecuentes'],
+    pl: ['Jak używać kalkulatora artyleryjskiego WARDOGS', 'Instrukcja krok po kroku', 'Funkcje kalkulatora i mapy', 'Wskazówki dotyczące celności', 'Pytania o kalkulator WARDOGS', 'Pierwsze kroki', 'Broń i ostrzał', 'Mapy taktyczne', 'Narzędzia zespołu', 'Częste pytania'],
+    ko: ['WARDOGS 포병 계산기 사용법', '단계별 가이드', '계산기 및 전술 지도 기능', '정확도 팁', 'WARDOGS 계산기 질문', '시작하기', '무기 및 사격', '전술 지도', '팀 도구', '자주 묻는 질문'],
+    pt: ['Como usar a calculadora de artilharia WARDOGS', 'Guia passo a passo', 'Funções da calculadora e do mapa', 'Dicas de precisão', 'Perguntas sobre a calculadora WARDOGS', 'Primeiros passos', 'Armas e tiro', 'Mapas táticos', 'Ferramentas de equipa', 'Perguntas frequentes'],
+    ja: ['WARDOGS砲兵計算機の使い方', 'ステップガイド', '計算機と戦術マップの機能', '精度のヒント', 'WARDOGS計算機の質問', 'はじめに', '火器と射撃', '戦術マップ', 'チームツール', 'よくある質問'],
+    cs: ['Jak používat artilerijní kalkulátor WARDOGS', 'Podrobný návod', 'Funkce kalkulátoru a mapy', 'Tipy pro přesnost', 'Otázky ke kalkulátoru WARDOGS', 'Začínáme', 'Zbraně a palba', 'Taktické mapy', 'Týmové nástroje', 'Časté otázky'],
+    cat: ['How to use the WARDOGS meowculator', 'Step-by-step meow guide', 'Calculator and meowp features', 'Accuracy tips', 'WARDOGS meowculator questions', 'Primers passos', 'Armes i tir', 'Mapes tàctics', 'Eines d’equip', 'Preguntes freqüents']
+};
+
+const LOCALIZED_GUIDE_CONTENT = {
+    uk: {
+        intro: 'Координати для L81 Mortar або SPH-2 можна ввести вручну, вставити з буфера чи встановити безпосередньо на тактичній мапі.',
+        steps: [
+            { heading: '1. Виберіть мапу та зброю', body: 'Виберіть Bakurani, Ozeti або Zestafona, стиль мапи, а потім L81 Mortar чи SPH-2. Дальність і таблиця стрільби оновляться автоматично.' },
+            { heading: '2. Установіть артилерію та ціль', body: 'Поставте точки на мапі або введіть X і Y. Copy копіює точку, Paste вставляє пару координат, а Lock захищає її від випадкового переміщення.' },
+            { heading: '3. Налаштуйте SPH-2', body: 'У третій картці введіть напрямок корпусу за компасом водія та виберіть LOW або HIGH. Паркуйтеся рівно: цей параметр не вимірює фактичний нахил машини.' },
+            { heading: '4. Перевірте рішення', body: 'Відкрийте Firing solution у лівому меню та перевірте статус дальності, дистанцію, MIL і азимут. Збережіть ціль або створіть лобі для спільного планування.' }
+        ],
+        tips: ['Перевірте мапу сервера перед установленням точок.', 'Заблокуйте артилерію перед розміщенням цілі.', 'Terrain3D є експериментальною підказкою; за невизначеності використовується звичайна таблиця.'],
+        faq: [
+            { question: 'Що вводити як напрямок корпусу SPH-2?', answer: 'Напрямок передньої частини корпусу за компасом з місця водія від 0 до 359 градусів. Це не азимут пострілу.' },
+            { question: 'Чим відрізняються LOW і HIGH?', answer: 'LOW — настильніша траєкторія, HIGH — крутіша. Калькулятор показує MIL для вибраної дуги.' },
+            { question: 'Що роблять Paste і Lock?', answer: 'Paste змінює лише відповідну точку, а Lock забороняє змінювати її кліками та перетягуванням.' }
+        ]
+    },
+    de: {
+        intro: 'Koordinaten für L81 Mortar oder SPH-2 können eingegeben, aus der Zwischenablage eingefügt oder direkt auf der taktischen Karte gesetzt werden.',
+        steps: [
+            { heading: '1. Karte und Waffe wählen', body: 'Bakurani, Ozeti oder Zestafona, den Kartenstil und anschließend L81 Mortar oder SPH-2 wählen. Reichweite und Feuertabelle werden automatisch angepasst.' },
+            { heading: '2. Geschütz und Ziel setzen', body: 'Punkte auf der Karte setzen oder X und Y eingeben. Copy kopiert einen Punkt, Paste fügt ein Koordinatenpaar ein und Lock schützt vor versehentlichem Verschieben.' },
+            { heading: '3. SPH-2 konfigurieren', body: 'In der dritten Karte die Rumpfrichtung vom Fahrerkompass eingeben und LOW oder HIGH wählen. Das Fahrzeug eben abstellen, da die tatsächliche Neigung nicht gemessen wird.' },
+            { heading: '4. Feuerlösung prüfen', body: 'Firing solution im linken Menü öffnen und Reichweitenstatus, Distanz, MIL und Azimut prüfen. Ziele können gespeichert oder in einer Lobby gemeinsam geplant werden.' }
+        ],
+        tips: ['Vor dem Setzen der Punkte die Serverkarte prüfen.', 'Das Geschütz sperren, bevor das Ziel gesetzt wird.', 'Terrain3D ist experimentell; bei unsicheren Daten gilt die normale Feuertabelle.'],
+        faq: [
+            { question: 'Was ist die SPH-2-Rumpfrichtung?', answer: 'Die Richtung der Fahrzeugfront laut Fahrerkompass von 0 bis 359 Grad. Sie ist nicht mit dem Schussazimut identisch.' },
+            { question: 'Wann LOW oder HIGH wählen?', answer: 'LOW ist die flachere, HIGH die steilere Flugbahn. Der Rechner zeigt den MIL-Wert für die gewählte Bahn.' },
+            { question: 'Was ist der Unterschied zwischen Paste und Lock?', answer: 'Paste aktualisiert nur den jeweiligen Punkt. Lock verhindert Änderungen durch Kartenklicks oder Ziehen.' }
+        ]
+    },
+    fr: {
+        intro: 'Les coordonnées du mortier L81 ou du SPH-2 peuvent être saisies, collées depuis le presse-papiers ou placées directement sur la carte tactique.',
+        steps: [
+            { heading: '1. Choisir la carte et l’arme', body: 'Choisissez Bakurani, Ozeti ou Zestafona, le style de carte, puis le mortier L81 ou le SPH-2. La portée et la table de tir sont mises à jour automatiquement.' },
+            { heading: '2. Placer l’artillerie et la cible', body: 'Placez les points sur la carte ou saisissez X et Y. Copy copie un point, Paste colle une paire de coordonnées et Lock empêche un déplacement accidentel.' },
+            { heading: '3. Configurer le SPH-2', body: 'Dans la troisième carte, saisissez la direction du châssis indiquée par la boussole du conducteur et choisissez LOW ou HIGH. Stationnez à plat, car l’inclinaison réelle n’est pas mesurée.' },
+            { heading: '4. Vérifier la solution', body: 'Ouvrez Firing solution dans le menu gauche et contrôlez la portée, la distance, le MIL et l’azimut. Enregistrez la cible ou créez un salon pour planifier en équipe.' }
+        ],
+        tips: ['Vérifiez la carte du serveur avant de placer les points.', 'Verrouillez l’artillerie avant de placer la cible.', 'Terrain3D est expérimental ; la table normale est utilisée en cas d’incertitude.'],
+        faq: [
+            { question: 'Quelle direction de châssis SPH-2 saisir ?', answer: 'La direction de l’avant du véhicule donnée par la boussole du conducteur, de 0 à 359 degrés. Ce n’est pas l’azimut de tir.' },
+            { question: 'Faut-il choisir LOW ou HIGH ?', answer: 'LOW est la trajectoire la plus tendue et HIGH la plus courbe. Le calculateur affiche le MIL correspondant.' },
+            { question: 'Quelle différence entre Paste et Lock ?', answer: 'Paste remplace uniquement le point concerné ; Lock bloque ses déplacements par clic ou glissement.' }
+        ]
+    },
+    es: {
+        intro: 'Las coordenadas del mortero L81 o SPH-2 se pueden escribir, pegar desde el portapapeles o colocar directamente en el mapa táctico.',
+        steps: [
+            { heading: '1. Selecciona mapa y arma', body: 'Elige Bakurani, Ozeti o Zestafona, el estilo de mapa y después L81 Mortar o SPH-2. El alcance y la tabla de tiro se actualizan automáticamente.' },
+            { heading: '2. Coloca artillería y objetivo', body: 'Coloca los puntos en el mapa o escribe X e Y. Copy copia un punto, Paste pega un par de coordenadas y Lock evita moverlo por accidente.' },
+            { heading: '3. Configura el SPH-2', body: 'En la tercera tarjeta introduce la dirección del casco que muestra la brújula del conductor y elige LOW o HIGH. Aparca en terreno llano: no se mide la inclinación real del vehículo.' },
+            { heading: '4. Comprueba la solución', body: 'Abre Firing solution en el menú izquierdo y revisa alcance, distancia, MIL y azimut. Guarda el objetivo o crea una sala para planificar con el equipo.' }
+        ],
+        tips: ['Comprueba el mapa del servidor antes de colocar puntos.', 'Bloquea la artillería antes de colocar el objetivo.', 'Terrain3D es experimental; ante datos inciertos se usa la tabla normal.'],
+        faq: [
+            { question: '¿Qué dirección de casco SPH-2 debo introducir?', answer: 'La dirección del frente del vehículo que indica la brújula del conductor, de 0 a 359 grados. No es el azimut de tiro.' },
+            { question: '¿Cuándo elijo LOW o HIGH?', answer: 'LOW es la trayectoria más plana y HIGH la más pronunciada. La calculadora muestra el MIL de la opción elegida.' },
+            { question: '¿En qué se diferencian Paste y Lock?', answer: 'Paste actualiza solo ese punto; Lock impide cambiarlo con clics o arrastrándolo en el mapa.' }
+        ]
+    },
+    pl: {
+        intro: 'Współrzędne dla L81 Mortar lub SPH-2 można wpisać, wkleić ze schowka albo wskazać bezpośrednio na mapie taktycznej.',
+        steps: [
+            { heading: '1. Wybierz mapę i broń', body: 'Wybierz Bakurani, Ozeti lub Zestafona, styl mapy, a następnie L81 Mortar albo SPH-2. Zasięg i tabela ogniowa zostaną zaktualizowane.' },
+            { heading: '2. Ustaw artylerię i cel', body: 'Umieść punkty na mapie lub wpisz X i Y. Copy kopiuje punkt, Paste wkleja parę współrzędnych, a Lock chroni przed przypadkowym przesunięciem.' },
+            { heading: '3. Skonfiguruj SPH-2', body: 'W trzeciej karcie wpisz kierunek kadłuba z kompasu kierowcy i wybierz LOW lub HIGH. Ustaw pojazd poziomo, ponieważ rzeczywiste przechylenie nie jest mierzone.' },
+            { heading: '4. Sprawdź rozwiązanie', body: 'Otwórz Firing solution w lewym menu i sprawdź zasięg, odległość, MIL oraz azymut. Zapisz cel lub utwórz lobby do wspólnego planowania.' }
+        ],
+        tips: ['Sprawdź mapę serwera przed ustawieniem punktów.', 'Zablokuj artylerię przed umieszczeniem celu.', 'Terrain3D jest eksperymentalny; przy niepewnych danych używana jest zwykła tabela.'],
+        faq: [
+            { question: 'Jaki kierunek kadłuba SPH-2 wpisać?', answer: 'Kierunek przodu pojazdu z kompasu kierowcy, od 0 do 359 stopni. Nie jest to azymut strzału.' },
+            { question: 'Kiedy wybrać LOW lub HIGH?', answer: 'LOW oznacza bardziej płaski, a HIGH bardziej stromy tor. Kalkulator pokaże MIL dla wybranej opcji.' },
+            { question: 'Czym różnią się Paste i Lock?', answer: 'Paste aktualizuje tylko dany punkt, a Lock blokuje jego zmianę kliknięciem lub przeciągnięciem.' }
+        ]
+    },
+    pt: {
+        intro: 'As coordenadas do morteiro L81 ou SPH-2 podem ser introduzidas, coladas da área de transferência ou marcadas diretamente no mapa tático.',
+        steps: [
+            { heading: '1. Escolha o mapa e a arma', body: 'Escolha Bakurani, Ozeti ou Zestafona, o estilo do mapa e depois L81 Mortar ou SPH-2. O alcance e a tabela de tiro são atualizados automaticamente.' },
+            { heading: '2. Defina a artilharia e o alvo', body: 'Marque os pontos no mapa ou introduza X e Y. Copy copia um ponto, Paste cola um par de coordenadas e Lock evita deslocações acidentais.' },
+            { heading: '3. Configure o SPH-2', body: 'No terceiro cartão, introduza a direção do casco indicada pela bússola do condutor e escolha LOW ou HIGH. Estacione nivelado, pois a inclinação real não é medida.' },
+            { heading: '4. Verifique a solução', body: 'Abra Firing solution no menu esquerdo e confirme alcance, distância, MIL e azimute. Guarde o alvo ou crie uma sala para planear em equipa.' }
+        ],
+        tips: ['Confirme o mapa do servidor antes de marcar os pontos.', 'Bloqueie a artilharia antes de colocar o alvo.', 'Terrain3D é experimental; em caso de incerteza é usada a tabela normal.'],
+        faq: [
+            { question: 'Que direção do casco SPH-2 devo introduzir?', answer: 'A direção da frente do veículo indicada pela bússola do condutor, de 0 a 359 graus. Não é o azimute de tiro.' },
+            { question: 'Quando escolher LOW ou HIGH?', answer: 'LOW é a trajetória mais plana e HIGH a mais elevada. A calculadora mostra o MIL da opção escolhida.' },
+            { question: 'Qual é a diferença entre Paste e Lock?', answer: 'Paste atualiza apenas esse ponto; Lock impede alterações por clique ou arrastamento.' }
+        ]
+    },
+    cs: {
+        intro: 'Souřadnice pro L81 Mortar nebo SPH-2 lze zadat ručně, vložit ze schránky nebo umístit přímo na taktické mapě.',
+        steps: [
+            { heading: '1. Vyberte mapu a zbraň', body: 'Vyberte Bakurani, Ozeti nebo Zestafona, styl mapy a poté L81 Mortar či SPH-2. Dostřel a palebná tabulka se automaticky změní.' },
+            { heading: '2. Umístěte dělo a cíl', body: 'Umístěte body na mapě nebo zadejte X a Y. Copy bod zkopíruje, Paste vloží dvojici souřadnic a Lock zabrání náhodnému posunutí.' },
+            { heading: '3. Nastavte SPH-2', body: 'Ve třetí kartě zadejte směr korby z kompasu řidiče a zvolte LOW nebo HIGH. Vozidlo postavte na rovinu, protože skutečný náklon se neměří.' },
+            { heading: '4. Zkontrolujte řešení', body: 'Otevřete Firing solution v levém menu a ověřte dostřel, vzdálenost, MIL a azimut. Cíl uložte nebo vytvořte lobby pro týmové plánování.' }
+        ],
+        tips: ['Před umístěním bodů ověřte mapu serveru.', 'Před nastavením cíle uzamkněte pozici děla.', 'Terrain3D je experimentální; při nejistých datech se použije běžná tabulka.'],
+        faq: [
+            { question: 'Jaký směr korby SPH-2 zadat?', answer: 'Směr přední části vozidla podle kompasu řidiče od 0 do 359 stupňů. Nejde o azimut střelby.' },
+            { question: 'Kdy zvolit LOW nebo HIGH?', answer: 'LOW je plošší a HIGH strmější dráha. Kalkulátor zobrazí MIL pro vybranou variantu.' },
+            { question: 'Jaký je rozdíl mezi Paste a Lock?', answer: 'Paste změní pouze příslušný bod, zatímco Lock zabrání jeho změně kliknutím či tažením.' }
+        ]
+    },
+    ko: {
+        intro: 'L81 Mortar 또는 SPH-2 좌표는 직접 입력하거나 클립보드에서 붙여넣거나 전술 지도에 바로 배치할 수 있습니다.',
+        steps: [
+            { heading: '1. 지도와 무기 선택', body: 'Bakurani, Ozeti 또는 Zestafona와 지도 스타일을 선택한 뒤 L81 Mortar 또는 SPH-2를 고릅니다. 사거리와 사격표가 자동으로 갱신됩니다.' },
+            { heading: '2. 포와 표적 배치', body: '지도에 점을 놓거나 X와 Y를 입력합니다. Copy는 점을 복사하고 Paste는 좌표 한 쌍을 붙여넣으며 Lock은 실수로 이동하는 것을 막습니다.' },
+            { heading: '3. SPH-2 설정', body: '세 번째 카드에 운전석 나침반의 차체 방향을 입력하고 LOW 또는 HIGH를 선택합니다. 실제 차량 기울기는 측정하지 않으므로 평지에 주차하세요.' },
+            { heading: '4. 사격 제원 확인', body: '왼쪽 메뉴에서 Firing solution을 열어 사거리 상태, 거리, MIL, 방위각을 확인합니다. 표적을 저장하거나 로비를 만들어 분대와 계획을 공유할 수 있습니다.' }
+        ],
+        tips: ['점을 배치하기 전에 서버 지도가 맞는지 확인하세요.', '표적을 놓기 전에 포 위치를 Lock으로 잠그세요.', 'Terrain3D는 실험 기능이며 불확실하면 기본 사격표를 사용합니다.'],
+        faq: [
+            { question: 'SPH-2 차체 방향에는 무엇을 입력하나요?', answer: '운전석 나침반에 표시되는 차량 전방 방향을 0~359도로 입력합니다. 사격 방위각과는 다른 값입니다.' },
+            { question: 'LOW와 HIGH 중 무엇을 선택하나요?', answer: 'LOW는 더 낮고 평평한 탄도, HIGH는 더 높은 탄도입니다. 계산기가 선택한 탄도의 MIL을 표시합니다.' },
+            { question: 'Paste와 Lock의 차이는 무엇인가요?', answer: 'Paste는 해당 포 또는 표적 좌표만 바꾸며 Lock은 지도 클릭이나 드래그로 점이 바뀌는 것을 막습니다.' }
+        ]
+    },
+    ja: {
+        intro: 'L81 MortarまたはSPH-2の座標は、直接入力、クリップボードから貼り付け、または戦術マップ上への配置ができます。',
+        steps: [
+            { heading: '1. マップと火器を選ぶ', body: 'Bakurani、Ozeti、Zestafonaのいずれかとマップ表示を選び、L81 MortarまたはSPH-2を選択します。射程と射表が自動更新されます。' },
+            { heading: '2. 砲位置と目標を設定する', body: 'マップに点を置くかXとYを入力します。Copyは点をコピーし、Pasteは座標を貼り付け、Lockは誤操作による移動を防ぎます。' },
+            { heading: '3. SPH-2を設定する', body: '3枚目のカードに運転席コンパスの車体方向を入力し、LOWまたはHIGHを選びます。実際の車体傾斜は測定しないため、平坦な場所に停車してください。' },
+            { heading: '4. 射撃諸元を確認する', body: '左メニューのFiring solutionを開き、射程状態、距離、MIL、方位角を確認します。目標を保存したり、ロビーで分隊と計画を共有できます。' }
+        ],
+        tips: ['点を置く前にサーバーのマップと一致しているか確認してください。', '目標を置く前に砲位置をLockしてください。', 'Terrain3Dは実験機能で、不確実な場合は通常の射表を使用します。'],
+        faq: [
+            { question: 'SPH-2の車体方向には何を入力しますか？', answer: '運転席コンパスに表示される車体前方の方向を0〜359度で入力します。射撃方位角とは別の値です。' },
+            { question: 'LOWとHIGHはどう選びますか？', answer: 'LOWは低く平坦な弾道、HIGHは高い弾道です。計算機は選択した弾道のMILを表示します。' },
+            { question: 'PasteとLockの違いは何ですか？', answer: 'Pasteはその砲位置または目標だけを更新し、Lockはマップのクリックやドラッグによる変更を防ぎます。' }
+        ]
+    }
+};
+
+for (const [language, labels] of Object.entries(LOCALIZED_GUIDE_LABELS)) {
+    const base = SEO_GUIDES.en;
+    SEO_GUIDES[language] = {
+        ...base,
+        heading: labels[0],
+        navLabel: labels[1],
+        featuresHeading: labels[2],
+        tipsHeading: labels[3],
+        faqHeading: labels[4],
+        categories: {
+            start: labels[5],
+            weapons: labels[6],
+            maps: labels[7],
+            tools: labels[8],
+            faq: labels[9]
+        }
+    };
+
+    Object.assign(
+        SEO_GUIDES[language],
+        LOCALIZED_GUIDE_CONTENT[language] || {}
+    );
+}
+
+for (const [language, guide] of Object.entries(SEO_GUIDES)) {
+    const copy = SEO_PAGE_CONTENT[language];
+    if (!copy) continue;
+
+    guide.tips = guide.tips
+        .filter(tip => !/Terrain3D/i.test(tip));
+
+    copy.guide = guide;
+    copy.faqHeading ||= guide.faqHeading;
+    copy.faq = [
+        ...(copy.faq || []),
+        ...guide.faq
+    ].filter(item => !/Terrain3D/i.test(item.question));
+
+    copy.features = copy.features
+        .filter(feature => !/Terrain3D/i.test(feature));
+
+    if (copy.cluster) {
+        const sphSection = copy.cluster.sections
+            .find(section => section.id === 'wardogs-sph-2-calculator');
+
+        if (sphSection) {
+            sphSection.body = guide.steps[2].body;
+        }
+    } else {
+        copy.intro = guide.intro;
+        copy.usage = guide.steps
+            .map(step => step.body)
+            .join(' ');
+    }
+}

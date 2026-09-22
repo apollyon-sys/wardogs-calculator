@@ -26,10 +26,10 @@ async function client(t, enabled = true, challenge = false) {
     const window = new Window({ url: 'http://localhost:8000/' });
     t.after(() => window.happyDOM.close());
     window.document.body.innerHTML = `<div class="map"><canvas id="canvas"></canvas></div>
-        <select id="mapSelect"><option value="custom">Custom</option><option value="bakurani">Bakurani</option></select>
+        <select id="mapSelect"><option value="bakurani">Bakurani</option></select>
         <select id="weapon"><option value="spg">SPG</option><option value="mortar">L81 Mortar</option></select>
-        <button id="apply"></button><input id="w"><input id="h"><input id="ox"><input id="oy"><input id="tx"><input id="ty">
-        <div id="customMapSizing"></div><button id="mapToolUndoButton"></button><button id="mapToolRedoButton"></button>`;
+        <input id="ox"><input id="oy"><input id="tx"><input id="ty">
+        <button id="mapToolUndoButton"></button><button id="mapToolRedoButton"></button>`;
     const drawing = { arcs: [], labels: [], lines: [] };
     const canvasContext = {
         save() {}, restore() {}, beginPath() {}, fill() {}, stroke() {},
