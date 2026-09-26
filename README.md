@@ -85,6 +85,13 @@ Corrections, map data improvements, localization updates, bug fixes, and QoL imp
 
 See [Contributing](docs/contributing.md) for details.
 
+## Support the Project
+
+WARDOGS Artillery Calculator is free, open source, and does not place features behind a paywall. If the project is useful to you, voluntary support helps cover hosting, asset delivery, analytics, and other infrastructure costs.
+
+- [Support via Ko-fi](https://ko-fi.com/D3J32528AD)
+- [Support via Boosty](https://boosty.to/apollyonsys/donate)
+
 ## License
 
 Original project source code is licensed under the [MIT License](LICENSE).
