@@ -61,6 +61,7 @@ Detailed documentation is split into focused files to keep this README concise.
 - [Message of the Day](docs/motd.md) — MOTD configuration, localization, and behavior
 - [Collaborative lobbies](docs/lobbies.md) — live team map behaviour, Cloudflare deployment, limits, privacy, and recovery
 - [Security hardening](docs/security.md) — public-source threat model, Cloudflare headers, secrets, CI, and residual risks
+- [CDN & hosted assets](docs/cdn.md) — permitted use of the project-funded CDN and requirements for forks and self-hosted deployments
 - [Contributing](docs/contributing.md) — contribution guidelines
 - [License & Disclaimer](docs/legal.md) — MIT scope, third-party assets, and project disclaimer
 
@@ -97,3 +98,5 @@ WARDOGS Artillery Calculator is free, open source, and does not place features b
 Original project source code is licensed under the [MIT License](LICENSE).
 
 WARDOGS assets and other third-party materials are not covered by the MIT License. See [License & Disclaimer](docs/legal.md) for details.
+
+The hosted map and terrain CDN is privately operated and funded for the official application. The MIT source-code license does not grant permission to use the CDN as infrastructure for forks, third-party applications, mirrors, bulk downloaders, or asset redistribution. See [CDN & hosted assets](docs/cdn.md).

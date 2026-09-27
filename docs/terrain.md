@@ -91,6 +91,12 @@ The binary terrain chunks contain only elevation samples. They are not map-image
 
 ### Terrain3D hosting
 
+The host below is project-funded infrastructure for the official application,
+not a public asset service for forks or independent deployments. The
+[CDN & hosted assets policy](cdn.md) applies to manifests and chunks as well as
+map imagery. Third-party deployments must use independently obtained and hosted
+data and replace the URLs in their own configuration.
+
 The application loads published manifests and chunks from Cloudflare R2 under:
 
 ```text

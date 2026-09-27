@@ -16,6 +16,12 @@ No ownership of WARDOGS or other third-party intellectual property is claimed by
 
 ---
 
+### Hosted infrastructure
+
+The MIT License does not grant access rights to infrastructure operated for the official project. `assets.wardogs-artillery.com`, its storage, bandwidth, cache, and related services are privately operated and funded for the official WARDOGS Artillery Calculator.
+
+Publicly visible CDN URLs are not permission to hotlink, proxy, scrape, mirror, bulk-download, package, or redistribute hosted assets. Forks and third-party deployments must use their own hosting and assets they are independently entitled to use. See [CDN & hosted assets](cdn.md) for the operational policy.
+
 ---
 
 ## Disclaimer

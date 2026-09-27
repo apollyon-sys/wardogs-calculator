@@ -123,8 +123,12 @@ release objects unchanged so long-lived caches cannot mix old and new tiles.
 The example map's relative path can be used for local tile development; give any
 registered production map a published tile URL before deployment.
 
-These URLs are public. Moving tiles out of Git reduces the checkout and build
-size, but CORS does not prevent downloading or copying browser-visible assets.
+These URLs are browser-visible, but they are not a general-purpose public asset
+API. Moving tiles out of Git reduces the checkout and build size, while CORS
+alone cannot prevent copying. Use of the project-funded CDN is nevertheless
+limited by the [CDN & hosted assets policy](cdn.md). Forks and independent
+deployments must host any assets they are entitled to use themselves and must
+not hotlink, proxy, scrape, mirror, or bulk-download the official CDN.
 
 ---
 

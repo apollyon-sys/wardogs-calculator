@@ -125,6 +125,8 @@ actual protection.
   listing do not make public assets confidential. Preventing redistribution
   requires licensing/enforcement or an authenticated paid delivery design,
   which would add cost and still cannot stop an authorized client from copying.
+  This technical limitation does not grant permission to use the CDN or hosted
+  assets in another project; see [CDN & hosted assets](cdn.md).
 - Production analytics loads the remote script from `https://cloud.umami.is`
   and allows event delivery to `https://gateway.umami.is`. The script executes
   with page privileges, so a compromise remains a supply-chain risk despite
