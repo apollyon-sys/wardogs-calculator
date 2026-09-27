@@ -25,7 +25,7 @@
     "ALLOWED_ORIGINS": "https://wardogs-artillery.com",
     "DEVELOPMENT_ORIGINS": "http://localhost:8000,http://127.0.0.1:8000",
     "PROTECTED_PREFIX": "/releases/assets-v1/",
-    "ENFORCE_SESSIONS": "true",
+    "ENFORCE_SESSIONS": "false",
     "SESSION_LIFETIME_SECONDS": "1200",
     "TURNSTILE_HOSTNAME": "wardogs-artillery.com",
     "TURNSTILE_ACTION": "asset-session",
