@@ -18,7 +18,7 @@ test('asset gateway production configuration is complete', async () => {
     const gateway = config.assetGateway;
 
     assert.equal(gateway.enabled, true);
-    assert.equal(gateway.mode, 'session-cookie');
+    assert.equal(gateway.mode, 'preclearance');
     assert.equal(
         gateway.origin,
         'https://assets.wardogs-artillery.com'
