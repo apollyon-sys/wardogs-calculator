@@ -4,6 +4,16 @@
       "enabled": true
     }
   },
+  "assetGateway": {
+    "enabled": true,
+    "origin": "https://assets.wardogs-artillery.com",
+    "sessionPath": "/__session",
+    "turnstile": {
+      "enabled": true,
+      "siteKey": "0x4AAAAAAFFbvfOulm2XKPH9",
+      "action": "asset-session"
+    }
+  },
   "collab": {
     "enabled": true,
     "serverUrl": "https://lobby.wardogs-artillery.com",

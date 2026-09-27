@@ -410,7 +410,8 @@ async function init() {
         await Promise.all([
             loadWeapons(),
             loadMapAssets(),
-            loadMaps()
+            loadMaps(),
+            initializeAssetAccess()
         ]);
 
         const sphPlatformRuntimeLoaded =

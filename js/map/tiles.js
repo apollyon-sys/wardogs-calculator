@@ -287,8 +287,20 @@ function startTileRequest(tile) {
     const image =
         new Image();
 
+    const tileUrl =
+        getTileURL(
+            map,
+            zoom,
+            x,
+            y,
+            styleId
+        );
+
     // Keep the canvas readable when tiles come from the asset CDN.
-    image.crossOrigin = 'anonymous';
+    image.crossOrigin =
+        isProtectedAssetURL(tileUrl)
+            ? 'use-credentials'
+            : 'anonymous';
 
     image.decoding =
         'async';
@@ -320,11 +332,17 @@ function startTileRequest(tile) {
         };
 
     image.onerror =
-        () => {
+        async () => {
             if (
                 tile.attempts <
                     TILE_REQUEST_ATTEMPTS
             ) {
+                if (
+                    isProtectedAssetURL(tileUrl)
+                ) {
+                    await recoverAssetAccessAfterFailure();
+                }
+
                 scheduleTileRetry(
                     tile
                 );
@@ -363,14 +381,7 @@ function startTileRequest(tile) {
             );
         };
 
-    image.src =
-        getTileURL(
-            map,
-            zoom,
-            x,
-            y,
-            styleId
-        );
+    image.src = tileUrl;
 }
 
 function pumpTileLoadQueue() {

@@ -3,6 +3,18 @@
    ========================= */
 
 const DEFAULT_APP_CONFIG = {
+    assetGateway: {
+        enabled: false,
+        origin:
+            'https://assets.wardogs-artillery.com',
+        sessionPath: '/__session',
+        turnstile: {
+            enabled: true,
+            siteKey: '',
+            action: 'asset-session'
+        }
+    },
+
     features: {
         sphPlatformCorrection: {
             enabled: false
@@ -59,6 +71,15 @@ function mergeAppConfig(base, override) {
     return {
         ...base,
         ...(override || {}),
+
+        assetGateway: {
+            ...base.assetGateway,
+            ...(override?.assetGateway || {}),
+            turnstile: {
+                ...base.assetGateway.turnstile,
+                ...(override?.assetGateway?.turnstile || {})
+            }
+        },
 
         map: {
             ...base.map,

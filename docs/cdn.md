@@ -50,3 +50,11 @@ data/ballistics/terrain-context.json
 Map tile paths should point to the fork operator's own tile pyramid. Terrain manifest URLs should point to the operator's own manifest and chunk storage. Removing a feature is preferable to silently falling back to the official CDN.
 
 If you want to request another form of access, contact the maintainer before implementing or publishing it. Permission must be explicit and should not be inferred from repository visibility, previous technical access, or the MIT License.
+
+### Production access gateway
+
+The production bucket can be kept private behind the optional authenticated
+Worker included in `assets-gateway/`. The gateway validates short-lived signed
+browser sessions, applies separate normal and restricted rate limits, and
+serves cached R2 objects without exposing R2 credentials. See
+[Protected asset gateway](assets-gateway.md) for deployment and rollback.

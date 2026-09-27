@@ -119,7 +119,12 @@ async function getLanguageDefinitions() {
 function addProductionSecurityMeta(html, appConfig) {
     const collab = appConfig.collab || {};
     const feedback = appConfig.feedback || {};
-    const turnstileEnabled = collab.turnstile?.enabled === true;
+    const turnstileEnabled =
+        collab.turnstile?.enabled === true ||
+        (
+            appConfig.assetGateway?.enabled === true &&
+            appConfig.assetGateway?.turnstile?.enabled === true
+        );
     const connectSources = new Set([
         "'self'",
         'https://assets.wardogs-artillery.com',

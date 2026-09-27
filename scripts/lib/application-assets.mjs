@@ -18,6 +18,7 @@ const COMMON_SCRIPT_FILES = Object.freeze([
     'js/core/core.js',
     'js/core/resources.js',
     'js/core/config.js',
+    'js/core/asset-access.js',
     'js/core/analytics.js',
     'js/core/file-transfer.js',
     'js/ui/i18n.js',

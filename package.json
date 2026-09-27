@@ -10,7 +10,8 @@
     "build-contours": "node scripts/build-contours.mjs",
     "test": "npm run test:scripts",
     "test:scripts": "node --test scripts/lib/*.test.mjs",
+    "test:assets-gateway": "npm --prefix assets-gateway test",
     "test:build": "node scripts/verify-build.mjs",
-    "check": "npm run test:scripts && npm run build && npm run test:build && npm --prefix sync test"
+    "check": "npm run test:scripts && npm run test:assets-gateway && npm run build && npm run test:build && npm --prefix sync test"
   }
 }

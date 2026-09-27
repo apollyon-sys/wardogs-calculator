@@ -127,6 +127,11 @@ actual protection.
   which would add cost and still cannot stop an authorized client from copying.
   This technical limitation does not grant permission to use the CDN or hosted
   assets in another project; see [CDN & hosted assets](cdn.md).
+- The optional [protected asset gateway](assets-gateway.md) prevents direct R2
+  hotlinking by requiring a short-lived signed browser session. It raises the
+  cost of automated extraction but cannot stop an admitted browser from saving
+  assets it is allowed to display. Its rate limits and billing alerts remain
+  part of the security boundary.
 - Production analytics loads the remote script from `https://cloud.umami.is`
   and allows event delivery to `https://gateway.umami.is`. The script executes
   with page privileges, so a compromise remains a supply-chain risk despite

@@ -202,7 +202,7 @@
 
     async function fetchJson(url) {
         const response =
-            await fetch(
+            await fetchAssetResource(
                 url
             );
 
@@ -236,7 +236,7 @@
         }
 
         const response =
-            await fetch(
+            await fetchAssetResource(
                 url
             );
 

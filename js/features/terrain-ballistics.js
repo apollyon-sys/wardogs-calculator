@@ -309,7 +309,7 @@
         ) {
             try {
                 const response =
-                    await fetch(
+                    await fetchAssetResource(
                         url,
                         options
                     );
@@ -471,10 +471,9 @@
     }
 
     async function loadTerrainDefinition(definition) {
-        const manifestUrl = new URL(
+        const manifestUrl = resourceURL(
             definition.terrainManifest,
-            document.baseURI
-        ).href;
+        );
 
         const manifest = await fetchJson(manifestUrl);
         validateTerrainManifest(manifest, definition.mapId);
@@ -753,10 +752,12 @@
     }
 
     function resolveChunkUrl(terrain, entry) {
-        return new URL(
-            entry.file,
-            terrain.manifestUrl
-        ).href;
+        return resourceURL(
+            new URL(
+                entry.file,
+                terrain.manifestUrl
+            ).href
+        );
     }
 
     async function loadChunk(terrain, key) {
