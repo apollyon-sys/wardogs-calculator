@@ -144,11 +144,17 @@ function getTileZoom(map) {
             basePixelsPerWorldUnit
         );
 
+    /*
+     * Prefer the coarser of the two suitable pyramid levels. Rounding up
+     * quadruples the number of 256 px tiles before the extra detail is
+     * actually visible, which is especially expensive now that every tile
+     * passes through the authenticated asset gateway.
+     */
     return Math.max(
         tiles.minZoom,
         Math.min(
             tiles.maxZoom,
-            Math.round(raw)
+            Math.floor(raw)
         )
     );
 }
@@ -191,9 +197,10 @@ function getTileURL(
     );
 }
 
-const TILE_REQUEST_CONCURRENCY = 8;
+const TILE_REQUEST_CONCURRENCY = 4;
 const TILE_REQUEST_ATTEMPTS = 2;
 const TILE_RETRY_DELAY_MS = 450;
+const TILE_VIEWPORT_MARGIN = 0;
 
 const TILE_LOAD_QUEUE = [];
 
@@ -400,6 +407,37 @@ function pumpTileLoadQueue() {
             tile.loading ||
             tile.retryPending
         ) {
+            continue;
+        }
+
+        /*
+         * A fast pan, zoom, map switch or style switch can leave hundreds of
+         * no-longer-visible tiles in the priority queue. They used to drain
+         * after the interaction ended, creating real network requests for
+         * imagery the user would never see. Drop them before assigning a
+         * request slot; loadTile() will enqueue the tile again if a later
+         * viewport needs it.
+         */
+        const currentMap =
+            typeof getCurrentMap === 'function'
+                ? getCurrentMap()
+                : null;
+
+        const layerVisible =
+            typeof isMapLayerVisible !== 'function' ||
+            isMapLayerVisible('tiles');
+
+        const stillRelevant =
+            currentMap?.id ===
+                tile.request.map.id &&
+            getMapTileStyleId(currentMap) ===
+                tile.request.styleId &&
+            layerVisible &&
+            tile.lastSeenEpoch ===
+                TILE_QUEUE_EPOCH;
+
+        if (!stillRelevant) {
+            tile.queued = false;
             continue;
         }
 
@@ -760,19 +798,19 @@ function drawTileMap(map) {
                     tileBounds.minX
                 ) /
                 tileWorldWidth
-            ) - 1
+            ) - TILE_VIEWPORT_MARGIN
         );
 
     const maxTileX =
         Math.min(
             tileCount - 1,
-            Math.floor(
+            Math.ceil(
                 (
                     worldRight -
                     tileBounds.minX
                 ) /
                 tileWorldWidth
-            ) + 1
+            ) - 1 + TILE_VIEWPORT_MARGIN
         );
 
     const minTileY =
@@ -784,19 +822,19 @@ function drawTileMap(map) {
                     worldTop
                 ) /
                 tileWorldHeight
-            ) - 1
+            ) - TILE_VIEWPORT_MARGIN
         );
 
     const maxTileY =
         Math.min(
             tileCount - 1,
-            Math.floor(
+            Math.ceil(
                 (
                     tileBounds.maxY -
                     worldBottom
                 ) /
                 tileWorldHeight
-            ) + 1
+            ) - 1 + TILE_VIEWPORT_MARGIN
         );
 
     const centerTileX =
