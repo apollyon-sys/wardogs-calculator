@@ -23,54 +23,153 @@ function getAssetGatewayConfig() {
     );
 }
 
-function isAssetGatewayEnabled() {
-    const config =
-        getAssetGatewayConfig();
+function getAssetGatewayMode() {
+    const mode =
+        String(
+            getAssetGatewayConfig()
+                ?.mode ||
+            'session-cookie'
+        )
+            .trim()
+            .toLowerCase();
 
     return (
-        config?.enabled === true &&
-        Boolean(
-            normalizeConfiguredHttpUrl(
-                config.origin,
-                {
-                    allowLocalhost: true,
-                    allowSearchAndHash: false
-                }
-            )
-        )
+        mode === 'preclearance'
+            ? 'preclearance'
+            : 'session-cookie'
     );
 }
 
-function getAssetGatewayOrigin() {
-    if (!isAssetGatewayEnabled()) {
+function normalizeAssetOrigin(value) {
+    const normalized =
+        normalizeConfiguredHttpUrl(
+            value,
+            {
+                allowLocalhost: true,
+                allowSearchAndHash: false
+            }
+        );
+
+    if (!normalized) {
         return '';
     }
 
     try {
         return new URL(
-            getAssetGatewayConfig().origin
+            normalized
         ).origin;
     } catch {
         return '';
     }
 }
 
-function isProtectedAssetURL(value) {
-    const protectedOrigin =
-        getAssetGatewayOrigin();
+function getAssetGatewayOrigin() {
+    return normalizeAssetOrigin(
+        getAssetGatewayConfig()
+            ?.origin
+    );
+}
 
-    if (!protectedOrigin) {
+function getAssetDirectOrigin() {
+    return normalizeAssetOrigin(
+        getAssetGatewayConfig()
+            ?.directOrigin
+    );
+}
+
+function isAssetGatewayEnabled() {
+    const config =
+        getAssetGatewayConfig();
+
+    if (
+        config?.enabled !== true ||
+        !getAssetGatewayOrigin()
+    ) {
         return false;
     }
 
+    return (
+        getAssetGatewayMode() !==
+            'preclearance' ||
+        Boolean(
+            getAssetDirectOrigin()
+        )
+    );
+}
+
+function usesPreclearanceAssetDelivery() {
+    return (
+        isAssetGatewayEnabled() &&
+        getAssetGatewayMode() ===
+            'preclearance'
+    );
+}
+
+function isProtectedAssetURL(value) {
     try {
-        return new URL(
-            value,
-            document.baseURI
-        ).origin === protectedOrigin;
+        const origin =
+            new URL(
+                value,
+                document.baseURI
+            ).origin;
+
+        return [
+            getAssetGatewayOrigin(),
+            getAssetDirectOrigin()
+        ]
+            .filter(Boolean)
+            .includes(origin);
     } catch {
         return false;
     }
+}
+
+function shouldUseDirectAssetOrigin() {
+    return (
+        usesPreclearanceAssetDelivery() &&
+        ASSET_ACCESS_STATE.mode ===
+            'standard' &&
+        !ASSET_ACCESS_STATE.regionalFallback
+    );
+}
+
+function resolveProtectedAssetURL(value) {
+    let source;
+
+    try {
+        source = new URL(
+            value,
+            document.baseURI
+        );
+    } catch {
+        return value;
+    }
+
+    if (
+        !isProtectedAssetURL(source.href) ||
+        source.origin !==
+            getAssetGatewayOrigin() ||
+        !shouldUseDirectAssetOrigin()
+    ) {
+        return source.href;
+    }
+
+    const directOrigin =
+        getAssetDirectOrigin();
+
+    if (!directOrigin) {
+        return source.href;
+    }
+
+    const target =
+        new URL(
+            source.pathname +
+                source.search +
+                source.hash,
+            directOrigin
+        );
+
+    return target.href;
 }
 
 function hasValidAssetAccess() {
@@ -152,6 +251,10 @@ function rememberAssetSession(data) {
         data.mode === 'restricted'
             ? 'restricted'
             : 'standard';
+
+    ASSET_ACCESS_STATE.regionalFallback =
+        ASSET_ACCESS_STATE.mode ===
+            'restricted';
 
     clearAssetRefreshTimer();
 
@@ -461,15 +564,8 @@ async function createAssetSession() {
     let challengeToken = '';
 
     if (!ASSET_ACCESS_STATE.regionalFallback) {
-        try {
-            challengeToken =
-                await requestAssetChallenge();
-        } catch (error) {
-            console.info(
-                '[asset-access] Browser challenge unavailable; requesting restricted regional fallback.',
-                error
-            );
-        }
+        challengeToken =
+            await requestAssetChallenge();
     }
 
     const response =
@@ -516,7 +612,17 @@ async function ensureAssetAccess({
         (async () => {
             if (!force) {
                 try {
-                    if (await probeAssetSession()) {
+                    const reused =
+                        await probeAssetSession();
+
+                    if (
+                        reused &&
+                        (
+                            !usesPreclearanceAssetDelivery() ||
+                            ASSET_ACCESS_STATE.mode ===
+                                'restricted'
+                        )
+                    ) {
                         return true;
                     }
                 } catch (error) {
@@ -582,15 +688,15 @@ async function fetchAssetResource(
     input,
     options = {}
 ) {
-    const url =
+    const sourceUrl =
         new URL(
             input,
             document.baseURI
         ).href;
 
-    if (!isProtectedAssetURL(url)) {
+    if (!isProtectedAssetURL(sourceUrl)) {
         return fetch(
-            url,
+            sourceUrl,
             options
         );
     }
@@ -603,20 +709,48 @@ async function fetchAssetResource(
         referrerPolicy: 'no-referrer'
     };
 
-    let response =
-        await fetch(
-            url,
+    let requestUrl =
+        resolveProtectedAssetURL(
+            sourceUrl
+        );
+
+    let response;
+
+    try {
+        response =
+            await fetch(
+                requestUrl,
+                requestOptions
+            );
+    } catch (error) {
+        if (!await refreshAssetAccess()) {
+            throw error;
+        }
+
+        requestUrl =
+            resolveProtectedAssetURL(
+                sourceUrl
+            );
+
+        return fetch(
+            requestUrl,
             requestOptions
         );
+    }
 
     if (
         response.status === 401 ||
         response.status === 403
     ) {
         if (await refreshAssetAccess()) {
+            requestUrl =
+                resolveProtectedAssetURL(
+                    sourceUrl
+                );
+
             response =
                 await fetch(
-                    url,
+                    requestUrl,
                     requestOptions
                 );
         }

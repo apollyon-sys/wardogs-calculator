@@ -128,6 +128,7 @@ function addProductionSecurityMeta(html, appConfig) {
     const connectSources = new Set([
         "'self'",
         'https://assets.wardogs-artillery.com',
+        'https://assets-v2.wardogs-artillery.com',
         'https://cloud.umami.is',
         'https://gateway.umami.is'
     ]);
@@ -163,8 +164,8 @@ function addProductionSecurityMeta(html, appConfig) {
         "'self'",
         'data:',
         'blob:',
-        'https://assets.wardogs-artillery.com'
-    ];
+        'https://assets.wardogs-artillery.com',
+        'https://assets-v2.wardogs-artillery.com',];
     if (turnstileEnabled) imageSources.push('https://challenges.cloudflare.com');
 
     const policy = [

@@ -192,8 +192,18 @@ function getTileURL(
         return null;
     }
 
-    return resourceURL(
-        `${tiles.path}/zoom_${zoom}/${x}_${y}.${tiles.extension}`
+    const url =
+        resourceURL(
+            `${tiles.path}/zoom_${zoom}/${x}_${y}.${tiles.extension}`
+        );
+
+    return (
+        typeof resolveProtectedAssetURL ===
+            'function'
+            ? resolveProtectedAssetURL(
+                url
+            )
+            : url
     );
 }
 
@@ -303,7 +313,8 @@ function startTileRequest(tile) {
             styleId
         );
 
-    // Keep the canvas readable when tiles come from the asset CDN.
+    // Credentialed CORS carries either the signed legacy session or
+    // Cloudflare's cf_clearance cookie to the selected asset hostname.
     image.crossOrigin =
         isProtectedAssetURL(tileUrl)
             ? 'use-credentials'

@@ -5,8 +5,11 @@
 const DEFAULT_APP_CONFIG = {
     assetGateway: {
         enabled: false,
+        mode: 'session-cookie',
         origin:
             'https://assets.wardogs-artillery.com',
+        directOrigin:
+            'https://assets-v2.wardogs-artillery.com',
         sessionPath: '/__session',
         turnstile: {
             enabled: true,

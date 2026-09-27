@@ -18,9 +18,14 @@ test('asset gateway production configuration is complete', async () => {
     const gateway = config.assetGateway;
 
     assert.equal(gateway.enabled, true);
+    assert.equal(gateway.mode, 'session-cookie');
     assert.equal(
         gateway.origin,
         'https://assets.wardogs-artillery.com'
+    );
+    assert.equal(
+        gateway.directOrigin,
+        'https://assets-v2.wardogs-artillery.com'
     );
     assert.equal(gateway.sessionPath, '/__session');
     assert.equal(gateway.turnstile.enabled, true);
@@ -38,6 +43,9 @@ test('protected assets use credentialed requests and session recovery', async ()
 
     assert.match(access, /method:\s*'POST'/);
     assert.match(access, /credentials:\s*'include'/);
+    assert.match(access, /getAssetDirectOrigin/);
+    assert.match(access, /resolveProtectedAssetURL/);
+    assert.match(access, /regionalFallback/);
     assert.match(access, /response\.status === 401/);
     assert.match(tiles, /'use-credentials'/);
     assert.match(tiles, /recoverAssetAccessAfterFailure/);
