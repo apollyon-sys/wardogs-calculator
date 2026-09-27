@@ -1,0 +1,4843 @@
+diff --git a/.github/dependabot.yml b/.github/dependabot.yml
+index e9bbbc7f0f14508605fc5aadb879122a4d13cfb0..f698c18bc12b43c1f0ca151e6e8b5efecf8776ad 100644
+--- a/.github/dependabot.yml
++++ b/.github/dependabot.yml
+@@ -12,6 +12,12 @@ updates:
+       interval: monthly
+     open-pull-requests-limit: 5
+ 
++  - package-ecosystem: npm
++    directory: /assets-gateway
++    schedule:
++      interval: monthly
++    open-pull-requests-limit: 5
++
+   - package-ecosystem: github-actions
+     directory: /
+     schedule:
+diff --git a/README.md b/README.md
+index afb20859318a0a62e5db9708ebc07e5f58aa3eec..b5d935b5c10d5dede2a1db0d4d2a6d95c639e242 100644
+--- a/README.md
++++ b/README.md
+@@ -62,6 +62,7 @@ Detailed documentation is split into focused files to keep this README concise.
+ - [Collaborative lobbies](docs/lobbies.md) — live team map behaviour, Cloudflare deployment, limits, privacy, and recovery
+ - [Security hardening](docs/security.md) — public-source threat model, Cloudflare headers, secrets, CI, and residual risks
+ - [CDN & hosted assets](docs/cdn.md) — permitted use of the project-funded CDN and requirements for forks and self-hosted deployments
++- [Protected asset gateway](docs/assets-gateway.md) — private R2 delivery, signed sessions, Turnstile, rate limits, deployment, and rollback
+ - [Contributing](docs/contributing.md) — contribution guidelines
+ - [License & Disclaimer](docs/legal.md) — MIT scope, third-party assets, and project disclaimer
+ 
+diff --git a/assets-gateway/.dev.vars.example b/assets-gateway/.dev.vars.example
+new file mode 100644
+index 0000000000000000000000000000000000000000..0ee5a4aadd1cb8f9103b8580d937ba7147b8b38d
+--- /dev/null
++++ b/assets-gateway/.dev.vars.example
+@@ -0,0 +1,2 @@
++SESSION_SECRET=replace-with-at-least-32-random-characters
++TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+diff --git a/assets-gateway/package-lock.json b/assets-gateway/package-lock.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..0cda337fd92b8926e578ea718378b2aff14e794f
+--- /dev/null
++++ b/assets-gateway/package-lock.json
+@@ -0,0 +1,1545 @@
++{
++  "name": "wardogs-assets-gateway",
++  "lockfileVersion": 3,
++  "requires": true,
++  "packages": {
++    "": {
++      "name": "wardogs-assets-gateway",
++      "devDependencies": {
++        "wrangler": "^4.129.0"
++      },
++      "engines": {
++        "node": ">=22"
++      }
++    },
++    "node_modules/@cloudflare/kv-asset-handler": {
++      "version": "0.5.0",
++      "resolved": "https://registry.npmjs.org/@cloudflare/kv-asset-handler/-/kv-asset-handler-0.5.0.tgz",
++      "integrity": "sha512-jxQYkj8dSIzc0cD6cMMNdOc1UVjqSqu8BZdor5s8cGjW2I8BjODt/kWPVdY+u9zj3ms75Q5qaZgnxUad83+eAg==",
++      "dev": true,
++      "license": "MIT OR Apache-2.0",
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@cloudflare/unenv-preset": {
++      "version": "2.16.2",
++      "resolved": "https://registry.npmjs.org/@cloudflare/unenv-preset/-/unenv-preset-2.16.2.tgz",
++      "integrity": "sha512-JBP1+Z7ZSNG/d4mRP+y8VC5dka3tZVMLEZRvS+rzQ4DGV1EoxRFQckcJTTkXbHSQiTj0DtNI01Zwb/V2fX0mvQ==",
++      "dev": true,
++      "license": "MIT OR Apache-2.0",
++      "peerDependencies": {
++        "unenv": "2.0.0-rc.24",
++        "workerd": ">1.20260305.0 <2.0.0-0"
++      },
++      "peerDependenciesMeta": {
++        "workerd": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/@cloudflare/workerd-darwin-64": {
++      "version": "1.20260926.1",
++      "resolved": "https://registry.npmjs.org/@cloudflare/workerd-darwin-64/-/workerd-darwin-64-1.20260926.1.tgz",
++      "integrity": "sha512-VCIpwgJu5Dm1o+VHLclNOKIdpttEqss7oDHS5DYxgVoonM9Dxxxr1xCQvJbh6IXFuQ1DDrbm5krjte5NsTgX3Q==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "engines": {
++        "node": ">=16"
++      }
++    },
++    "node_modules/@cloudflare/workerd-darwin-arm64": {
++      "version": "1.20260926.1",
++      "resolved": "https://registry.npmjs.org/@cloudflare/workerd-darwin-arm64/-/workerd-darwin-arm64-1.20260926.1.tgz",
++      "integrity": "sha512-oVuLXfCnr1Xu9sBMNYrEPcFZQNMcviNcacz9l+oqQiLHc5UrVp++lpKbsuWstCfh+/c39Pp37TVeaNBLA8+ReA==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "engines": {
++        "node": ">=16"
++      }
++    },
++    "node_modules/@cloudflare/workerd-linux-64": {
++      "version": "1.20260926.1",
++      "resolved": "https://registry.npmjs.org/@cloudflare/workerd-linux-64/-/workerd-linux-64-1.20260926.1.tgz",
++      "integrity": "sha512-BjmiDvYBVBG5248gCHSZS3yONbcm3/3qKTu9RaQA8o7jQHJfXx9JnWbhkld2KsbXnRGEGHFwpLLidIpIGtQYUA==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=16"
++      }
++    },
++    "node_modules/@cloudflare/workerd-linux-arm64": {
++      "version": "1.20260926.1",
++      "resolved": "https://registry.npmjs.org/@cloudflare/workerd-linux-arm64/-/workerd-linux-arm64-1.20260926.1.tgz",
++      "integrity": "sha512-28bdfQDIFcpaKXMPisADy8BchpIsX+tEAhD+bhfEBXukFGFr8F3ouyiG3HzN3CqAh/OYvifJizzFZtptUPCy7w==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=16"
++      }
++    },
++    "node_modules/@cloudflare/workerd-windows-64": {
++      "version": "1.20260926.1",
++      "resolved": "https://registry.npmjs.org/@cloudflare/workerd-windows-64/-/workerd-windows-64-1.20260926.1.tgz",
++      "integrity": "sha512-ehdL3ataKdEmlnW9oom6OZUR8n3XsTL/zl8+KGREpLi5sMSW0mek0PrF4wK9SX51f3Alnlu8tF8eKBg+mc3xFw==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "win32"
++      ],
++      "engines": {
++        "node": ">=16"
++      }
++    },
++    "node_modules/@cspotcode/source-map-support": {
++      "version": "0.8.1",
++      "resolved": "https://registry.npmjs.org/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz",
++      "integrity": "sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@jridgewell/trace-mapping": "0.3.9"
++      },
++      "engines": {
++        "node": ">=12"
++      }
++    },
++    "node_modules/@emnapi/runtime": {
++      "version": "1.11.3",
++      "resolved": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.11.3.tgz",
++      "integrity": "sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==",
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "dependencies": {
++        "tslib": "^2.4.0"
++      }
++    },
++    "node_modules/@esbuild/aix-ppc64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.28.1.tgz",
++      "integrity": "sha512-Svl7tq8k/08+p6CXPpRjQ1fKX+1odH/BQbb48fV6fj3CWHhsoIOoY87w1oHXm0qEpkIK3ZfVgp0hed3XBXzXMQ==",
++      "cpu": [
++        "ppc64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "aix"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/android-arm": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.28.1.tgz",
++      "integrity": "sha512-0k2F129Xdio1TdJfzJ8sy1Q47vUD2NnwdhiAf7drUN1EBTfPf4hsFCtmMgu/6m8JSzsBrlmVjudMBQqOfG8usQ==",
++      "cpu": [
++        "arm"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "android"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/android-arm64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/android-arm64/-/android-arm64-0.28.1.tgz",
++      "integrity": "sha512-34EGEbCIAgosYz6goLcopX6Mo7NyGv9tfwEM2/7Ce2VcVRk568iSvniGWcUXIy7wEDR1wzolcxcriFVrWYcwBg==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "android"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/android-x64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/android-x64/-/android-x64-0.28.1.tgz",
++      "integrity": "sha512-dbwY7ltSMDWsRatcRpCnES4F+im88OCUgGZjy52shC7GqHRE/cYlxNbB4Z4UpJswpcc4Qxd2oE/ufM0p61IKng==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "android"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/darwin-arm64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.28.1.tgz",
++      "integrity": "sha512-TZbWkQY7kvTAXbXUT7uVACR5cMHsDiSz9z7ZKAX/RTq/WJEk3QyRr0wZpNhBDX+/0CtdqUIJlOiodQcta6tY3Q==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/darwin-x64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.28.1.tgz",
++      "integrity": "sha512-zfdzgK9ACBNZLI/CyHTOx81SyNbM6YXn7rxSgX97VjyiPl9W1i4Ka4fgKECEoFCKGpvBj5qArWIGgQjOwkgskQ==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/freebsd-arm64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/freebsd-arm64/-/freebsd-arm64-0.28.1.tgz",
++      "integrity": "sha512-wG2EA8ENdEI0qhkSZMjfqrdY+ziCYCPMmtZjjIwOmXFjmyzEHn+UUxk5of+SYsjtfs3VpnlC7QLzSI5hY/rOAw==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "freebsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/freebsd-x64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/freebsd-x64/-/freebsd-x64-0.28.1.tgz",
++      "integrity": "sha512-i7dZ9vQgnvSCzi/rYCXNgtF/U+eKZNJBzu3eTQbRgHnM7tNSizLOkRFAl3qzVc/Op/u5YkHHa4pf/3DOYHthLQ==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "freebsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-arm": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-arm/-/linux-arm-0.28.1.tgz",
++      "integrity": "sha512-qVXBOHQS+d5Y722GwJzJUtOLlX7km3CraOaGormF1pDtPd2C/l1SHRPgjLunLGe51Sh5YYWKMFDyV4SxgMQYTQ==",
++      "cpu": [
++        "arm"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-arm64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.28.1.tgz",
++      "integrity": "sha512-yHs+0uc8+nvEAfAfxrWQKK5peSNzBc4PegcMO0EJ2hT71uA7vB8Ihg2e77R2P7SG5uYjPbHlLLmve4LLLRCf0g==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-ia32": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-ia32/-/linux-ia32-0.28.1.tgz",
++      "integrity": "sha512-d1z4ZuP0ajrfz/FhGT4vv278rX8KnPPJx8i5+AtK7TYbx9Le9F1hyzurZpkEyjkGa9dUGhQow4C1NmeGvqxN2w==",
++      "cpu": [
++        "ia32"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-loong64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.28.1.tgz",
++      "integrity": "sha512-M5sRjUVZrkm1OAPR3dlOYzNmN+loZKGVi1VUQGrwuqLcbR6qeAz+famMhjASeH3YVKvZz+zT1jlh/keC3Rj/lg==",
++      "cpu": [
++        "loong64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-mips64el": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-mips64el/-/linux-mips64el-0.28.1.tgz",
++      "integrity": "sha512-mRObBZeHh2OxcBFPWE/FjylkRgZdYuiTR3vaTozquCGOH14iP9oN4x4Ge81CoIDYQrXmIxpFumJBu5MtZpnQJQ==",
++      "cpu": [
++        "mips64el"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-ppc64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-ppc64/-/linux-ppc64-0.28.1.tgz",
++      "integrity": "sha512-slScBsMAb3GFDcdrCgLwZtPYRoH2H/youv10QiZyRjmsP48fznoveWytSgCI/R0ZcUgpc0ZhIUEx6LHts8yrfQ==",
++      "cpu": [
++        "ppc64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-riscv64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-riscv64/-/linux-riscv64-0.28.1.tgz",
++      "integrity": "sha512-kw0owk1o0GFETUJyW0jc0G4Yzs0BHZn0JDZ8JRT088vjJYX777BAs1fDGxAC+q831qOs2DTC96mNsG2opdfyyQ==",
++      "cpu": [
++        "riscv64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-s390x": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-s390x/-/linux-s390x-0.28.1.tgz",
++      "integrity": "sha512-/lAIjX8aYFRByhh6L5rYtPEDRqa9de/4V/juOXcta5frjvzXO4/sqEtyytse0g3zZFuWu5cDN0MkLz2qRDD2Ag==",
++      "cpu": [
++        "s390x"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-x64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.28.1.tgz",
++      "integrity": "sha512-u/anNYF2mmVOEDwLtnQ1wOr3EZ9sTNGLWrsYGYwHWzGA3Si84IOkHXlbWTD1NB+9/1lcnweYKO54uhxZydNzfA==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/netbsd-arm64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/netbsd-arm64/-/netbsd-arm64-0.28.1.tgz",
++      "integrity": "sha512-oks0DYbLwWMmaakTsCb+zL4E+aHRVLom9IJZOAthMQEPiQmydXHkziYEsGYRx0uNV/IjEKGAV941JzH02pflqw==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "netbsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/netbsd-x64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/netbsd-x64/-/netbsd-x64-0.28.1.tgz",
++      "integrity": "sha512-aeL6lAnN89Hz43Mlh1G8ARasbuoYvSITDEx0tHh5b7jJnHcssqgjy9Yx430GDpmCa6OyrKoS0aNRjKundRizGg==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "netbsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/openbsd-arm64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/openbsd-arm64/-/openbsd-arm64-0.28.1.tgz",
++      "integrity": "sha512-MEFJe5C3R8pwXdZ5Y21oo6m7ePiS0d9pWucn99O/wvyJZChoIQKrQDxKrGeW8F5+T0okTHesAmDeiHDTIq0V/Q==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "openbsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/openbsd-x64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/openbsd-x64/-/openbsd-x64-0.28.1.tgz",
++      "integrity": "sha512-i/ZLIOafE0Z8cI/XANJAixoJL/uRAoS2xOA3rb0xN+KK0K177cMAsQYkzHtBrtMXAKuAc7HGgcWiZ/sRC1Nxgw==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "openbsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/openharmony-arm64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/openharmony-arm64/-/openharmony-arm64-0.28.1.tgz",
++      "integrity": "sha512-ge+Z7EXFNt2BO1oAMsVpiQ8EwndV9i1xXerAeTIK7AtPs3bKFXQM7nlRxDSIUIMeueR1CNXxqztLzdNeReKBJg==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "openharmony"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/sunos-x64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/sunos-x64/-/sunos-x64-0.28.1.tgz",
++      "integrity": "sha512-BEjgtECkL3vY+SaSQ6nzVfiALUeFxpawyp8Jmf5PtYhf1Ug40N1h/hxlhts+f1FvSvarEigdxS3BlSMI2PJLcQ==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "sunos"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/win32-arm64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.28.1.tgz",
++      "integrity": "sha512-lCv9eK/H6ZJWbE7bh2nw54CZ9M2nupBxJcTsdk/QQnWkdSjKGuxmmH8/GWrlT1eMmZfn4dGcCjRte397WqfQXA==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "win32"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/win32-ia32": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/win32-ia32/-/win32-ia32-0.28.1.tgz",
++      "integrity": "sha512-zvb/mB2bSCoJOpoCBgYKKpX6YM6mJBlBUVUtVj41DlZJVEB6/0CKlRYxP5wWl1C1ILiCoAU5wZZ4q1P3qeS6Eg==",
++      "cpu": [
++        "ia32"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "win32"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/win32-x64": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.28.1.tgz",
++      "integrity": "sha512-bm4Mowrv+GXMlpWX++EcXw/iLyd1o3+bJkC2DkWXYVvgZCqD/bSj9ctZeAMC3cIxgjRVR2Dufaiu4YPxr5gW1A==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "win32"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@img/colour": {
++      "version": "1.1.0",
++      "resolved": "https://registry.npmjs.org/@img/colour/-/colour-1.1.0.tgz",
++      "integrity": "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@img/sharp-darwin-arm64": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-darwin-arm64/-/sharp-darwin-arm64-0.35.4.tgz",
++      "integrity": "sha512-Uhfl4V4lhP2nbUVF9+hyH1+luj86f1gUFeo8ALYxFoULoU+G87D43BfeMP8XHsk9boxAnCY/bf2EHwhA7MuGsA==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-libvips-darwin-arm64": "1.3.3"
++      }
++    },
++    "node_modules/@img/sharp-darwin-x64": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-darwin-x64/-/sharp-darwin-x64-0.35.4.tgz",
++      "integrity": "sha512-hWniXY3bG5qKpkKrAwPe4y+VTPmf086YQAnkxWh7uA1YrlRouWGa0M0Mxj3ZjnXFkv7/TD1bTy9lGUK26vRvWw==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-libvips-darwin-x64": "1.3.3"
++      }
++    },
++    "node_modules/@img/sharp-freebsd-wasm32": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-freebsd-wasm32/-/sharp-freebsd-wasm32-0.35.4.tgz",
++      "integrity": "sha512-lIsKw/BU+kjB4eZjxrYrZmwOJYi3Ajrv66iAlBmUPyKc3HpnloevB1g3wxGD9P/5BbQ1brBGl65VRRrCvQDEqA==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "freebsd"
++      ],
++      "dependencies": {
++        "@img/sharp-wasm32": "0.35.4"
++      },
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-libvips-darwin-arm64": {
++      "version": "1.3.3",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-darwin-arm64/-/sharp-libvips-darwin-arm64-1.3.3.tgz",
++      "integrity": "sha512-suTBPTDGrI9WodccaDdwZItTSaBYASlBk1NSfElSHrUfzu3szG6lvIF58+WiFvnfzuK8ZBFS5zE00PxqxnRiPg==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-libvips-darwin-x64": {
++      "version": "1.3.3",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-darwin-x64/-/sharp-libvips-darwin-x64-1.3.3.tgz",
++      "integrity": "sha512-FVJZ5mITMobmXIz/hPDTw0EintTW5H3WfrxwLqEqjiIihlu+hVRyGrFQ60xl0Lxn7Bt3zdpevPaQi0HEzqz9fw==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-libvips-linux-arm": {
++      "version": "1.3.3",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-arm/-/sharp-libvips-linux-arm-1.3.3.tgz",
++      "integrity": "sha512-3rbU4vqXXc3hY/OiXdl52xZvT0F1yEngWfvqudtPJg/KkyiaQw2DRsFrNzpmLvfavbwOq3qXn36GP8obHRULQA==",
++      "cpu": [
++        "arm"
++      ],
++      "dev": true,
++      "license": "LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-libvips-linux-arm64": {
++      "version": "1.3.3",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-arm64/-/sharp-libvips-linux-arm64-1.3.3.tgz",
++      "integrity": "sha512-0DaL0A6Xu6sQSQFwe4iVCrKWU2cCTItnRsYsCdxAMm9NF6twAA9BKnoqy4hqz4+azQ0JHuA26qiUKsf1XJ/v5A==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-libvips-linux-ppc64": {
++      "version": "1.3.3",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-ppc64/-/sharp-libvips-linux-ppc64-1.3.3.tgz",
++      "integrity": "sha512-cdn1OvUBwsXhbC0zSzJnNzf5MZ/mTrobawDvNXBTxe8VtqKAm0sRuEY2Evzovb/w9JMk4TvRxqt1mekSuJz64w==",
++      "cpu": [
++        "ppc64"
++      ],
++      "dev": true,
++      "license": "LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-libvips-linux-riscv64": {
++      "version": "1.3.3",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-riscv64/-/sharp-libvips-linux-riscv64-1.3.3.tgz",
++      "integrity": "sha512-HjPVx7yKz+0lqdhDlTw1tt90wamBoxhiXpvl1XZpJLiHH4RCJ5yDTqH+VlYPv2fwFs89JFw4c1IexYOcQUi4IQ==",
++      "cpu": [
++        "riscv64"
++      ],
++      "dev": true,
++      "license": "LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-libvips-linux-s390x": {
++      "version": "1.3.3",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-s390x/-/sharp-libvips-linux-s390x-1.3.3.tgz",
++      "integrity": "sha512-neWLh+3yCNThxnfy3c4BbVBeGgt9aftno+XbT56iK28RgeDs3UOFWviLWlUu0bArYVYJaFDK+RRohbicUNCm8Q==",
++      "cpu": [
++        "s390x"
++      ],
++      "dev": true,
++      "license": "LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-libvips-linux-x64": {
++      "version": "1.3.3",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linux-x64/-/sharp-libvips-linux-x64-1.3.3.tgz",
++      "integrity": "sha512-4vKmvAst9nrowcqquKFAyZJUDolUaIp8uRiN0mWFguJ1IplC9/pitXtlnnlU4aa/eJw3J7i67V+pwUL+wZGdsA==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-libvips-linuxmusl-arm64": {
++      "version": "1.3.3",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-arm64/-/sharp-libvips-linuxmusl-arm64-1.3.3.tgz",
++      "integrity": "sha512-Y9kQaLMuNoB0bPYOOdcZMaseNrFpPodIWWMrx+CZyydf2xn68j9WYc6sWWRrDwNkzCQjKYfc68L7jKjGlHMibw==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-libvips-linuxmusl-x64": {
++      "version": "1.3.3",
++      "resolved": "https://registry.npmjs.org/@img/sharp-libvips-linuxmusl-x64/-/sharp-libvips-linuxmusl-x64-1.3.3.tgz",
++      "integrity": "sha512-fj8Mv0HHfD1Rr+4I68+3agJynxDWtBFgicTbSOb9Bke6pIwzGcJ+RX/yHjmiEGFMCavY/dxvem7MyNaJF+wDiw==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-linux-arm": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-arm/-/sharp-linux-arm-0.35.4.tgz",
++      "integrity": "sha512-7OAS8gI0EReKGVN2HssHlM6umJgxF5VI3xN0p9FA91p/YO+ou5hiNghLdZ5BEHztwaaK5+bLKRf8x/o2L2nk9A==",
++      "cpu": [
++        "arm"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-libvips-linux-arm": "1.3.3"
++      }
++    },
++    "node_modules/@img/sharp-linux-arm64": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-arm64/-/sharp-linux-arm64-0.35.4.tgz",
++      "integrity": "sha512-De4jpEnAU8Hd5oT0j1G3uL4ZvTuipVMn7YC6vPaJhy6/7EwEae0SVAoBrUMYQbkLGDm85taVWwuPc1a44LTzCQ==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-libvips-linux-arm64": "1.3.3"
++      }
++    },
++    "node_modules/@img/sharp-linux-ppc64": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-ppc64/-/sharp-linux-ppc64-0.35.4.tgz",
++      "integrity": "sha512-2oYZJeIl4kCcMGk4ouZVjnkCtFrpQFlNEtJ6GbxzhHQchwH0NH/qEb9ykmOl29dqwMq+JhFdZn+1ak2FKhI9fQ==",
++      "cpu": [
++        "ppc64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-libvips-linux-ppc64": "1.3.3"
++      }
++    },
++    "node_modules/@img/sharp-linux-riscv64": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-riscv64/-/sharp-linux-riscv64-0.35.4.tgz",
++      "integrity": "sha512-cPbNChoRURAWdebDIHSenxRpgEdy7JkPydSnUxRm9VvKD7m0/xVaR/8Fzlu81pk5nHEvHH87UZUA7cTtwnbJSA==",
++      "cpu": [
++        "riscv64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-libvips-linux-riscv64": "1.3.3"
++      }
++    },
++    "node_modules/@img/sharp-linux-s390x": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-s390x/-/sharp-linux-s390x-0.35.4.tgz",
++      "integrity": "sha512-RY0JFY8Fd6RonCBtHz+DvadaPkXDSI1AUn6yWL9TipqkZ1vY8w8evqdgyDFnkm4/K1ve1TvZiaePP5oSd4+WVQ==",
++      "cpu": [
++        "s390x"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-libvips-linux-s390x": "1.3.3"
++      }
++    },
++    "node_modules/@img/sharp-linux-x64": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linux-x64/-/sharp-linux-x64-0.35.4.tgz",
++      "integrity": "sha512-9qvvEAuk8k89TfWUoX2htWjbAMX8p+NxCppjpcg5k6xMsjhBQPTsoIh36h9Qde4WRuGpJeYnOjdosDn/cnv+OA==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-libvips-linux-x64": "1.3.3"
++      }
++    },
++    "node_modules/@img/sharp-linuxmusl-arm64": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linuxmusl-arm64/-/sharp-linuxmusl-arm64-0.35.4.tgz",
++      "integrity": "sha512-KB5jxpfWQTr0nc3xdHtWChdbifHrBGsd2SM62Eyxrl8afikm+f5qGBU75SJIZBT/S1MC8XyacdlXBMSWq6OURA==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-libvips-linuxmusl-arm64": "1.3.3"
++      }
++    },
++    "node_modules/@img/sharp-linuxmusl-x64": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-linuxmusl-x64/-/sharp-linuxmusl-x64-0.35.4.tgz",
++      "integrity": "sha512-f+eZJZIQNEEd26RPSW+76chwOf1XtA2Y/O+5ocVyLliHkeih3e+jhLVBdNTd2rS3IbNXK8+ug93Vf5ZXtF5Lxg==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-libvips-linuxmusl-x64": "1.3.3"
++      }
++    },
++    "node_modules/@img/sharp-wasm32": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-wasm32/-/sharp-wasm32-0.35.4.tgz",
++      "integrity": "sha512-zQnl4Kwp7Q6NHsENtU2T/00Zi+w3AQNwz3+UaTyVBy2FpXrzXzGjndpK61onhZjRtRpQXxCTeqw19bVyXOh7jA==",
++      "dev": true,
++      "license": "Apache-2.0 AND LGPL-3.0-or-later AND MIT",
++      "optional": true,
++      "dependencies": {
++        "@emnapi/runtime": "^1.11.3"
++      },
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-webcontainers-wasm32": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-webcontainers-wasm32/-/sharp-webcontainers-wasm32-0.35.4.tgz",
++      "integrity": "sha512-ESfNkywmCfPNyaZjxooddJQiQ+l/nTpGEOGthxiLnIHXC/CmcBixnfwUleX9mCz9ovrUUvKMap/pm8RYbzfwaA==",
++      "cpu": [
++        "wasm32"
++      ],
++      "dev": true,
++      "license": "Apache-2.0",
++      "optional": true,
++      "dependencies": {
++        "@img/sharp-wasm32": "0.35.4"
++      },
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-win32-arm64": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-win32-arm64/-/sharp-win32-arm64-0.35.4.tgz",
++      "integrity": "sha512-iNdlBX9gLVvqe2I3uIJSIKTq6wckP/DYxZtcqxm09x5Gi24DnFBmPAWZmr60ZyYMG0xlzo6goG3670ar+RXvRw==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0 AND LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "win32"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-win32-ia32": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-win32-ia32/-/sharp-win32-ia32-0.35.4.tgz",
++      "integrity": "sha512-kqRsbaa5CS6KHlpxnN7WhE6vAAugXyZButpRdvDWetlv6Qv4N9WTcrWzF7tXfB9T7MsoadqdI8hmwLq6UlLvtw==",
++      "cpu": [
++        "ia32"
++      ],
++      "dev": true,
++      "license": "Apache-2.0 AND LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "win32"
++      ],
++      "engines": {
++        "node": "^20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@img/sharp-win32-x64": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/@img/sharp-win32-x64/-/sharp-win32-x64-0.35.4.tgz",
++      "integrity": "sha512-XtmnYhBcrORsJ4XJngyzr/EWP0hRZLAZRFaApdKuviyqF78+ylxh2y06ZmtULAMOnObJ3ucpN0AcwSWnMowTRg==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "Apache-2.0 AND LGPL-3.0-or-later",
++      "optional": true,
++      "os": [
++        "win32"
++      ],
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      }
++    },
++    "node_modules/@jridgewell/resolve-uri": {
++      "version": "3.1.2",
++      "resolved": "https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz",
++      "integrity": "sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=6.0.0"
++      }
++    },
++    "node_modules/@jridgewell/sourcemap-codec": {
++      "version": "1.6.0",
++      "resolved": "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.6.0.tgz",
++      "integrity": "sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@jridgewell/trace-mapping": {
++      "version": "0.3.9",
++      "resolved": "https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.9.tgz",
++      "integrity": "sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@jridgewell/resolve-uri": "^3.0.3",
++        "@jridgewell/sourcemap-codec": "^1.4.10"
++      }
++    },
++    "node_modules/@poppinss/colors": {
++      "version": "4.1.6",
++      "resolved": "https://registry.npmjs.org/@poppinss/colors/-/colors-4.1.6.tgz",
++      "integrity": "sha512-H9xkIdFswbS8n1d6vmRd8+c10t2Qe+rZITbbDHHkQixH5+2x1FDGmi/0K+WgWiqQFKPSlIYB7jlH6Kpfn6Fleg==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "kleur": "^4.1.5"
++      }
++    },
++    "node_modules/@poppinss/dumper": {
++      "version": "0.6.5",
++      "resolved": "https://registry.npmjs.org/@poppinss/dumper/-/dumper-0.6.5.tgz",
++      "integrity": "sha512-NBdYIb90J7LfOI32dOewKI1r7wnkiH6m920puQ3qHUeZkxNkQiFnXVWoE6YtFSv6QOiPPf7ys6i+HWWecDz7sw==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@poppinss/colors": "^4.1.5",
++        "@sindresorhus/is": "^7.0.2",
++        "supports-color": "^10.0.0"
++      }
++    },
++    "node_modules/@poppinss/exception": {
++      "version": "1.2.3",
++      "resolved": "https://registry.npmjs.org/@poppinss/exception/-/exception-1.2.3.tgz",
++      "integrity": "sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/@sindresorhus/is": {
++      "version": "7.2.0",
++      "resolved": "https://registry.npmjs.org/@sindresorhus/is/-/is-7.2.0.tgz",
++      "integrity": "sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/sindresorhus/is?sponsor=1"
++      }
++    },
++    "node_modules/@speed-highlight/core": {
++      "version": "1.2.24",
++      "resolved": "https://registry.npmjs.org/@speed-highlight/core/-/core-1.2.24.tgz",
++      "integrity": "sha512-qeW2e1l78afw8VhRPfPQ1Gjj+KU5XFQ/OFV5ti6eTa9bruO7mJyZtA4vw0ofqmA3tKCkROE9xLk3VZoeRc98nw==",
++      "dev": true,
++      "license": "CC0-1.0"
++    },
++    "node_modules/blake3-wasm": {
++      "version": "2.1.5",
++      "resolved": "https://registry.npmjs.org/blake3-wasm/-/blake3-wasm-2.1.5.tgz",
++      "integrity": "sha512-F1+K8EbfOZE49dtoPtmxUQrpXaBIl3ICvasLh+nJta0xkz+9kF/7uet9fLnwKqhDrmj6g+6K3Tw9yQPUg2ka5g==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/cookie": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/cookie/-/cookie-1.1.1.tgz",
++      "integrity": "sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/express"
++      }
++    },
++    "node_modules/detect-libc": {
++      "version": "2.1.2",
++      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
++      "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/error-stack-parser-es": {
++      "version": "1.0.5",
++      "resolved": "https://registry.npmjs.org/error-stack-parser-es/-/error-stack-parser-es-1.0.5.tgz",
++      "integrity": "sha512-5qucVt2XcuGMcEGgWI7i+yZpmpByQ8J1lHhcL7PwqCwu9FPP3VUXzT4ltHe5i2z9dePwEHcDVOAfSnHsOlCXRA==",
++      "dev": true,
++      "license": "MIT",
++      "funding": {
++        "url": "https://github.com/sponsors/antfu"
++      }
++    },
++    "node_modules/esbuild": {
++      "version": "0.28.1",
++      "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.28.1.tgz",
++      "integrity": "sha512-HrJrvZv5ayxBzPfwphOoNzkzOIIlifzk0KJrGK2c8R4+LKpMtpYLQeUdjnwjWv/LZlkH2laZk+4w78pi99D4Vw==",
++      "dev": true,
++      "hasInstallScript": true,
++      "license": "MIT",
++      "bin": {
++        "esbuild": "bin/esbuild"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "optionalDependencies": {
++        "@esbuild/aix-ppc64": "0.28.1",
++        "@esbuild/android-arm": "0.28.1",
++        "@esbuild/android-arm64": "0.28.1",
++        "@esbuild/android-x64": "0.28.1",
++        "@esbuild/darwin-arm64": "0.28.1",
++        "@esbuild/darwin-x64": "0.28.1",
++        "@esbuild/freebsd-arm64": "0.28.1",
++        "@esbuild/freebsd-x64": "0.28.1",
++        "@esbuild/linux-arm": "0.28.1",
++        "@esbuild/linux-arm64": "0.28.1",
++        "@esbuild/linux-ia32": "0.28.1",
++        "@esbuild/linux-loong64": "0.28.1",
++        "@esbuild/linux-mips64el": "0.28.1",
++        "@esbuild/linux-ppc64": "0.28.1",
++        "@esbuild/linux-riscv64": "0.28.1",
++        "@esbuild/linux-s390x": "0.28.1",
++        "@esbuild/linux-x64": "0.28.1",
++        "@esbuild/netbsd-arm64": "0.28.1",
++        "@esbuild/netbsd-x64": "0.28.1",
++        "@esbuild/openbsd-arm64": "0.28.1",
++        "@esbuild/openbsd-x64": "0.28.1",
++        "@esbuild/openharmony-arm64": "0.28.1",
++        "@esbuild/sunos-x64": "0.28.1",
++        "@esbuild/win32-arm64": "0.28.1",
++        "@esbuild/win32-ia32": "0.28.1",
++        "@esbuild/win32-x64": "0.28.1"
++      }
++    },
++    "node_modules/fsevents": {
++      "version": "2.3.3",
++      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
++      "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
++      "dev": true,
++      "hasInstallScript": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "engines": {
++        "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
++      }
++    },
++    "node_modules/kleur": {
++      "version": "4.1.5",
++      "resolved": "https://registry.npmjs.org/kleur/-/kleur-4.1.5.tgz",
++      "integrity": "sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=6"
++      }
++    },
++    "node_modules/miniflare": {
++      "version": "5.20260926.0-alpha",
++      "resolved": "https://registry.npmjs.org/miniflare/-/miniflare-5.20260926.0-alpha.tgz",
++      "integrity": "sha512-m/M3rpLnaouw6QSoKzylfw6Z1dnOwRM48idnZ7kc5ivRqBXANFQ8XqKCyQ/V+xqQ9Rg1L99j4WkZGVU9uT4L2w==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cspotcode/source-map-support": "0.8.1",
++        "sharp": "0.35.4",
++        "undici": "7.29.0",
++        "workerd": "1.20260926.1",
++        "ws": "8.21.0",
++        "youch": "4.1.0-beta.10"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/path-to-regexp": {
++      "version": "6.3.0",
++      "resolved": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-6.3.0.tgz",
++      "integrity": "sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/pathe": {
++      "version": "2.0.3",
++      "resolved": "https://registry.npmjs.org/pathe/-/pathe-2.0.3.tgz",
++      "integrity": "sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/semver": {
++      "version": "7.8.5",
++      "resolved": "https://registry.npmjs.org/semver/-/semver-7.8.5.tgz",
++      "integrity": "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==",
++      "dev": true,
++      "license": "ISC",
++      "bin": {
++        "semver": "bin/semver.js"
++      },
++      "engines": {
++        "node": ">=10"
++      }
++    },
++    "node_modules/sharp": {
++      "version": "0.35.4",
++      "resolved": "https://registry.npmjs.org/sharp/-/sharp-0.35.4.tgz",
++      "integrity": "sha512-n++8XWcj+jCOr2IOl7h8LbKnGBDY4aPbmprMONBNFdn0ImXqpGVv5zliDs0V9HbmbCQLpbuo2ej9rAoOQTvMDA==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "@img/colour": "^1.1.0",
++        "detect-libc": "^2.1.2",
++        "semver": "^7.8.5"
++      },
++      "engines": {
++        "node": ">=20.9.0"
++      },
++      "funding": {
++        "url": "https://opencollective.com/libvips"
++      },
++      "optionalDependencies": {
++        "@img/sharp-darwin-arm64": "0.35.4",
++        "@img/sharp-darwin-x64": "0.35.4",
++        "@img/sharp-freebsd-wasm32": "0.35.4",
++        "@img/sharp-libvips-darwin-arm64": "1.3.3",
++        "@img/sharp-libvips-darwin-x64": "1.3.3",
++        "@img/sharp-libvips-linux-arm": "1.3.3",
++        "@img/sharp-libvips-linux-arm64": "1.3.3",
++        "@img/sharp-libvips-linux-ppc64": "1.3.3",
++        "@img/sharp-libvips-linux-riscv64": "1.3.3",
++        "@img/sharp-libvips-linux-s390x": "1.3.3",
++        "@img/sharp-libvips-linux-x64": "1.3.3",
++        "@img/sharp-libvips-linuxmusl-arm64": "1.3.3",
++        "@img/sharp-libvips-linuxmusl-x64": "1.3.3",
++        "@img/sharp-linux-arm": "0.35.4",
++        "@img/sharp-linux-arm64": "0.35.4",
++        "@img/sharp-linux-ppc64": "0.35.4",
++        "@img/sharp-linux-riscv64": "0.35.4",
++        "@img/sharp-linux-s390x": "0.35.4",
++        "@img/sharp-linux-x64": "0.35.4",
++        "@img/sharp-linuxmusl-arm64": "0.35.4",
++        "@img/sharp-linuxmusl-x64": "0.35.4",
++        "@img/sharp-webcontainers-wasm32": "0.35.4",
++        "@img/sharp-win32-arm64": "0.35.4",
++        "@img/sharp-win32-ia32": "0.35.4",
++        "@img/sharp-win32-x64": "0.35.4"
++      },
++      "peerDependenciesMeta": {
++        "@types/node": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/supports-color": {
++      "version": "10.2.2",
++      "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-10.2.2.tgz",
++      "integrity": "sha512-SS+jx45GF1QjgEXQx4NJZV9ImqmO2NPz5FNsIHrsDjh2YsHnawpan7SNQ1o8NuhrbHZy9AZhIoCUiCeaW/C80g==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=18"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/supports-color?sponsor=1"
++      }
++    },
++    "node_modules/tslib": {
++      "version": "2.8.1",
++      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
++      "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==",
++      "dev": true,
++      "license": "0BSD",
++      "optional": true
++    },
++    "node_modules/undici": {
++      "version": "7.29.0",
++      "resolved": "https://registry.npmjs.org/undici/-/undici-7.29.0.tgz",
++      "integrity": "sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=20.18.1"
++      }
++    },
++    "node_modules/unenv": {
++      "version": "2.0.0-rc.24",
++      "resolved": "https://registry.npmjs.org/unenv/-/unenv-2.0.0-rc.24.tgz",
++      "integrity": "sha512-i7qRCmY42zmCwnYlh9H2SvLEypEFGye5iRmEMKjcGi7zk9UquigRjFtTLz0TYqr0ZGLZhaMHl/foy1bZR+Cwlw==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "pathe": "^2.0.3"
++      }
++    },
++    "node_modules/workerd": {
++      "version": "1.20260926.1",
++      "resolved": "https://registry.npmjs.org/workerd/-/workerd-1.20260926.1.tgz",
++      "integrity": "sha512-YojhsWBuZwk3Jk9OC0QfTgVbLeQOD1tK1olC9ZXAUcmeip8z4NE/xtttpxCsuTvQBRqppvy7Tkac0kxPYMjIXA==",
++      "dev": true,
++      "hasInstallScript": true,
++      "license": "Apache-2.0",
++      "bin": {
++        "workerd": "bin/workerd"
++      },
++      "engines": {
++        "node": ">=16"
++      },
++      "optionalDependencies": {
++        "@cloudflare/workerd-darwin-64": "1.20260926.1",
++        "@cloudflare/workerd-darwin-arm64": "1.20260926.1",
++        "@cloudflare/workerd-linux-64": "1.20260926.1",
++        "@cloudflare/workerd-linux-arm64": "1.20260926.1",
++        "@cloudflare/workerd-windows-64": "1.20260926.1"
++      }
++    },
++    "node_modules/wrangler": {
++      "version": "4.142.0",
++      "resolved": "https://registry.npmjs.org/wrangler/-/wrangler-4.142.0.tgz",
++      "integrity": "sha512-oqquqqtHOevn17hzI7qRzU+MiOaCU2UZRLPIZStjGlhwYbxe3hk4Stq3knfcIlGfMSfgM4iycZKeb1fEF5mRTQ==",
++      "dev": true,
++      "license": "MIT OR Apache-2.0",
++      "dependencies": {
++        "@cloudflare/kv-asset-handler": "0.5.0",
++        "@cloudflare/unenv-preset": "2.16.2",
++        "blake3-wasm": "2.1.5",
++        "esbuild": "0.28.1",
++        "miniflare": "5.20260926.0-alpha",
++        "path-to-regexp": "6.3.0",
++        "unenv": "2.0.0-rc.24",
++        "workerd": "1.20260926.1"
++      },
++      "bin": {
++        "cf-wrangler": "bin/cf-wrangler.js",
++        "wrangler": "bin/wrangler.js",
++        "wrangler2": "bin/wrangler.js"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      },
++      "optionalDependencies": {
++        "fsevents": "2.3.3"
++      },
++      "peerDependencies": {
++        "@cloudflare/workers-types": "^5.20260926.1"
++      },
++      "peerDependenciesMeta": {
++        "@cloudflare/workers-types": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/ws": {
++      "version": "8.21.0",
++      "resolved": "https://registry.npmjs.org/ws/-/ws-8.21.0.tgz",
++      "integrity": "sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==",
++      "dev": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=10.0.0"
++      },
++      "peerDependencies": {
++        "bufferutil": "^4.0.1",
++        "utf-8-validate": ">=5.0.2"
++      },
++      "peerDependenciesMeta": {
++        "bufferutil": {
++          "optional": true
++        },
++        "utf-8-validate": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/youch": {
++      "version": "4.1.0-beta.10",
++      "resolved": "https://registry.npmjs.org/youch/-/youch-4.1.0-beta.10.tgz",
++      "integrity": "sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@poppinss/colors": "^4.1.5",
++        "@poppinss/dumper": "^0.6.4",
++        "@speed-highlight/core": "^1.2.7",
++        "cookie": "^1.0.2",
++        "youch-core": "^0.3.3"
++      }
++    },
++    "node_modules/youch-core": {
++      "version": "0.3.3",
++      "resolved": "https://registry.npmjs.org/youch-core/-/youch-core-0.3.3.tgz",
++      "integrity": "sha512-ho7XuGjLaJ2hWHoK8yFnsUGy2Y5uDpqSTq1FkHLK4/oqKtyUU1AFbOOxY4IpC9f0fTLjwYbslUz0Po5BpD1wrA==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "@poppinss/exception": "^1.2.2",
++        "error-stack-parser-es": "^1.0.5"
++      }
++    }
++  }
++}
+diff --git a/assets-gateway/package.json b/assets-gateway/package.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..d51768c425586b222aab001a088b8db110a4fd7a
+--- /dev/null
++++ b/assets-gateway/package.json
+@@ -0,0 +1,16 @@
++{
++  "name": "wardogs-assets-gateway",
++  "private": true,
++  "type": "module",
++  "scripts": {
++    "dev": "wrangler dev --port 8788 --var ASSETS_DEV:true",
++    "deploy": "wrangler deploy",
++    "test": "node --test test/*.test.mjs"
++  },
++  "engines": {
++    "node": ">=22"
++  },
++  "devDependencies": {
++    "wrangler": "^4.129.0"
++  }
++}
+diff --git a/assets-gateway/src/config.mjs b/assets-gateway/src/config.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..5e564dcfa53c34c5a5a87a0fe4177eb86f5480d9
+--- /dev/null
++++ b/assets-gateway/src/config.mjs
+@@ -0,0 +1,124 @@
++const DEFAULT_PRODUCTION_ORIGIN =
++    'https://wardogs-artillery.com';
++
++function strings(value) {
++    return String(value || '')
++        .split(',')
++        .map(item => item.trim())
++        .filter(Boolean);
++}
++
++function integer(value, fallback, min, max) {
++    const parsed = Number(value);
++
++    return (
++        Number.isSafeInteger(parsed) &&
++        parsed >= min &&
++        parsed <= max
++    )
++        ? parsed
++        : fallback;
++}
++
++function origins(value, fallback = []) {
++    return strings(value)
++        .map(item => {
++            try {
++                const url = new URL(item);
++
++                if (
++                    !['https:', 'http:'].includes(url.protocol) ||
++                    url.username ||
++                    url.password ||
++                    url.pathname !== '/' ||
++                    url.search ||
++                    url.hash
++                ) {
++                    return null;
++                }
++
++                return url.origin;
++            } catch {
++                return null;
++            }
++        })
++        .filter(Boolean)
++        .concat(fallback);
++}
++
++export function settings(env = {}) {
++    const development =
++        env.ASSETS_DEV === 'true';
++
++    const productionOrigins =
++        origins(
++            env.ALLOWED_ORIGINS,
++            [DEFAULT_PRODUCTION_ORIGIN]
++        );
++
++    const developmentOrigins =
++        development
++            ? origins(env.DEVELOPMENT_ORIGINS)
++            : [];
++
++    const prefix =
++        String(
++            env.PROTECTED_PREFIX ||
++            '/releases/assets-v1/'
++        );
++
++    if (
++        !prefix.startsWith('/') ||
++        !prefix.endsWith('/') ||
++        prefix.includes('..')
++    ) {
++        throw new Error('invalid-protected-prefix');
++    }
++
++    return {
++        development,
++        allowedOrigins: [
++            ...new Set([
++                ...productionOrigins,
++                ...developmentOrigins
++            ])
++        ],
++        protectedPrefix: prefix,
++        enforceSessions:
++            env.ENFORCE_SESSIONS !== 'false',
++        sessionLifetimeSeconds:
++            integer(
++                env.SESSION_LIFETIME_SECONDS,
++                1200,
++                300,
++                3600
++            ),
++        edgeCacheSeconds:
++            integer(
++                env.EDGE_CACHE_SECONDS,
++                2592000,
++                60,
++                31536000
++            ),
++        turnstileHostname:
++            String(
++                env.TURNSTILE_HOSTNAME ||
++                'wardogs-artillery.com'
++            ),
++        turnstileAction:
++            String(
++                env.TURNSTILE_ACTION ||
++                'asset-session'
++            ),
++        fallbackCountries:
++            new Set(
++                strings(env.FALLBACK_COUNTRIES)
++                    .map(country =>
++                        country.toUpperCase()
++                    )
++                    .filter(country =>
++                        /^[A-Z]{2}$/.test(country)
++                    )
++            )
++    };
++}
+diff --git a/assets-gateway/src/index.mjs b/assets-gateway/src/index.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..e504d859481fe980a2efdd17a469edbafc874291
+--- /dev/null
++++ b/assets-gateway/src/index.mjs
+@@ -0,0 +1,799 @@
++import { settings } from './config.mjs';
++import {
++    mintSession,
++    sessionSubject,
++    verifySession
++} from './tokens.mjs';
++import {
++    validateTurnstile
++} from './turnstile.mjs';
++
++const SESSION_PATH = '/__session';
++const SESSION_COOKIE =
++    '__Host-wardogs_asset_session';
++
++function securityHeaders() {
++    return {
++        'Referrer-Policy': 'no-referrer',
++        'X-Content-Type-Options': 'nosniff',
++        'Cross-Origin-Resource-Policy':
++            'cross-origin',
++        'Content-Security-Policy':
++            "default-src 'none'; frame-ancestors 'none'",
++        'Permissions-Policy':
++            'camera=(), geolocation=(), microphone=()'
++    };
++}
++
++function corsHeaders(origin) {
++    return {
++        ...securityHeaders(),
++        'Access-Control-Allow-Origin': origin,
++        'Access-Control-Allow-Credentials': 'true',
++        'Access-Control-Allow-Methods':
++            'GET, HEAD, POST, OPTIONS',
++        'Access-Control-Allow-Headers':
++            'Content-Type',
++        'Access-Control-Expose-Headers':
++            'Content-Length, Content-Type, ETag, X-Wardogs-Asset-Access, X-Wardogs-Asset-Fallback',
++        'Access-Control-Max-Age': '86400',
++        Vary: 'Origin'
++    };
++}
++
++function json(body, status, origin, extra = {}) {
++    return new Response(
++        JSON.stringify(body),
++        {
++            status,
++            headers: {
++                ...corsHeaders(origin),
++                'Content-Type':
++                    'application/json; charset=utf-8',
++                'Cache-Control': 'no-store',
++                ...extra
++            }
++        }
++    );
++}
++
++function plain(message, status, origin, extra = {}) {
++    return new Response(
++        message,
++        {
++            status,
++            headers: {
++                ...corsHeaders(origin),
++                'Content-Type':
++                    'text/plain; charset=utf-8',
++                'Cache-Control': 'no-store',
++                ...extra
++            }
++        }
++    );
++}
++
++function cookieValue(request, name) {
++    const header =
++        request.headers.get('Cookie') ||
++        '';
++
++    for (const part of header.split(';')) {
++        const separator =
++            part.indexOf('=');
++
++        if (separator < 1) {
++            continue;
++        }
++
++        if (
++            part
++                .slice(0, separator)
++                .trim() === name
++        ) {
++            return part
++                .slice(separator + 1)
++                .trim();
++        }
++    }
++
++    return '';
++}
++
++function sessionCookie(token, lifetimeSeconds) {
++    return [
++        `${SESSION_COOKIE}=${token}`,
++        'Path=/',
++        `Max-Age=${lifetimeSeconds}`,
++        'HttpOnly',
++        'Secure',
++        'SameSite=None',
++        'Partitioned'
++    ].join('; ');
++}
++
++async function allowedBy(rateLimit, key) {
++    return (
++        !rateLimit ||
++        (
++            await rateLimit.limit({
++                key
++            })
++        ).success
++    );
++}
++
++function requireBinding(env, name, development) {
++    const binding = env[name];
++
++    if (!binding && !development) {
++        throw new Error(
++            `missing-binding:${name}`
++        );
++    }
++
++    return binding;
++}
++
++async function limitedJson(request, maximum = 4096) {
++    const length =
++        Number(
++            request.headers.get(
++                'Content-Length'
++            ) || 0
++        );
++
++    if (
++        Number.isFinite(length) &&
++        length > maximum
++    ) {
++        throw new Error('body-too-large');
++    }
++
++    const text =
++        await request.text();
++
++    if (new TextEncoder().encode(text).length > maximum) {
++        throw new Error('body-too-large');
++    }
++
++    try {
++        return JSON.parse(text || '{}');
++    } catch {
++        throw new Error('bad-json');
++    }
++}
++
++function validAssetPath(pathname, prefix) {
++    return (
++        pathname.startsWith(prefix) &&
++        pathname.length > prefix.length &&
++        !pathname.includes('\\') &&
++        !/%(?:2f|5c|00)/i.test(pathname) &&
++        /^\/[A-Za-z0-9._/-]+$/.test(pathname)
++    );
++}
++
++async function currentSession(
++    request,
++    env,
++    now = Date.now()
++) {
++    if (
++        typeof env.SESSION_SECRET !== 'string' ||
++        env.SESSION_SECRET.length < 32
++    ) {
++        throw new Error('invalid-session-secret');
++    }
++
++    return verifySession(
++        env.SESSION_SECRET,
++        cookieValue(
++            request,
++            SESSION_COOKIE
++        ),
++        sessionSubject(request),
++        now
++    );
++}
++
++async function handleSession(
++    request,
++    env,
++    config,
++    origin
++) {
++    const ip =
++        request.headers.get(
++            'CF-Connecting-IP'
++        ) || 'local';
++
++    const country =
++        String(
++            request.cf?.country ||
++            ''
++        ).toUpperCase();
++
++    if (
++        !['GET', 'POST'].includes(
++            request.method
++        )
++    ) {
++        return json(
++            {
++                error: 'method-not-allowed'
++            },
++            405,
++            origin,
++            {
++                Allow: 'GET, POST, OPTIONS'
++            }
++        );
++    }
++
++    if (
++        !await allowedBy(
++            requireBinding(
++                env,
++                'SESSION_RATE',
++                config.development
++            ),
++            ip
++        )
++    ) {
++        return json(
++            {
++                error: 'rate-limited'
++            },
++            429,
++            origin,
++            {
++                'Retry-After': '60'
++            }
++        );
++    }
++
++    if (request.method === 'GET') {
++        const session =
++            await currentSession(
++                request,
++                env
++            );
++
++        if (!session) {
++            return json(
++                {
++                    error: 'session-required'
++                },
++                401,
++                origin,
++                config.fallbackCountries.has(
++                    country
++                )
++                    ? {
++                        'X-Wardogs-Asset-Fallback':
++                            'restricted'
++                    }
++                    : {}
++            );
++        }
++
++        return json(
++            {
++                ok: true,
++                expiresAt: session.expiresAt,
++                mode: session.mode
++            },
++            200,
++            origin
++        );
++    }
++
++    const body =
++        await limitedJson(request);
++
++    const fallback =
++        !config.development &&
++        config.fallbackCountries.has(country) &&
++        !body.token;
++
++    if (!fallback) {
++        const challenge =
++            await validateTurnstile(
++                env,
++                config,
++                body.token,
++                ip
++            );
++
++        if (!challenge.ok) {
++            return json(
++                {
++                    error: challenge.error
++                },
++                challenge.status,
++                origin
++            );
++        }
++    }
++
++    if (
++        typeof env.SESSION_SECRET !== 'string' ||
++        env.SESSION_SECRET.length < 32
++    ) {
++        return json(
++            {
++                error: 'gateway-not-configured'
++            },
++            503,
++            origin
++        );
++    }
++
++    const expiresAt =
++        Date.now() +
++        config.sessionLifetimeSeconds * 1000;
++
++    const mode =
++        fallback
++            ? 'restricted'
++            : 'standard';
++
++    const token =
++        await mintSession(
++            env.SESSION_SECRET,
++            expiresAt,
++            mode,
++            sessionSubject(request)
++        );
++
++    return json(
++        {
++            ok: true,
++            expiresAt,
++            mode
++        },
++        201,
++        origin,
++        {
++            'Set-Cookie':
++                sessionCookie(
++                    token,
++                    config.sessionLifetimeSeconds
++                )
++        }
++    );
++}
++
++function contentTypeForKey(key) {
++    const extension =
++        key
++            .split('.')
++            .pop()
++            ?.toLowerCase();
++
++    return ({
++        webp: 'image/webp',
++        json: 'application/json; charset=utf-8',
++        bin: 'application/octet-stream'
++    })[extension] ||
++        'application/octet-stream';
++}
++
++function assetHeaders(object, config, key) {
++    const headers =
++        new Headers();
++
++    object.writeHttpMetadata?.(headers);
++
++    if (!headers.has('Content-Type')) {
++        headers.set(
++            'Content-Type',
++            contentTypeForKey(
++                key
++            )
++        );
++    }
++
++    headers.set(
++        'Cache-Control',
++        `public, max-age=86400, s-maxage=${config.edgeCacheSeconds}, immutable`
++    );
++    headers.set(
++        'ETag',
++        object.httpEtag ||
++        object.etag ||
++        ''
++    );
++    headers.set(
++        'Content-Length',
++        String(object.size)
++    );
++    headers.set('Accept-Ranges', 'none');
++    headers.set(
++        'X-Content-Type-Options',
++        'nosniff'
++    );
++    headers.set(
++        'Cross-Origin-Resource-Policy',
++        'cross-origin'
++    );
++
++    return headers;
++}
++
++function withCors(
++    response,
++    origin,
++    accessMode = ''
++) {
++    const headers =
++        new Headers(response.headers);
++
++    for (
++        const [name, value]
++        of Object.entries(
++            corsHeaders(origin)
++        )
++    ) {
++        headers.set(name, value);
++    }
++
++    if (accessMode) {
++        headers.set(
++            'X-Wardogs-Asset-Access',
++            accessMode
++        );
++    }
++
++    return new Response(
++        response.body,
++        {
++            status: response.status,
++            statusText: response.statusText,
++            headers
++        }
++    );
++}
++
++function cacheRequest(url) {
++    const clean =
++        new URL(url);
++
++    clean.search = '';
++    clean.hash = '';
++
++    return new Request(
++        clean.href,
++        {
++            method: 'GET'
++        }
++    );
++}
++
++async function handleAsset(
++    request,
++    env,
++    context,
++    config,
++    origin,
++    url
++) {
++    if (
++        !['GET', 'HEAD'].includes(
++            request.method
++        ) ||
++        url.search ||
++        url.hash ||
++        request.headers.has('Range')
++    ) {
++        return plain(
++            'Unsupported asset request',
++            400,
++            origin,
++            {
++                'Accept-Ranges': 'none'
++            }
++        );
++    }
++
++    let session =
++        await currentSession(
++            request,
++            env
++        );
++
++    if (
++        !session &&
++        !config.enforceSessions
++    ) {
++        session = {
++            id: `migration:${
++                request.headers.get(
++                    'CF-Connecting-IP'
++                ) || 'local'
++            }`,
++            mode: 'restricted',
++            migration: true
++        };
++    }
++
++    if (!session) {
++        return json(
++            {
++                error: 'session-required'
++            },
++            401,
++            origin
++        );
++    }
++
++    const ip =
++        request.headers.get(
++            'CF-Connecting-IP'
++        ) || 'local';
++
++    const sessionRate =
++        session.mode === 'restricted'
++            ? requireBinding(
++                env,
++                'ASSET_RESTRICTED_RATE',
++                config.development
++            )
++            : requireBinding(
++                env,
++                'ASSET_SESSION_RATE',
++                config.development
++            );
++
++    const [sessionAllowed, ipAllowed] =
++        await Promise.all([
++            allowedBy(
++                sessionRate,
++                session.id
++            ),
++            allowedBy(
++                requireBinding(
++                    env,
++                    'ASSET_IP_RATE',
++                    config.development
++                ),
++                ip
++            )
++        ]);
++
++    if (!sessionAllowed || !ipAllowed) {
++        return json(
++            {
++                error: 'rate-limited'
++            },
++            429,
++            origin,
++            {
++                'Retry-After': '60'
++            }
++        );
++    }
++
++    const key =
++        url.pathname.slice(1);
++
++    const bucket =
++        requireBinding(
++            env,
++            'ASSETS',
++            config.development
++        );
++
++    if (!bucket) {
++        return json(
++            {
++                error: 'gateway-not-configured'
++            },
++            503,
++            origin
++        );
++    }
++
++    if (request.method === 'HEAD') {
++        const object =
++            await bucket.head(key);
++
++        if (!object) {
++            return plain(
++                'Not found',
++                404,
++                origin
++            );
++        }
++
++        return withCors(
++            new Response(
++                null,
++                {
++                    status: 200,
++                    headers:
++                        assetHeaders(
++                            object,
++                            config,
++                            key
++                        )
++                }
++            ),
++            origin,
++            session.migration
++                ? 'migration'
++                : session.mode
++        );
++    }
++
++    const cache =
++        globalThis.caches?.default;
++
++    const cacheKey =
++        cacheRequest(url);
++
++    const cached =
++        cache
++            ? await cache.match(cacheKey)
++            : null;
++
++    if (cached) {
++        return withCors(
++            cached,
++            origin,
++            session.migration
++                ? 'migration'
++                : session.mode
++        );
++    }
++
++    const object =
++        await bucket.get(key);
++
++    if (!object) {
++        return plain(
++            'Not found',
++            404,
++            origin
++        );
++    }
++
++    const response =
++        new Response(
++            object.body,
++            {
++                status: 200,
++                headers:
++                    assetHeaders(
++                        object,
++                        config,
++                        key
++                    )
++            }
++        );
++
++    if (cache && context?.waitUntil) {
++        context.waitUntil(
++            cache.put(
++                cacheKey,
++                response.clone()
++            )
++        );
++    }
++
++    return withCors(
++        response,
++        origin,
++        session.migration
++            ? 'migration'
++            : session.mode
++    );
++}
++
++export async function handleRequest(
++    request,
++    env,
++    context = {}
++) {
++    let config;
++
++    try {
++        config = settings(env);
++    } catch {
++        return new Response(
++            'Gateway configuration is invalid',
++            {
++                status: 503,
++                headers: securityHeaders()
++            }
++        );
++    }
++
++    const origin =
++        request.headers.get('Origin') ||
++        '';
++
++    if (!config.allowedOrigins.includes(origin)) {
++        return json(
++            {
++                error: 'forbidden-origin'
++            },
++            403,
++            'null'
++        );
++    }
++
++    const url =
++        new URL(request.url);
++
++    if (request.method === 'OPTIONS') {
++        return new Response(
++            null,
++            {
++                status: 204,
++                headers:
++                    corsHeaders(origin)
++            }
++        );
++    }
++
++    try {
++        if (url.pathname === SESSION_PATH) {
++            return await handleSession(
++                request,
++                env,
++                config,
++                origin
++            );
++        }
++
++        if (
++            !validAssetPath(
++                url.pathname,
++                config.protectedPrefix
++            )
++        ) {
++            return plain(
++                'Not found',
++                404,
++                origin
++            );
++        }
++
++        return await handleAsset(
++            request,
++            env,
++            context,
++            config,
++            origin,
++            url
++        );
++    } catch (error) {
++        const clientError =
++            /^(bad-json|body-too-large)$/
++                .test(error?.message || '');
++
++        console.error(
++            '[assets-gateway]',
++            error
++        );
++
++        return json(
++            {
++                error:
++                    clientError
++                        ? error.message
++                        : 'unavailable'
++            },
++            clientError
++                ? 400
++                : 503,
++            origin
++        );
++    }
++}
++
++export default {
++    fetch: handleRequest
++};
+diff --git a/assets-gateway/src/tokens.mjs b/assets-gateway/src/tokens.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..b138be7053cf4df51e53da6f4ba92d790c564147
+--- /dev/null
++++ b/assets-gateway/src/tokens.mjs
+@@ -0,0 +1,153 @@
++const encoder = new TextEncoder();
++
++const TOKEN =
++    /^([A-Za-z0-9_-]{22})\.([a-z0-9]{8,12})\.([sr])\.([A-Za-z0-9_-]{43})$/;
++
++function base64url(bytes) {
++    return btoa(
++        String.fromCharCode(...bytes)
++    )
++        .replaceAll('+', '-')
++        .replaceAll('/', '_')
++        .replace(/=+$/, '');
++}
++
++function decodeBase64url(value) {
++    const normalized =
++        value
++            .replaceAll('-', '+')
++            .replaceAll('_', '/');
++
++    const padding =
++        '='.repeat(
++            (4 - normalized.length % 4) % 4
++        );
++
++    return Uint8Array.from(
++        atob(normalized + padding),
++        character => character.charCodeAt(0)
++    );
++}
++
++function randomId() {
++    return base64url(
++        crypto.getRandomValues(
++            new Uint8Array(16)
++        )
++    );
++}
++
++async function signingKey(secret) {
++    return crypto.subtle.importKey(
++        'raw',
++        encoder.encode(secret),
++        {
++            name: 'HMAC',
++            hash: 'SHA-256'
++        },
++        false,
++        ['sign', 'verify']
++    );
++}
++
++function signedMessage(payload, subject) {
++    return `wardogs-assets:${payload}:${subject}`;
++}
++
++export function sessionSubject(request) {
++    const ip =
++        request.headers.get('CF-Connecting-IP') ||
++        'local';
++
++    const userAgent =
++        request.headers.get('User-Agent') ||
++        '';
++
++    return `${ip}\n${userAgent}`;
++}
++
++export async function mintSession(
++    secret,
++    expiresAt,
++    mode,
++    subject
++) {
++    const marker =
++        mode === 'restricted'
++            ? 'r'
++            : 's';
++
++    const payload =
++        `${randomId()}.${expiresAt.toString(36)}.${marker}`;
++
++    const signature =
++        await crypto.subtle.sign(
++            'HMAC',
++            await signingKey(secret),
++            encoder.encode(
++                signedMessage(
++                    payload,
++                    subject
++                )
++            )
++        );
++
++    return `${payload}.${base64url(
++        new Uint8Array(signature)
++    )}`;
++}
++
++export async function verifySession(
++    secret,
++    token,
++    subject,
++    now = Date.now()
++) {
++    const match =
++        typeof token === 'string'
++            ? TOKEN.exec(token)
++            : null;
++
++    if (!match) {
++        return null;
++    }
++
++    const expiresAt =
++        parseInt(match[2], 36);
++
++    if (
++        !Number.isSafeInteger(expiresAt) ||
++        expiresAt <= now
++    ) {
++        return null;
++    }
++
++    const payload =
++        `${match[1]}.${match[2]}.${match[3]}`;
++
++    const valid =
++        await crypto.subtle.verify(
++            'HMAC',
++            await signingKey(secret),
++            decodeBase64url(match[4]),
++            encoder.encode(
++                signedMessage(
++                    payload,
++                    subject
++                )
++            )
++        );
++
++    if (!valid) {
++        return null;
++    }
++
++    return {
++        id: match[1],
++        expiresAt,
++        mode:
++            match[3] === 'r'
++                ? 'restricted'
++                : 'standard'
++    };
++}
+diff --git a/assets-gateway/src/turnstile.mjs b/assets-gateway/src/turnstile.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..6e8464288f5f17ba5aafc0c1c870b7ea1affd8dd
+--- /dev/null
++++ b/assets-gateway/src/turnstile.mjs
+@@ -0,0 +1,107 @@
++const SITEVERIFY =
++    'https://challenges.cloudflare.com/turnstile/v0/siteverify';
++
++export async function validateTurnstile(
++    env,
++    config,
++    token,
++    remoteip
++) {
++    if (config.development) {
++        return {
++            ok: true
++        };
++    }
++
++    if (
++        typeof env.TURNSTILE_SECRET !== 'string' ||
++        env.TURNSTILE_SECRET.length < 16 ||
++        !/^[a-z0-9.-]+$/i.test(
++            config.turnstileHostname
++        ) ||
++        !/^[a-z0-9_-]{1,32}$/i.test(
++            config.turnstileAction
++        )
++    ) {
++        return {
++            ok: false,
++            error: 'turnstile-not-configured',
++            status: 503
++        };
++    }
++
++    if (
++        typeof token !== 'string' ||
++        !token ||
++        token.length > 2048
++    ) {
++        return {
++            ok: false,
++            error: 'challenge-required',
++            status: 403
++        };
++    }
++
++    try {
++        const response =
++            await fetch(
++                SITEVERIFY,
++                {
++                    method: 'POST',
++                    headers: {
++                        'Content-Type':
++                            'application/json'
++                    },
++                    body: JSON.stringify({
++                        secret:
++                            env.TURNSTILE_SECRET,
++                        response: token,
++                        remoteip
++                    }),
++                    signal:
++                        AbortSignal.timeout(5000)
++                }
++            );
++
++        if (!response.ok) {
++            return {
++                ok: false,
++                error: 'challenge-unavailable',
++                status: 503
++            };
++        }
++
++        const result =
++            await response.json();
++
++        const hostnameMatches =
++            result.hostname ===
++                config.turnstileHostname;
++
++        const actionMatches =
++            result.action ===
++                config.turnstileAction;
++
++        if (
++            result.success !== true ||
++            !hostnameMatches ||
++            !actionMatches
++        ) {
++            return {
++                ok: false,
++                error: 'challenge-failed',
++                status: 403
++            };
++        }
++
++        return {
++            ok: true
++        };
++    } catch {
++        return {
++            ok: false,
++            error: 'challenge-unavailable',
++            status: 503
++        };
++    }
++}
+diff --git a/assets-gateway/test/config.test.mjs b/assets-gateway/test/config.test.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..a6b332752eb9d3e395964fa1c9241042c6717715
+--- /dev/null
++++ b/assets-gateway/test/config.test.mjs
+@@ -0,0 +1,45 @@
++import assert from 'node:assert/strict';
++import test from 'node:test';
++
++import {
++    settings
++} from '../src/config.mjs';
++
++test('production trusts only explicitly configured application origins', () => {
++    const config = settings({
++        ALLOWED_ORIGINS:
++            'https://wardogs-artillery.com',
++        DEVELOPMENT_ORIGINS:
++            'http://localhost:8000',
++        FALLBACK_COUNTRIES: 'CN,RU'
++    });
++
++    assert.deepEqual(
++        config.allowedOrigins,
++        ['https://wardogs-artillery.com']
++    );
++    assert.equal(config.development, false);
++    assert.equal(config.fallbackCountries.has('CN'), true);
++    assert.equal(config.fallbackCountries.has('RU'), true);
++});
++
++test('local origins are added only by an explicit development flag', () => {
++    const config = settings({
++        ASSETS_DEV: 'true',
++        DEVELOPMENT_ORIGINS:
++            'http://localhost:8000,http://127.0.0.1:8000'
++    });
++
++    assert.equal(
++        config.allowedOrigins.includes(
++            'http://localhost:8000'
++        ),
++        true
++    );
++    assert.equal(
++        config.allowedOrigins.includes(
++            'http://127.0.0.1:8000'
++        ),
++        true
++    );
++});
+diff --git a/assets-gateway/test/runtime.test.mjs b/assets-gateway/test/runtime.test.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..bff173fa8b6101b4d886fd4fd9d2524ade3bd6eb
+--- /dev/null
++++ b/assets-gateway/test/runtime.test.mjs
+@@ -0,0 +1,262 @@
++import assert from 'node:assert/strict';
++import test from 'node:test';
++
++import {
++    handleRequest
++} from '../src/index.mjs';
++
++const origin =
++    'https://wardogs-artillery.com';
++
++const userAgent =
++    'WARDOGS gateway test';
++
++const ip = '192.0.2.10';
++
++function env() {
++    return {
++        ASSETS_DEV: 'true',
++        SESSION_SECRET:
++            'test-secret-with-at-least-thirty-two-characters',
++        ASSETS: {
++            async get(key) {
++                if (
++                    key !==
++                    'releases/assets-v1/maps/test.webp'
++                ) {
++                    return null;
++                }
++
++                const body =
++                    new TextEncoder().encode(
++                        'tile'
++                    );
++
++                return {
++                    body,
++                    size: body.byteLength,
++                    httpEtag: '"test-etag"',
++                    writeHttpMetadata(headers) {
++                        headers.set(
++                            'Content-Type',
++                            'image/webp'
++                        );
++                    }
++                };
++            },
++            async head() {
++                return null;
++            }
++        }
++    };
++}
++
++function request(path, options = {}) {
++    return new Request(
++        `https://assets.wardogs-artillery.com${path}`,
++        {
++            ...options,
++            headers: {
++                Origin: origin,
++                'User-Agent': userAgent,
++                'CF-Connecting-IP': ip,
++                ...(options.headers || {})
++            }
++        }
++    );
++}
++
++test('gateway requires a signed session before reading R2', async () => {
++    const environment = env();
++
++    const denied =
++        await handleRequest(
++            request(
++                '/releases/assets-v1/maps/test.webp'
++            ),
++            environment
++        );
++
++    assert.equal(denied.status, 401);
++
++    const admitted =
++        await handleRequest(
++            request(
++                '/__session',
++                {
++                    method: 'POST',
++                    headers: {
++                        'Content-Type':
++                            'application/json'
++                    },
++                    body: '{}'
++                }
++            ),
++            environment
++        );
++
++    assert.equal(admitted.status, 201);
++
++    const cookie =
++        admitted.headers
++            .get('Set-Cookie')
++            .split(';', 1)[0];
++
++    assert.match(
++        cookie,
++        /^__Host-wardogs_asset_session=/
++    );
++
++    const allowed =
++        await handleRequest(
++            request(
++                '/releases/assets-v1/maps/test.webp',
++                {
++                    headers: {
++                        Cookie: cookie
++                    }
++                }
++            ),
++            environment
++        );
++
++    assert.equal(allowed.status, 200);
++    assert.equal(
++        allowed.headers.get(
++            'Access-Control-Allow-Credentials'
++        ),
++        'true'
++    );
++    assert.equal(
++        await allowed.text(),
++        'tile'
++    );
++});
++
++test('gateway rejects forged origins, modified cookies and query strings', async () => {
++    const environment = env();
++
++    const wrongOrigin =
++        await handleRequest(
++            new Request(
++                'https://assets.wardogs-artillery.com/__session',
++                {
++                    method: 'POST',
++                    headers: {
++                        Origin:
++                            'https://fork.example',
++                        'Content-Type':
++                            'application/json'
++                    },
++                    body: '{}'
++                }
++            ),
++            environment
++        );
++
++    assert.equal(wrongOrigin.status, 403);
++
++    const forgedCookie =
++        await handleRequest(
++            request(
++                '/releases/assets-v1/maps/test.webp',
++                {
++                    headers: {
++                        Cookie:
++                            '__Host-wardogs_asset_session=forged'
++                    }
++                }
++            ),
++            environment
++        );
++
++    assert.equal(forgedCookie.status, 401);
++
++    const query =
++        await handleRequest(
++            request(
++                '/releases/assets-v1/maps/test.webp?v=1'
++            ),
++            environment
++        );
++
++    assert.equal(query.status, 400);
++});
++
++test('configured countries receive a restricted session without Turnstile', async () => {
++    const environment = {
++        ...env(),
++        ASSETS_DEV: 'false',
++        FALLBACK_COUNTRIES: 'CN,RU',
++        SESSION_RATE: {
++            async limit() {
++                return {
++                    success: true
++                };
++            }
++        }
++    };
++
++    const regionalRequest = (
++        path,
++        options
++    ) => {
++        const value = request(
++            path,
++            options
++        );
++
++        Object.defineProperty(
++            value,
++            'cf',
++            {
++                value: {
++                    country: 'RU'
++                }
++            }
++        );
++
++        return value;
++    };
++
++    const probe =
++        await handleRequest(
++            regionalRequest(
++                '/__session',
++                {
++                    method: 'GET'
++                }
++            ),
++            environment
++        );
++
++    assert.equal(probe.status, 401);
++    assert.equal(
++        probe.headers.get(
++            'X-Wardogs-Asset-Fallback'
++        ),
++        'restricted'
++    );
++
++    const admitted =
++        await handleRequest(
++            regionalRequest(
++                '/__session',
++                {
++                    method: 'POST',
++                    headers: {
++                        'Content-Type':
++                            'application/json'
++                    },
++                    body: '{}'
++                }
++            ),
++            environment
++        );
++
++    assert.equal(admitted.status, 201);
++    assert.equal(
++        (await admitted.json()).mode,
++        'restricted'
++    );
++});
+diff --git a/assets-gateway/test/tokens.test.mjs b/assets-gateway/test/tokens.test.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..5d276bdd039c0d21a9783db2ad0275e0e815f019
+--- /dev/null
++++ b/assets-gateway/test/tokens.test.mjs
+@@ -0,0 +1,75 @@
++import assert from 'node:assert/strict';
++import test from 'node:test';
++
++import {
++    mintSession,
++    verifySession
++} from '../src/tokens.mjs';
++
++const secret =
++    'test-secret-with-at-least-thirty-two-characters';
++
++test('asset sessions are signed, expiring and subject-bound', async () => {
++    const now = Date.now();
++    const subject = '192.0.2.10\nTest Browser';
++    const token =
++        await mintSession(
++            secret,
++            now + 60000,
++            'standard',
++            subject
++        );
++
++    const session =
++        await verifySession(
++            secret,
++            token,
++            subject,
++            now
++        );
++
++    assert.equal(session.mode, 'standard');
++    assert.equal(session.expiresAt, now + 60000);
++    assert.equal(session.id.length, 22);
++
++    assert.equal(
++        await verifySession(
++            secret,
++            token,
++            '198.51.100.20\nTest Browser',
++            now
++        ),
++        null
++    );
++
++    assert.equal(
++        await verifySession(
++            secret,
++            token,
++            subject,
++            now + 60001
++        ),
++        null
++    );
++});
++
++test('restricted sessions retain their lower-trust mode', async () => {
++    const now = Date.now();
++    const token =
++        await mintSession(
++            secret,
++            now + 60000,
++            'restricted',
++            'subject'
++        );
++
++    const session =
++        await verifySession(
++            secret,
++            token,
++            'subject',
++            now
++        );
++
++    assert.equal(session.mode, 'restricted');
++});
+diff --git a/assets-gateway/wrangler.jsonc b/assets-gateway/wrangler.jsonc
+new file mode 100644
+index 0000000000000000000000000000000000000000..eb8fd101cdebd56ab4193db981daf90991300605
+--- /dev/null
++++ b/assets-gateway/wrangler.jsonc
+@@ -0,0 +1,69 @@
++{
++  "$schema": "node_modules/wrangler/config-schema.json",
++  "name": "wardogs-assets-gateway",
++  "main": "src/index.mjs",
++  "compatibility_date": "2026-04-07",
++  "workers_dev": false,
++  "preview_urls": false,
++  "routes": [
++    {
++      "pattern": "assets.wardogs-artillery.com",
++      "custom_domain": true
++    }
++  ],
++  "observability": {
++    "enabled": true,
++    "head_sampling_rate": 0.01
++  },
++  "r2_buckets": [
++    {
++      "binding": "ASSETS",
++      "bucket_name": "wardogs-assets"
++    }
++  ],
++  "vars": {
++    "ALLOWED_ORIGINS": "https://wardogs-artillery.com",
++    "DEVELOPMENT_ORIGINS": "http://localhost:8000,http://127.0.0.1:8000",
++    "PROTECTED_PREFIX": "/releases/assets-v1/",
++    "ENFORCE_SESSIONS": "false",
++    "SESSION_LIFETIME_SECONDS": "1200",
++    "TURNSTILE_HOSTNAME": "wardogs-artillery.com",
++    "TURNSTILE_ACTION": "asset-session",
++    "FALLBACK_COUNTRIES": "CN,RU",
++    "EDGE_CACHE_SECONDS": "2592000"
++  },
++  "ratelimits": [
++    {
++      "name": "SESSION_RATE",
++      "namespace_id": "73201",
++      "simple": {
++        "limit": 60,
++        "period": 60
++      }
++    },
++    {
++      "name": "ASSET_SESSION_RATE",
++      "namespace_id": "73202",
++      "simple": {
++        "limit": 1000,
++        "period": 60
++      }
++    },
++    {
++      "name": "ASSET_RESTRICTED_RATE",
++      "namespace_id": "73203",
++      "simple": {
++        "limit": 240,
++        "period": 60
++      }
++    },
++    {
++      "name": "ASSET_IP_RATE",
++      "namespace_id": "73204",
++      "simple": {
++        "limit": 3000,
++        "period": 60
++      }
++    }
++  ]
++}
+diff --git a/config/app.json b/config/app.json
+index a16d048981f420f5c88fea645f07c180065ea9fe..51dbf3b62b33f07c9fd1bba5c11e69fb8e9b5cda 100644
+--- a/config/app.json
++++ b/config/app.json
+@@ -4,6 +4,16 @@
+       "enabled": true
+     }
+   },
++  "assetGateway": {
++    "enabled": false,
++    "origin": "https://assets.wardogs-artillery.com",
++    "sessionPath": "/__session",
++    "turnstile": {
++      "enabled": true,
++      "siteKey": "",
++      "action": "asset-session"
++    }
++  },
+   "collab": {
+     "enabled": true,
+     "serverUrl": "https://lobby.wardogs-artillery.com",
+diff --git a/docs/assets-gateway.md b/docs/assets-gateway.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..66fbba8b28750e512a828bb90e5b77945565f5ad
+--- /dev/null
++++ b/docs/assets-gateway.md
+@@ -0,0 +1,431 @@
++# Protected Asset Gateway
++
++The optional asset gateway puts the map tile and Terrain3D bucket behind a
++Cloudflare Worker. Direct R2 access can then be disabled. The official browser
++receives a short-lived, signed, `HttpOnly` session cookie after a Turnstile
++check; map and terrain requests are authenticated and rate-limited by that
++session before the Worker reads R2.
++
++This design is intended to stop direct hotlinking and inexpensive bulk scripts.
++It does not make browser-visible game assets confidential and cannot prevent an
++admitted user from saving responses that their browser is allowed to display.
++
++## Request flow
++
++1. The application requests `POST https://assets.wardogs-artillery.com/__session`.
++2. The Worker validates the Turnstile token, hostname, action and request
++   origin.
++3. The Worker sets a signed `__Host-wardogs_asset_session` cookie. The cookie is
++   bound to the requesting IP address and User-Agent and expires after 20
++   minutes by default.
++4. Tile and Terrain3D requests use credentialed CORS. The Worker verifies the
++   cookie, applies session and IP rate limits, and serves the object from cache
++   or the private R2 binding.
++5. The cookie is removed from the edge cache key, so all admitted users share
++   the same cached object instead of creating one cache entry per session.
++
++Turnstile is attempted before creating every new standard session. Countries
++listed in `FALLBACK_COUNTRIES` may receive a more tightly rate-limited
++restricted session if Turnstile is unavailable. The repository default is
++`CN,RU`; the initial session probe lets their clients skip the blocked
++Turnstile script instead of waiting for a network timeout. Use an empty value
++to fail closed everywhere.
++
++## Cost model
++
++The gateway requires the Workers Paid plan. At the time this integration was
++written, the plan had a USD 5 monthly minimum, included 10 million Worker
++requests per month, and charged USD 0.30 per additional million requests.
++Worker requests served from the Worker cache are still counted, while cache
++hits avoid R2 `GetObject` operations.
++
++Estimate the request volume from Cloudflare HTTP traffic for
++`assets.wardogs-artillery.com`, not from the R2 operation chart. The latter
++normally contains only requests that reached the bucket after caching.
++
++## Files
++
++```text
++assets-gateway/
++├── src/
++│   ├── config.mjs
++│   ├── index.mjs
++│   ├── tokens.mjs
++│   └── turnstile.mjs
++├── test/
++├── .dev.vars.example
++├── package.json
++└── wrangler.jsonc
++```
++
++The browser adapter is `js/core/asset-access.js`. Gateway configuration is in
++`config/app.json`.
++
++## 1. Enable Workers Paid
++
++In the Cloudflare dashboard, open **Workers & Pages**, select the Workers Paid
++plan and confirm the USD 5 monthly subscription. R2 billing remains separate.
++
++Before continuing, create billing notifications for at least two thresholds,
++for example USD 10 and USD 20. A paid Worker has usage-based overage billing;
++the subscription price is not a hard spending cap.
++
++## 2. Create an invisible Turnstile widget
++
++Open **Turnstile** in the Cloudflare dashboard and create a widget with:
++
++```text
++Name:       WARDOGS Asset Gateway
++Hostname:   wardogs-artillery.com
++Mode:       Invisible
++```
++
++Copy both values:
++
++- the public site key goes into `config/app.json`;
++- the secret key is stored only as a Worker secret.
++
++Use a separate widget from the lobby widget. The asset client renders this
++widget invisibly with the action `asset-session`. Turnstile tokens are always
++validated server-side and cannot be reused as asset-session cookies.
++
++## 3. Review Worker configuration
++
++Open `assets-gateway/wrangler.jsonc` and verify:
++
++```jsonc
++"bucket_name": "wardogs-assets"
++```
++
++It must exactly match the existing R2 bucket name.
++
++Review these variables:
++
++```jsonc
++"ALLOWED_ORIGINS": "https://wardogs-artillery.com",
++"DEVELOPMENT_ORIGINS": "http://localhost:8000,http://127.0.0.1:8000",
++"PROTECTED_PREFIX": "/releases/assets-v1/",
++"ENFORCE_SESSIONS": "false",
++"SESSION_LIFETIME_SECONDS": "1200",
++"TURNSTILE_HOSTNAME": "wardogs-artillery.com",
++"TURNSTILE_ACTION": "asset-session",
++"FALLBACK_COUNTRIES": "CN,RU",
++"EDGE_CACHE_SECONDS": "2592000"
++```
++
++`ENFORCE_SESSIONS` intentionally starts as `false`. This temporary migration
++mode allows requests from the configured official origin while the new browser
++client is being deployed. Do not leave migration mode enabled after validation.
++
++The default limits are:
++
++| Binding | Limit | Purpose |
++| --- | ---: | --- |
++| `SESSION_RATE` | 60/minute/IP | Session probing and creation |
++| `ASSET_SESSION_RATE` | 1000/minute/session | Normal browser session |
++| `ASSET_RESTRICTED_RATE` | 240/minute/session | Regional fallback session |
++| `ASSET_IP_RATE` | 3000/minute/IP | High emergency backstop across sessions |
++
++The `namespace_id` values `73201` through `73204` are intentionally different
++from the lobby Worker namespaces in this repository. If those numbers are
++already used by another Worker in the same Cloudflare account, replace them
++with four other unique positive integers before deployment.
++
++The main limit is keyed by a random signed session, not only by IP. This avoids
++blocking several ordinary players behind the same NAT. The IP limit is
++deliberately much higher and exists only to contain session churn.
++
++Worker rate-limit counters are local to the Cloudflare location handling the
++request and are intentionally eventually consistent. Treat them as abuse
++containment rather than exact accounting.
++
++If normal browsers receive `429`, increase `ASSET_SESSION_RATE` first. Do not
++reduce limits based only on a single short traffic spike.
++
++## 4. Install and test locally
++
++From the repository root:
++
++```powershell
++cd .\assets-gateway
++npm ci
++npm test
++npx wrangler login
++```
++
++For local Worker development, copy the example environment file:
++
++```powershell
++Copy-Item .dev.vars.example .dev.vars
++```
++
++`.dev.vars` is ignored by Git. `ASSETS_DEV=true`, supplied by the `npm run dev`
++script, disables the Turnstile requirement and permits the configured local
++origins. Never deploy a production Worker with `ASSETS_DEV=true`.
++
++Run:
++
++```powershell
++npm run dev
++```
++
++The unit tests use an in-memory R2 mock. Testing real R2 reads locally requires
++a Wrangler development binding with access to the bucket; it is not necessary
++for the deployment sequence below.
++
++## 5. Prepare Worker secrets
++
++Generate at least 48 random bytes for the session signing secret. In Windows
++PowerShell:
++
++```powershell
++$bytes = New-Object byte[] 48
++$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
++$rng.GetBytes($bytes)
++[Convert]::ToBase64String($bytes)
++$rng.Dispose()
++```
++
++Create `assets-gateway/.env.production` locally with these two lines:
++
++```dotenv
++SESSION_SECRET=PASTE_THE_GENERATED_VALUE
++TURNSTILE_SECRET=PASTE_THE_ASSET_WIDGET_SECRET
++```
++
++The repository already ignores `.env.production`. Keep a secure copy of both
++values in your password manager. The file is used once during cutover so the
++Worker code and both secrets are deployed together; this avoids an intermediate
++deployment that is missing one of the secrets.
++
++Do not place either secret in `wrangler.jsonc`, `config/app.json`, `.dev.vars.example`,
++GitHub Actions output, screenshots or Git history. The Turnstile site key is
++public and belongs in application configuration; the secret key does not.
++
++## 6. Prepare the browser configuration
++
++Edit `config/app.json` but do not deploy the site yet:
++
++```json
++"assetGateway": {
++  "enabled": true,
++  "origin": "https://assets.wardogs-artillery.com",
++  "sessionPath": "/__session",
++  "turnstile": {
++    "enabled": true,
++    "siteKey": "PASTE_THE_PUBLIC_ASSET_WIDGET_SITE_KEY",
++    "action": "asset-session"
++  }
++}
++```
++
++The client will:
++
++- reuse an existing valid cookie after reload;
++- execute the invisible challenge only when a new session is needed;
++- refresh the session shortly before expiration;
++- retry Terrain3D once after an authentication failure;
++- use `crossOrigin="use-credentials"` for protected map images.
++
++Keep `enabled` set to `false` until the Worker serves the CDN hostname.
++
++## 7. Cut over the CDN hostname
++
++The R2 bucket and Worker cannot both own the same Custom Domain. Minimize the
++transition by preparing the terminal and Worker configuration first.
++
++1. Confirm `ENFORCE_SESSIONS` is still `false`.
++2. In **R2 Object Storage → wardogs-assets → Settings**, locate **Custom
++   Domains** and remove `assets.wardogs-artillery.com` from the bucket.
++3. Keep the `r2.dev` development URL disabled.
++4. Immediately deploy the Worker:
++
++```powershell
++cd .\assets-gateway
++npx wrangler deploy --secrets-file .env.production
++```
++
++The `custom_domain` route in `wrangler.jsonc` attaches
++`assets.wardogs-artillery.com` to the Worker. The Worker reads the same bucket
++through its `ASSETS` R2 binding; no public bucket URL is required.
++
++After the deploy succeeds, delete the temporary file:
++
++```powershell
++Remove-Item .env.production
++```
++
++While migration mode is active, verify an existing tile:
++
++```powershell
++$url = "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles-color/bakurani/zoom_7/116_94.webp"
++
++curl.exe -sS -D - -o NUL `
++  -H "Origin: https://wardogs-artillery.com" `
++  $url
++```
++
++Expected output includes:
++
++```text
++HTTP/2 200
++X-Wardogs-Asset-Access: migration
++```
++
++A missing or foreign Origin should still be blocked by the WAF or Worker.
++
++## 8. Deploy the authenticated browser client
++
++Set `assetGateway.enabled` to `true`, insert the public Turnstile site key, then
++run the full application checks:
++
++```powershell
++cd ..
++npm ci
++npm run check
++```
++
++Deploy the generated site normally. Open the production application in a clean
++browser profile and inspect DevTools → Network:
++
++1. `POST https://assets.wardogs-artillery.com/__session` returns `201`.
++2. Its response contains `Set-Cookie: __Host-wardogs_asset_session=...`.
++3. Tile requests contain the session cookie and return `200`.
++4. Tile responses contain `X-Wardogs-Asset-Access: restricted` or `standard`.
++5. Selecting SPH-2 loads the Terrain3D manifest and `.bin` chunks successfully.
++6. Canvas screenshots/export continue to work; there must be no tainted-canvas
++   error.
++
++Test desktop, mobile, all three maps, both map styles and SPH-2 before enforcing
++sessions.
++
++## 9. Enable enforcement
++
++Change this value in `assets-gateway/wrangler.jsonc`:
++
++```jsonc
++"ENFORCE_SESSIONS": "true"
++```
++
++Deploy again:
++
++```powershell
++cd .\assets-gateway
++npx wrangler deploy
++```
++
++Verify that a forged Origin alone no longer grants access:
++
++```powershell
++curl.exe -sS -o NUL -w "%{http_code}`n" `
++  -H "Origin: https://wardogs-artillery.com" `
++  $url
++```
++
++Without the signed cookie, the result must be:
++
++```text
++401
++```
++
++The real browser session must still receive `200` responses with
++`X-Wardogs-Asset-Access: standard` (or `restricted` in the configured fallback
++countries).
++
++## 10. Cloudflare WAF rules
++
++Keep the method/query rule unchanged:
++
++```text
++(
++  http.host eq "assets.wardogs-artillery.com"
++  and starts_with(http.request.uri.path, "/releases/assets-v1/")
++  and (
++    not (http.request.method in {"GET" "HEAD"})
++    or http.request.uri.query ne ""
++  )
++)
++```
++
++Use action **Block**.
++
++Tighten the origin rule by removing the `Referer` exception:
++
++```text
++(
++  http.host eq "assets.wardogs-artillery.com"
++  and starts_with(http.request.uri.path, "/releases/assets-v1/")
++  and not any(
++    http.request.headers["origin"][*] eq
++    "https://wardogs-artillery.com"
++  )
++)
++```
++
++Use action **Block**. This WAF rule is only an inexpensive pre-filter. The
++signed Worker session is the authentication boundary, so spoofing `Origin`
++does not grant access.
++
++Do not apply either expression to `/__session`; that route needs `POST` and is
++validated separately by the Worker.
++
++Disable the old broad asset rate-limiting rule after Worker enforcement is
++verified. The Worker limits normal and restricted sessions independently and
++does not combine unrelated players behind one IP except at the high emergency
++backstop.
++
++## Monitoring
++
++Check these views after cutover:
++
++- **Workers & Pages → wardogs-assets-gateway → Metrics** for requests, errors
++  and CPU time;
++- **Workers Logs** for sampled `401`, `403`, `429` and `5xx` responses;
++- **R2 → wardogs-assets → Metrics** for Class A/B operations;
++- **Security → Events** for WAF blocks;
++- Turnstile Analytics for challenge success, failure and top source IPs.
++
++The Worker deliberately logs unexpected exceptions, not valid session cookies
++or Turnstile tokens. Never add cookies, request bodies or secrets to production
++logs.
++
++Useful response meanings:
++
++| Status | Meaning |
++| ---: | --- |
++| `200` | Authenticated asset delivered |
++| `201` | New browser session created |
++| `401` | Missing, expired, modified or differently bound cookie |
++| `403` | Origin or Turnstile validation failed |
++| `404` | Path is outside the allowlisted prefix or object is absent |
++| `429` | Session, fallback or IP limit reached |
++| `503` | Missing secret/binding or temporary upstream failure |
++
++## Emergency rollback
++
++If legitimate maps fail after enforcement:
++
++1. Change `ENFORCE_SESSIONS` back to `false` and deploy the Worker. This is the
++   fastest recovery and keeps the bucket private.
++2. Investigate Worker logs, Turnstile Analytics and browser cookie/CORS errors.
++3. If the Worker itself must be removed, deploy the site with
++   `assetGateway.enabled=false`, detach the Worker Custom Domain, and reattach
++   `assets.wardogs-artillery.com` to the R2 bucket.
++4. Restore the strict Origin and method/query WAF rules after the public R2
++   custom domain is reattached.
++
++Migration mode is a temporary availability control, not permanent protection.
++Return `ENFORCE_SESSIONS` to `true` after fixing the incident.
++
++## Secret rotation
++
++Rotate `SESSION_SECRET` if session signing material may have leaked:
++
++```powershell
++npx wrangler secret put SESSION_SECRET
++npx wrangler deploy
++```
++
++All existing asset sessions become invalid and browsers automatically request
++new ones. Rotate `TURNSTILE_SECRET` independently in the Turnstile dashboard
++and Worker secrets if that key may have leaked.
+diff --git a/docs/cdn.md b/docs/cdn.md
+index f19d2038a3e903255534f72286853c8174696803..f6b2c2feca7a0ded3db2183bd50bccf2443fd507 100644
+--- a/docs/cdn.md
++++ b/docs/cdn.md
+@@ -50,3 +50,11 @@ data/ballistics/terrain-context.json
+ Map tile paths should point to the fork operator's own tile pyramid. Terrain manifest URLs should point to the operator's own manifest and chunk storage. Removing a feature is preferable to silently falling back to the official CDN.
+ 
+ If you want to request another form of access, contact the maintainer before implementing or publishing it. Permission must be explicit and should not be inferred from repository visibility, previous technical access, or the MIT License.
++
++### Production access gateway
++
++The production bucket can be kept private behind the optional authenticated
++Worker included in `assets-gateway/`. The gateway validates short-lived signed
++browser sessions, applies separate normal and restricted rate limits, and
++serves cached R2 objects without exposing R2 credentials. See
++[Protected asset gateway](assets-gateway.md) for deployment and rollback.
+diff --git a/docs/security.md b/docs/security.md
+index 79f702a4bf263172aec6e856d1bae570cb4c519c..516f9b416a66bbedb08fa1672f206c48199809d0 100644
+--- a/docs/security.md
++++ b/docs/security.md
+@@ -127,6 +127,11 @@ actual protection.
+   which would add cost and still cannot stop an authorized client from copying.
+   This technical limitation does not grant permission to use the CDN or hosted
+   assets in another project; see [CDN & hosted assets](cdn.md).
++- The optional [protected asset gateway](assets-gateway.md) prevents direct R2
++  hotlinking by requiring a short-lived signed browser session. It raises the
++  cost of automated extraction but cannot stop an admitted browser from saving
++  assets it is allowed to display. Its rate limits and billing alerts remain
++  part of the security boundary.
+ - Production analytics loads the remote script from `https://cloud.umami.is`
+   and allows event delivery to `https://gateway.umami.is`. The script executes
+   with page privileges, so a compromise remains a supply-chain risk despite
+diff --git a/js/core/asset-access.js b/js/core/asset-access.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..d78f7b72e18849a72e09d70c0fa960a9efb0c54b
+--- /dev/null
++++ b/js/core/asset-access.js
+@@ -0,0 +1,630 @@
++/* =========================
++   PROTECTED ASSET ACCESS
++   ========================= */
++
++const ASSET_ACCESS_STATE = {
++    expiresAt: 0,
++    mode: '',
++    pending: null,
++    refreshTimer: null,
++    turnstileLoader: null,
++    turnstileWidget: null,
++    challengeResolve: null,
++    challengeReject: null,
++    challengeTimer: null,
++    lastFailureRefresh: 0,
++    regionalFallback: false
++};
++
++function getAssetGatewayConfig() {
++    return (
++        APP_CONFIG?.assetGateway ||
++        DEFAULT_APP_CONFIG.assetGateway
++    );
++}
++
++function isAssetGatewayEnabled() {
++    const config =
++        getAssetGatewayConfig();
++
++    return (
++        config?.enabled === true &&
++        Boolean(
++            normalizeConfiguredHttpUrl(
++                config.origin,
++                {
++                    allowLocalhost: true,
++                    allowSearchAndHash: false
++                }
++            )
++        )
++    );
++}
++
++function getAssetGatewayOrigin() {
++    if (!isAssetGatewayEnabled()) {
++        return '';
++    }
++
++    try {
++        return new URL(
++            getAssetGatewayConfig().origin
++        ).origin;
++    } catch {
++        return '';
++    }
++}
++
++function isProtectedAssetURL(value) {
++    const protectedOrigin =
++        getAssetGatewayOrigin();
++
++    if (!protectedOrigin) {
++        return false;
++    }
++
++    try {
++        return new URL(
++            value,
++            document.baseURI
++        ).origin === protectedOrigin;
++    } catch {
++        return false;
++    }
++}
++
++function hasValidAssetAccess() {
++    return (
++        !isAssetGatewayEnabled() ||
++        ASSET_ACCESS_STATE.expiresAt >
++            Date.now() + 15000
++    );
++}
++
++function assetSessionURL() {
++    const config =
++        getAssetGatewayConfig();
++
++    const origin =
++        normalizeConfiguredHttpUrl(
++            config.origin,
++            {
++                allowLocalhost: true,
++                allowSearchAndHash: false
++            }
++        );
++
++    if (!origin) {
++        throw new Error(
++            'asset-gateway-not-configured'
++        );
++    }
++
++    const path =
++        String(
++            config.sessionPath ||
++            '/__session'
++        );
++
++    if (
++        !path.startsWith('/') ||
++        path.includes('..') ||
++        /[?#]/.test(path)
++    ) {
++        throw new Error(
++            'asset-session-path-invalid'
++        );
++    }
++
++    return new URL(
++        path,
++        origin
++    ).href;
++}
++
++function clearAssetRefreshTimer() {
++    if (ASSET_ACCESS_STATE.refreshTimer) {
++        window.clearTimeout(
++            ASSET_ACCESS_STATE.refreshTimer
++        );
++    }
++
++    ASSET_ACCESS_STATE.refreshTimer = null;
++}
++
++function rememberAssetSession(data) {
++    const expiresAt =
++        Number(data?.expiresAt || 0);
++
++    if (
++        !Number.isFinite(expiresAt) ||
++        expiresAt <= Date.now()
++    ) {
++        throw new Error(
++            'asset-session-invalid'
++        );
++    }
++
++    ASSET_ACCESS_STATE.expiresAt =
++        expiresAt;
++
++    ASSET_ACCESS_STATE.mode =
++        data.mode === 'restricted'
++            ? 'restricted'
++            : 'standard';
++
++    clearAssetRefreshTimer();
++
++    const delay =
++        Math.max(
++            30000,
++            expiresAt - Date.now() - 60000
++        );
++
++    ASSET_ACCESS_STATE.refreshTimer =
++        window.setTimeout(
++            () => {
++                refreshAssetAccess()
++                    .catch(error => {
++                        console.warn(
++                            '[asset-access] Session refresh failed.',
++                            error
++                        );
++                    });
++            },
++            delay
++        );
++}
++
++function assetChallengeConfig() {
++    return (
++        getAssetGatewayConfig()
++            ?.turnstile ||
++        {}
++    );
++}
++
++function loadAssetTurnstile() {
++    if (window.turnstile) {
++        return Promise.resolve();
++    }
++
++    if (ASSET_ACCESS_STATE.turnstileLoader) {
++        return ASSET_ACCESS_STATE.turnstileLoader;
++    }
++
++    ASSET_ACCESS_STATE.turnstileLoader =
++        new Promise((resolve, reject) => {
++            let settled = false;
++
++            const finish = (
++                callback,
++                value
++            ) => {
++                if (settled) {
++                    return;
++                }
++
++                settled = true;
++                window.clearTimeout(timer);
++                callback(value);
++            };
++
++            const timer =
++                window.setTimeout(
++                    () => finish(
++                        reject,
++                        new Error(
++                            'turnstile-unavailable'
++                        )
++                    ),
++                    8000
++                );
++
++            const existing =
++                document.querySelector(
++                    'script[data-wardogs-turnstile]'
++                );
++
++            if (existing) {
++                existing.addEventListener(
++                    'load',
++                    () => finish(resolve),
++                    { once: true }
++                );
++                existing.addEventListener(
++                    'error',
++                    () => finish(
++                        reject,
++                        new Error(
++                            'turnstile-unavailable'
++                        )
++                    ),
++                    { once: true }
++                );
++                return;
++            }
++
++            const script =
++                document.createElement(
++                    'script'
++                );
++
++            script.src =
++                'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
++            script.async = true;
++            script.defer = true;
++            script.dataset.wardogsTurnstile = '1';
++            script.addEventListener(
++                'load',
++                () => finish(resolve),
++                { once: true }
++            );
++            script.addEventListener(
++                'error',
++                () => finish(
++                    reject,
++                    new Error(
++                        'turnstile-unavailable'
++                    )
++                ),
++                { once: true }
++            );
++
++            document.head.appendChild(
++                script
++            );
++        });
++
++    return ASSET_ACCESS_STATE.turnstileLoader;
++}
++
++function settleAssetChallenge(
++    method,
++    value
++) {
++    const callback =
++        method === 'resolve'
++            ? ASSET_ACCESS_STATE.challengeResolve
++            : ASSET_ACCESS_STATE.challengeReject;
++
++    if (!callback) {
++        return;
++    }
++
++    window.clearTimeout(
++        ASSET_ACCESS_STATE.challengeTimer
++    );
++
++    ASSET_ACCESS_STATE.challengeResolve = null;
++    ASSET_ACCESS_STATE.challengeReject = null;
++    ASSET_ACCESS_STATE.challengeTimer = null;
++
++    callback(value);
++}
++
++async function requestAssetChallenge() {
++    const challenge =
++        assetChallengeConfig();
++
++    if (
++        challenge.enabled !== true ||
++        typeof challenge.siteKey !== 'string' ||
++        !challenge.siteKey.trim()
++    ) {
++        throw new Error(
++            'turnstile-not-configured'
++        );
++    }
++
++    await loadAssetTurnstile();
++
++    if (
++        !window.turnstile ||
++        typeof window.turnstile.render !== 'function' ||
++        typeof window.turnstile.execute !== 'function'
++    ) {
++        throw new Error(
++            'turnstile-unavailable'
++        );
++    }
++
++    if (!document.getElementById(
++        'assetAccessTurnstile'
++    )) {
++        const holder =
++            document.createElement('div');
++
++        holder.id =
++            'assetAccessTurnstile';
++        holder.setAttribute(
++            'aria-hidden',
++            'true'
++        );
++        document.body.appendChild(holder);
++    }
++
++    if (
++        ASSET_ACCESS_STATE.turnstileWidget === null
++    ) {
++        ASSET_ACCESS_STATE.turnstileWidget =
++            window.turnstile.render(
++                '#assetAccessTurnstile',
++                {
++                    sitekey:
++                        challenge.siteKey,
++                    action:
++                        challenge.action ||
++                        'asset-session',
++                    execution: 'execute',
++                    retry: 'never',
++                    'refresh-expired': 'manual',
++                    callback: token =>
++                        settleAssetChallenge(
++                            'resolve',
++                            token
++                        ),
++                    'error-callback': () =>
++                        settleAssetChallenge(
++                            'reject',
++                            new Error(
++                                'turnstile-unavailable'
++                            )
++                        ),
++                    'expired-callback': () =>
++                        settleAssetChallenge(
++                            'reject',
++                            new Error(
++                                'turnstile-expired'
++                            )
++                        )
++                }
++            );
++    } else if (window.turnstile.reset) {
++        window.turnstile.reset(
++            ASSET_ACCESS_STATE.turnstileWidget
++        );
++    }
++
++    return new Promise((resolve, reject) => {
++        ASSET_ACCESS_STATE.challengeResolve =
++            resolve;
++        ASSET_ACCESS_STATE.challengeReject =
++            reject;
++        ASSET_ACCESS_STATE.challengeTimer =
++            window.setTimeout(
++                () =>
++                    settleAssetChallenge(
++                        'reject',
++                        new Error(
++                            'turnstile-timeout'
++                        )
++                    ),
++                12000
++            );
++
++        window.turnstile.execute(
++            ASSET_ACCESS_STATE.turnstileWidget
++        );
++    });
++}
++
++async function parseAssetSessionResponse(response) {
++    let data = {};
++
++    try {
++        data = await response.json();
++    } catch {
++        data = {};
++    }
++
++    if (!response.ok) {
++        throw new Error(
++            data.error ||
++            `asset-session-http-${response.status}`
++        );
++    }
++
++    rememberAssetSession(data);
++    return true;
++}
++
++async function probeAssetSession() {
++    const response =
++        await fetch(
++            assetSessionURL(),
++            {
++                method: 'GET',
++                credentials: 'include',
++                cache: 'no-store',
++                referrerPolicy: 'no-referrer',
++                signal:
++                    AbortSignal.timeout(8000)
++            }
++        );
++
++    if (response.status === 401) {
++        ASSET_ACCESS_STATE.regionalFallback =
++            response.headers.get(
++                'X-Wardogs-Asset-Fallback'
++            ) === 'restricted';
++
++        return false;
++    }
++
++    return parseAssetSessionResponse(
++        response
++    );
++}
++
++async function createAssetSession() {
++    let challengeToken = '';
++
++    if (!ASSET_ACCESS_STATE.regionalFallback) {
++        try {
++            challengeToken =
++                await requestAssetChallenge();
++        } catch (error) {
++            console.info(
++                '[asset-access] Browser challenge unavailable; requesting restricted regional fallback.',
++                error
++            );
++        }
++    }
++
++    const response =
++        await fetch(
++            assetSessionURL(),
++            {
++                method: 'POST',
++                headers: {
++                    'Content-Type':
++                        'application/json'
++                },
++                body: JSON.stringify({
++                    token: challengeToken
++                }),
++                credentials: 'include',
++                cache: 'no-store',
++                referrerPolicy: 'no-referrer',
++                signal:
++                    AbortSignal.timeout(10000)
++            }
++        );
++
++    return parseAssetSessionResponse(
++        response
++    );
++}
++
++async function ensureAssetAccess({
++    force = false
++} = {}) {
++    if (!isAssetGatewayEnabled()) {
++        return true;
++    }
++
++    if (!force && hasValidAssetAccess()) {
++        return true;
++    }
++
++    if (ASSET_ACCESS_STATE.pending) {
++        return ASSET_ACCESS_STATE.pending;
++    }
++
++    ASSET_ACCESS_STATE.pending =
++        (async () => {
++            if (!force) {
++                try {
++                    if (await probeAssetSession()) {
++                        return true;
++                    }
++                } catch (error) {
++                    if (
++                        !/^asset-session-http-5/.test(
++                            error?.message || ''
++                        )
++                    ) {
++                        console.info(
++                            '[asset-access] Existing session could not be reused.',
++                            error
++                        );
++                    }
++                }
++            }
++
++            return createAssetSession();
++        })()
++            .catch(error => {
++                ASSET_ACCESS_STATE.expiresAt = 0;
++                ASSET_ACCESS_STATE.mode = '';
++
++                console.warn(
++                    '[asset-access] Protected map assets are unavailable.',
++                    error
++                );
++
++                return false;
++            })
++            .finally(() => {
++                ASSET_ACCESS_STATE.pending = null;
++            });
++
++    return ASSET_ACCESS_STATE.pending;
++}
++
++function refreshAssetAccess() {
++    return ensureAssetAccess({
++        force: true
++    });
++}
++
++async function recoverAssetAccessAfterFailure() {
++    if (!isAssetGatewayEnabled()) {
++        return false;
++    }
++
++    const now = Date.now();
++
++    if (
++        now -
++            ASSET_ACCESS_STATE.lastFailureRefresh <
++        30000
++    ) {
++        return false;
++    }
++
++    ASSET_ACCESS_STATE.lastFailureRefresh = now;
++    return refreshAssetAccess();
++}
++
++async function fetchAssetResource(
++    input,
++    options = {}
++) {
++    const url =
++        new URL(
++            input,
++            document.baseURI
++        ).href;
++
++    if (!isProtectedAssetURL(url)) {
++        return fetch(
++            url,
++            options
++        );
++    }
++
++    await ensureAssetAccess();
++
++    const requestOptions = {
++        ...options,
++        credentials: 'include',
++        referrerPolicy: 'no-referrer'
++    };
++
++    let response =
++        await fetch(
++            url,
++            requestOptions
++        );
++
++    if (
++        response.status === 401 ||
++        response.status === 403
++    ) {
++        if (await refreshAssetAccess()) {
++            response =
++                await fetch(
++                    url,
++                    requestOptions
++                );
++        }
++    }
++
++    return response;
++}
++
++async function initializeAssetAccess() {
++    return ensureAssetAccess();
++}
+diff --git a/js/core/config.js b/js/core/config.js
+index 166a25534f7537a1d8c68947c2dd432cf6c0a914..9bb6333caec0827035060cb74233a49ba069cd18 100644
+--- a/js/core/config.js
++++ b/js/core/config.js
+@@ -3,6 +3,18 @@
+    ========================= */
+ 
+ const DEFAULT_APP_CONFIG = {
++    assetGateway: {
++        enabled: false,
++        origin:
++            'https://assets.wardogs-artillery.com',
++        sessionPath: '/__session',
++        turnstile: {
++            enabled: true,
++            siteKey: '',
++            action: 'asset-session'
++        }
++    },
++
+     features: {
+         sphPlatformCorrection: {
+             enabled: false
+@@ -60,6 +72,15 @@ function mergeAppConfig(base, override) {
+         ...base,
+         ...(override || {}),
+ 
++        assetGateway: {
++            ...base.assetGateway,
++            ...(override?.assetGateway || {}),
++            turnstile: {
++                ...base.assetGateway.turnstile,
++                ...(override?.assetGateway?.turnstile || {})
++            }
++        },
++
+         map: {
+             ...base.map,
+             ...(override?.map || {}),
+diff --git a/js/features/experimental-terrain-correction.js b/js/features/experimental-terrain-correction.js
+index 625974a06533e4d36d602defc99db3c809a72873..787a69ce47abd07d35020b713ad6e0c0223aace4 100644
+--- a/js/features/experimental-terrain-correction.js
++++ b/js/features/experimental-terrain-correction.js
+@@ -201,10 +201,10 @@
+     }
+ 
+     async function fetchJson(url) {
+-        const response =
+-            await fetch(
++        const response =
++            await fetchAssetResource(
+                 url
+-            );
++            );
+ 
+         if (!response.ok) {
+             throw new Error(
+@@ -235,10 +235,10 @@
+             );
+         }
+ 
+-        const response =
+-            await fetch(
++        const response =
++            await fetchAssetResource(
+                 url
+-            );
++            );
+ 
+         if (!response.ok) {
+             throw new Error(
+diff --git a/js/features/terrain-ballistics.js b/js/features/terrain-ballistics.js
+index 8456ae6e3cecbd3b24bb5995bc42193767dcb210..60c09d6d535cbfc169e32a15e8ea7ae674bb1291 100644
+--- a/js/features/terrain-ballistics.js
++++ b/js/features/terrain-ballistics.js
+@@ -309,7 +309,7 @@
+         ) {
+             try {
+                 const response =
+-                    await fetch(
++                    await fetchAssetResource(
+                         url,
+                         options
+                     );
+@@ -471,10 +471,9 @@
+     }
+ 
+     async function loadTerrainDefinition(definition) {
+-        const manifestUrl = new URL(
++        const manifestUrl = resourceURL(
+             definition.terrainManifest,
+-            document.baseURI
+-        ).href;
++        );
+ 
+         const manifest = await fetchJson(manifestUrl);
+         validateTerrainManifest(manifest, definition.mapId);
+@@ -753,10 +752,12 @@
+     }
+ 
+     function resolveChunkUrl(terrain, entry) {
+-        return new URL(
+-            entry.file,
+-            terrain.manifestUrl
+-        ).href;
++        return resourceURL(
++            new URL(
++                entry.file,
++                terrain.manifestUrl
++            ).href
++        );
+     }
+ 
+     async function loadChunk(terrain, key) {
+diff --git a/js/main.js b/js/main.js
+index 1333f9f0a6dfed52f713cf9d3aa10bf035f461d0..69a6405f70a1e9be8493d3a5326931ce883702ad 100644
+--- a/js/main.js
++++ b/js/main.js
+@@ -410,7 +410,8 @@ async function init() {
+         await Promise.all([
+             loadWeapons(),
+             loadMapAssets(),
+-            loadMaps()
++            loadMaps(),
++            initializeAssetAccess()
+         ]);
+ 
+         const sphPlatformRuntimeLoaded =
+diff --git a/js/map/tiles.js b/js/map/tiles.js
+index 083059b009ae62624925f499c44926343f0b2175..faa883ec99929cdd826b563a79c2c0de882089ea 100644
+--- a/js/map/tiles.js
++++ b/js/map/tiles.js
+@@ -287,8 +287,20 @@ function startTileRequest(tile) {
+     const image =
+         new Image();
+ 
++    const tileUrl =
++        getTileURL(
++            map,
++            zoom,
++            x,
++            y,
++            styleId
++        );
++
+     // Keep the canvas readable when tiles come from the asset CDN.
+-    image.crossOrigin = 'anonymous';
++    image.crossOrigin =
++        isProtectedAssetURL(tileUrl)
++            ? 'use-credentials'
++            : 'anonymous';
+ 
+     image.decoding =
+         'async';
+@@ -320,11 +332,17 @@ function startTileRequest(tile) {
+         };
+ 
+     image.onerror =
+-        () => {
++        async () => {
+             if (
+                 tile.attempts <
+                     TILE_REQUEST_ATTEMPTS
+             ) {
++                if (
++                    isProtectedAssetURL(tileUrl)
++                ) {
++                    await recoverAssetAccessAfterFailure();
++                }
++
+                 scheduleTileRetry(
+                     tile
+                 );
+@@ -363,14 +381,7 @@ function startTileRequest(tile) {
+             );
+         };
+ 
+-    image.src =
+-        getTileURL(
+-            map,
+-            zoom,
+-            x,
+-            y,
+-            styleId
+-        );
++    image.src = tileUrl;
+ }
+ 
+ function pumpTileLoadQueue() {
+diff --git a/package.json b/package.json
+index 1a2768587d60c7bf0346037058868966b522ba95..7881caaba90b8b60416e558aafea64d86f119907 100644
+--- a/package.json
++++ b/package.json
+@@ -1,16 +1,17 @@
+-{
+-  "name": "wardogs-artillery-calculator",
+-  "private": true,
+-  "engines": {
+-    "node": ">=22"
+-  },
+-  "scripts": {
+-    "build": "node scripts/build-pages.mjs && node scripts/sync-locales.mjs && node scripts/version-assets.mjs",
+-    "dev": "node scripts/dev-server.mjs",
+-    "build-contours": "node scripts/build-contours.mjs",
+-    "test": "npm run test:scripts",
+-    "test:scripts": "node --test scripts/lib/*.test.mjs",
+-    "test:build": "node scripts/verify-build.mjs",
+-    "check": "npm run test:scripts && npm run build && npm run test:build && npm --prefix sync test"
+-  }
+-}
++{
++  "name": "wardogs-artillery-calculator",
++  "private": true,
++  "engines": {
++    "node": ">=22"
++  },
++  "scripts": {
++    "build": "node scripts/build-pages.mjs && node scripts/sync-locales.mjs && node scripts/version-assets.mjs",
++    "dev": "node scripts/dev-server.mjs",
++    "build-contours": "node scripts/build-contours.mjs",
++    "test": "npm run test:scripts",
++    "test:scripts": "node --test scripts/lib/*.test.mjs",
++    "test:assets-gateway": "npm --prefix assets-gateway test",
++    "test:build": "node scripts/verify-build.mjs",
++    "check": "npm run test:scripts && npm run test:assets-gateway && npm run build && npm run test:build && npm --prefix sync test"
++  }
++}
+diff --git a/scripts/build-pages.mjs b/scripts/build-pages.mjs
+index 61fc8e8d2120f05da5debc48b58cdd73459fa219..7843351ece5e0dbf6ebc3d26c09e78abf4553784 100644
+--- a/scripts/build-pages.mjs
++++ b/scripts/build-pages.mjs
+@@ -119,7 +119,12 @@ async function getLanguageDefinitions() {
+ function addProductionSecurityMeta(html, appConfig) {
+     const collab = appConfig.collab || {};
+     const feedback = appConfig.feedback || {};
+-    const turnstileEnabled = collab.turnstile?.enabled === true;
++    const turnstileEnabled =
++        collab.turnstile?.enabled === true ||
++        (
++            appConfig.assetGateway?.enabled === true &&
++            appConfig.assetGateway?.turnstile?.enabled === true
++        );
+     const connectSources = new Set([
+         "'self'",
+         'https://assets.wardogs-artillery.com',
+diff --git a/scripts/lib/application-assets.mjs b/scripts/lib/application-assets.mjs
+index 9798e616c920d0f21a850a0091e38012748f982f..1ad352adb6eec6500cebc66e494f8705f13a2a67 100644
+--- a/scripts/lib/application-assets.mjs
++++ b/scripts/lib/application-assets.mjs
+@@ -18,6 +18,7 @@ const COMMON_SCRIPT_FILES = Object.freeze([
+     'js/core/core.js',
+     'js/core/resources.js',
+     'js/core/config.js',
++    'js/core/asset-access.js',
+     'js/core/analytics.js',
+     'js/core/file-transfer.js',
+     'js/ui/i18n.js',
+diff --git a/src/pages/index.html b/src/pages/index.html
+index 8b9ba03295ee3fb20326e02919af8c3a828cbcfc..34a4d8e44e48cdb04cdbe52a53ce4e91159eec9c 100644
+--- a/src/pages/index.html
++++ b/src/pages/index.html
+@@ -278,6 +278,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/cat.html b/src/pages/locales/cat.html
+index 1d22a00cc0fa3df9b0534a5aff9211436e787db2..c0b5baed9a5e18af55182a5e0e494ab6a384963c 100644
+--- a/src/pages/locales/cat.html
++++ b/src/pages/locales/cat.html
+@@ -228,6 +228,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/cs.html b/src/pages/locales/cs.html
+index a5da2f7f5339749782b17f829258d7cb3296d48a..a7a3c7d117d743be80510bceadbb1655b2496937 100644
+--- a/src/pages/locales/cs.html
++++ b/src/pages/locales/cs.html
+@@ -279,6 +279,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/de.html b/src/pages/locales/de.html
+index 48afeaa5cb8a6df88dde408f9dc5afd4de15990e..1864ce5709358d3d1b9ae28ba77172b81fb953bb 100644
+--- a/src/pages/locales/de.html
++++ b/src/pages/locales/de.html
+@@ -228,6 +228,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/es.html b/src/pages/locales/es.html
+index 2faa0ab2976789f0ded1652e2be74ca3eef911ea..25e1f10a94508c8cd9d7d4058a53ff87ba5ead9c 100644
+--- a/src/pages/locales/es.html
++++ b/src/pages/locales/es.html
+@@ -228,6 +228,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/fr.html b/src/pages/locales/fr.html
+index 3b9c2e59a21f3417b8a3ad1203e3d0719eda9d0f..95c6ddaeeb76aae28d49840ee8b7ac6c57ea07b8 100644
+--- a/src/pages/locales/fr.html
++++ b/src/pages/locales/fr.html
+@@ -228,6 +228,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/ja.html b/src/pages/locales/ja.html
+index fc5e4c02f827f787e28e2348c03900f019e8234a..556b63406b6b91d53f9d81a8d5e99ae5906e7d4a 100644
+--- a/src/pages/locales/ja.html
++++ b/src/pages/locales/ja.html
+@@ -228,6 +228,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/ko.html b/src/pages/locales/ko.html
+index f146a86ca71de03e875a86181bce8149786cdb38..f9ebe6b83cdadeff2e6221ad0ee4737c6886276c 100644
+--- a/src/pages/locales/ko.html
++++ b/src/pages/locales/ko.html
+@@ -228,6 +228,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/pl.html b/src/pages/locales/pl.html
+index 3cb1da49512271ab496c4d139787cbdb3ca55ab6..9cda7fda5443f3112e11b56df8d0d05cc6392ae3 100644
+--- a/src/pages/locales/pl.html
++++ b/src/pages/locales/pl.html
+@@ -228,6 +228,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/pt.html b/src/pages/locales/pt.html
+index 98e4fdd030960994fa8b9f126fbfb0ccb3f7a1cf..8ae9e4cdb8a6ddee9ee41fd1a604435575758202 100644
+--- a/src/pages/locales/pt.html
++++ b/src/pages/locales/pt.html
+@@ -228,6 +228,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/ru.html b/src/pages/locales/ru.html
+index bf555ba91afd2b2e9c31090a1dae3b926baad2bf..0b145d5e88e776f336a4681f5e9e113d918c6299 100644
+--- a/src/pages/locales/ru.html
++++ b/src/pages/locales/ru.html
+@@ -228,6 +228,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/uk.html b/src/pages/locales/uk.html
+index a2e04749e78af7dd1ac7a2779b33ac3809661c89..85d9d8fcf733654220222b6c66c5f8d90fc299a8 100644
+--- a/src/pages/locales/uk.html
++++ b/src/pages/locales/uk.html
+@@ -228,6 +228,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/locales/zh-cn.html b/src/pages/locales/zh-cn.html
+index b46102f1baea032d07cd4612afaa6e3bc9fa2475..d2df1f4847816c8577b4557f44cf037b4f56da8e 100644
+--- a/src/pages/locales/zh-cn.html
++++ b/src/pages/locales/zh-cn.html
+@@ -279,6 +279,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
+diff --git a/src/pages/mobile/index.html b/src/pages/mobile/index.html
+index 606ad2c3c11dff58a530a2e54b89ab800ac64bfd..f17c274b37b4e79cb191b8851df8c369ff9a6d37 100644
+--- a/src/pages/mobile/index.html
++++ b/src/pages/mobile/index.html
+@@ -235,6 +235,7 @@
+ <script src="js/core/core.js"></script>
+ <script src="js/core/resources.js"></script>
+ <script src="js/core/config.js"></script>
++<script src="js/core/asset-access.js"></script>
+ <script src="js/core/analytics.js"></script>
+ <script src="js/core/file-transfer.js"></script>
+ <script src="js/ui/i18n.js"></script>
