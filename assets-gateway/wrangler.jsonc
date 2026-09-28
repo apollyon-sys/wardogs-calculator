@@ -1,101 +1,101 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "wardogs-assets-gateway",
-  "main": "src/index.mjs",
-  "compatibility_date": "2026-04-07",
-  "workers_dev": false,
-  "preview_urls": false,
-  "routes": [
-    {
-      "pattern": "assets.wardogs-artillery.com",
-      "custom_domain": true
-    }
-  ],
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 0.01
-  },
-  "r2_buckets": [
-    {
-      "binding": "ASSETS",
-      "bucket_name": "wardogs-assets"
-    }
-  ],
-  "vars": {
-    "ALLOWED_ORIGINS": "https://wardogs-artillery.com",
-    "DEVELOPMENT_ORIGINS": "http://localhost:8000,http://127.0.0.1:8000",
-    "PROTECTED_PREFIX": "/releases/assets-v1/",
-    "ENFORCE_SESSIONS": "true",
-    "SESSION_LIFETIME_SECONDS": "1200",
-    "TURNSTILE_HOSTNAME": "wardogs-artillery.com",
-    "TURNSTILE_ACTION": "asset-session",
-    "FALLBACK_COUNTRIES": "CN,RU",
-    "EDGE_CACHE_SECONDS": "2592000",
-    "REQUEST_POLICY_ENABLED": "true",
-    "REQUEST_HOLD_SECONDS": "600"
-  },
-  "kv_namespaces": [
-    {
-      "binding": "REQUEST_STATE",
-      "id": "REPLACE_WITH_REQUEST_STATE_NAMESPACE_ID"
-    }
-  ],
-  "ratelimits": [
-    {
-      "name": "SESSION_RATE",
-      "namespace_id": "73201",
-      "simple": {
-        "limit": 60,
-        "period": 60
-      }
-    },
-    {
-      "name": "ASSET_SESSION_RATE",
-      "namespace_id": "73202",
-      "simple": {
-        "limit": 1000,
-        "period": 60
-      }
-    },
-    {
-      "name": "ASSET_RESTRICTED_RATE",
-      "namespace_id": "73203",
-      "simple": {
-        "limit": 240,
-        "period": 60
-      }
-    },
-    {
-      "name": "ASSET_IP_RATE",
-      "namespace_id": "73204",
-      "simple": {
-        "limit": 3000,
-        "period": 60
-      }
-    },
-    {
-      "name": "ASSET_WINDOW_RATE",
-      "namespace_id": "73205",
-      "simple": {
-        "limit": 320,
-        "period": 60
-      }
-    },
-    {
-      "name": "ASSET_CONTEXT_RATE",
-      "namespace_id": "73206",
-      "simple": {
-        "limit": 24,
-        "period": 60
-      }
-    },
-    {
-      "name": "ASSET_SEQUENCE_RATE",
-      "namespace_id": "73207",
-      "simple": {
-        "limit": 20,
-        "period": 10
-      }
-    }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "wardogs-assets-gateway",
+	"main": "src/index.mjs",
+	"compatibility_date": "2026-04-07",
+	"workers_dev": false,
+	"preview_urls": false,
+	"routes": [
+		{
+			"pattern": "assets.wardogs-artillery.com",
+			"custom_domain": true
+		}
+	],
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 0.01
+	},
+	"r2_buckets": [
+		{
+			"binding": "ASSETS",
+			"bucket_name": "wardogs-assets"
+		}
+	],
+	"vars": {
+		"ALLOWED_ORIGINS": "https://wardogs-artillery.com",
+		"DEVELOPMENT_ORIGINS": "http://localhost:8000,http://127.0.0.1:8000",
+		"PROTECTED_PREFIX": "/releases/assets-v1/",
+		"ENFORCE_SESSIONS": "true",
+		"SESSION_LIFETIME_SECONDS": "1200",
+		"TURNSTILE_HOSTNAME": "wardogs-artillery.com",
+		"TURNSTILE_ACTION": "asset-session",
+		"FALLBACK_COUNTRIES": "CN,RU",
+		"EDGE_CACHE_SECONDS": "2592000",
+		"REQUEST_POLICY_ENABLED": "true",
+		"REQUEST_HOLD_SECONDS": "600"
+	},
+	"kv_namespaces": [
+		{
+			"binding": "REQUEST_STATE",
+			"id": "37c969a08ef941558a1443ec546f1c8a"
+		}
+	],
+	"ratelimits": [
+		{
+			"name": "SESSION_RATE",
+			"namespace_id": "73201",
+			"simple": {
+				"limit": 60,
+				"period": 60
+			}
+		},
+		{
+			"name": "ASSET_SESSION_RATE",
+			"namespace_id": "73202",
+			"simple": {
+				"limit": 1000,
+				"period": 60
+			}
+		},
+		{
+			"name": "ASSET_RESTRICTED_RATE",
+			"namespace_id": "73203",
+			"simple": {
+				"limit": 240,
+				"period": 60
+			}
+		},
+		{
+			"name": "ASSET_IP_RATE",
+			"namespace_id": "73204",
+			"simple": {
+				"limit": 3000,
+				"period": 60
+			}
+		},
+		{
+			"name": "ASSET_WINDOW_RATE",
+			"namespace_id": "73205",
+			"simple": {
+				"limit": 320,
+				"period": 60
+			}
+		},
+		{
+			"name": "ASSET_CONTEXT_RATE",
+			"namespace_id": "73206",
+			"simple": {
+				"limit": 24,
+				"period": 60
+			}
+		},
+		{
+			"name": "ASSET_SEQUENCE_RATE",
+			"namespace_id": "73207",
+			"simple": {
+				"limit": 20,
+				"period": 10
+			}
+		}
+	]
 }
