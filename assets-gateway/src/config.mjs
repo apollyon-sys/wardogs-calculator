@@ -100,6 +100,15 @@ export function settings(env = {}) {
                 60,
                 31536000
             ),
+        requestPolicyEnabled:
+            env.REQUEST_POLICY_ENABLED !== 'false',
+        requestHoldSeconds:
+            integer(
+                env.REQUEST_HOLD_SECONDS,
+                600,
+                60,
+                3600
+            ),
         turnstileHostname:
             String(
                 env.TURNSTILE_HOSTNAME ||

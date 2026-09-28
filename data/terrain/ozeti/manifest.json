@@ -25,6 +25,13 @@
   },
   "coordinateMappingEvidence": "Absolute Y sign corrected 2026-08-24 after top-view production tile overlay on the verified Bakurani reference showed Terrain3D mirrored along game Y. Chunk-local row-major orientation and inter-chunk seams remain unchanged.",
   "chunks": {
+    "-1,0": {
+      "file": "chunks/-1_0.bin",
+      "bytes": 522242,
+      "minLocalZ": -93.078125,
+      "maxLocalZ": -76.203125,
+      "sha256": "bbcddec4fdc4604407b2d724a4e3ee73c2a46c50b40f2f0df3f7376df107062c"
+    },
     "0,0": {
       "file": "chunks/0_0.bin",
       "bytes": 522242,
@@ -1816,6 +1823,13 @@
       "minLocalZ": -90.1171875,
       "maxLocalZ": -62.921875,
       "sha256": "19d87cadaedf48ec8caebd3db838989e17d947d65b31a1ec673fb7ddf2cd2124"
+    },
+    "16,15": {
+      "file": "chunks/16_15.bin",
+      "bytes": 522242,
+      "minLocalZ": -89.75,
+      "maxLocalZ": -63.125,
+      "sha256": "b3e496e4a60afb784d6d163dc929f72b74e7e3854f8bcf7ed6e3d66832c5b4c9"
     }
   }
 }

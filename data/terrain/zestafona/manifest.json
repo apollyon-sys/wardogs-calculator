@@ -25,6 +25,13 @@
   },
   "coordinateMappingEvidence": "",
   "chunks": {
+    "-1,0": {
+      "file": "chunks/-1_0.bin",
+      "bytes": 522242,
+      "minLocalZ": -199.015625,
+      "maxLocalZ": -149.234375,
+      "sha256": "64574964b4c216724b17f8e9bc8fe450c68ed467cdfd43830fb74840c1684b1f"
+    },
     "0,0": {
       "file": "chunks/0_0.bin",
       "bytes": 522242,
@@ -1816,6 +1823,13 @@
       "minLocalZ": -175.6015625,
       "maxLocalZ": -118.4296875,
       "sha256": "1df862866fe35ab8a848e2a6ac3be6b77100a3f8a712954bca67ca3006a23763"
+    },
+    "16,15": {
+      "file": "chunks/16_15.bin",
+      "bytes": 522242,
+      "minLocalZ": -176.125,
+      "maxLocalZ": -119.0,
+      "sha256": "c9b982ea4222e52094d662e25af26c91928036d12dcf11a59429bbcbce66cb4a"
     }
   }
 }

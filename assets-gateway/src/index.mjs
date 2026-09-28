@@ -7,6 +7,15 @@ import {
 import {
     validateTurnstile
 } from './turnstile.mjs';
+import {
+    hasBrowserRequestContext,
+    holdClient,
+    isAddressHeldAtAdmission,
+    isClientHeld,
+    isCoverageBoundaryPath,
+    requestLogId,
+    sequenceRateKeys
+} from './request-policy.mjs';
 
 const SESSION_PATH = '/__session';
 const SESSION_COOKIE =
@@ -69,6 +78,20 @@ function plain(message, status, origin, extra = {}) {
                 'Cache-Control': 'no-store',
                 ...extra
             }
+        }
+    );
+}
+
+function blocked(origin, seconds) {
+    return json(
+        {
+            error: 'rate-limited'
+        },
+        429,
+        origin,
+        {
+            'Retry-After':
+                String(seconds)
         }
     );
 }
@@ -213,6 +236,18 @@ async function handleSession(
             request.cf?.country ||
             ''
         ).toUpperCase();
+
+    if (
+        await isAddressHeldAtAdmission(
+            env,
+            ip
+        )
+    ) {
+        return blocked(
+            origin,
+            config.requestHoldSeconds
+        );
+    }
 
     if (
         !['GET', 'POST'].includes(
@@ -533,6 +568,53 @@ async function handleAsset(
             'CF-Connecting-IP'
         ) || 'local';
 
+    if (
+        await isClientHeld(
+            env,
+            session.id,
+            ip
+        )
+    ) {
+        return blocked(
+            origin,
+            config.requestHoldSeconds
+        );
+    }
+
+    if (
+        config.requestPolicyEnabled &&
+        isCoverageBoundaryPath(
+            url.pathname,
+            config.protectedPrefix
+        )
+    ) {
+        await holdClient(
+            env,
+            session.id,
+            ip,
+            config.requestHoldSeconds
+        );
+
+        console.warn(
+            '[assets-gateway-policy]',
+            JSON.stringify({
+                code: 'P01',
+                actor:
+                    await requestLogId(ip),
+                path: url.pathname,
+                country:
+                    request.cf?.country || '',
+                colo:
+                    request.cf?.colo || ''
+            })
+        );
+
+        return blocked(
+            origin,
+            config.requestHoldSeconds
+        );
+    }
+
     const sessionRate =
         session.mode === 'restricted'
             ? requireBinding(
@@ -546,23 +628,119 @@ async function handleAsset(
                 config.development
             );
 
-    const [sessionAllowed, ipAllowed] =
-        await Promise.all([
-            allowedBy(
-                sessionRate,
-                session.id
+    const sequenceKeys =
+        sequenceRateKeys(
+            url.pathname,
+            config.protectedPrefix,
+            session.id
+        );
+
+    const reducedContext =
+        !hasBrowserRequestContext(
+            request,
+            config.development
+        );
+
+    const sequenceRate =
+        requireBinding(
+            env,
+            'ASSET_SEQUENCE_RATE',
+            config.development
+        );
+
+    const checks = [
+        allowedBy(
+            sessionRate,
+            session.id
+        ),
+        allowedBy(
+            requireBinding(
+                env,
+                'ASSET_IP_RATE',
+                config.development
             ),
-            allowedBy(
+            ip
+        ),
+        allowedBy(
+            requireBinding(
+                env,
+                'ASSET_WINDOW_RATE',
+                config.development
+            ),
+            session.id
+        ),
+        reducedContext
+            ? allowedBy(
                 requireBinding(
                     env,
-                    'ASSET_IP_RATE',
+                    'ASSET_CONTEXT_RATE',
                     config.development
                 ),
-                ip
+                session.id
             )
+            : Promise.resolve(true),
+        ...sequenceKeys.map(key =>
+            allowedBy(
+                sequenceRate,
+                key
+            )
+        )
+    ];
+
+    const [
+        sessionAllowed,
+        ipAllowed,
+        windowAllowed,
+        contextAllowed,
+        ...sequenceAllowed
+    ] =
+        await Promise.all([
+            ...checks
         ]);
 
-    if (!sessionAllowed || !ipAllowed) {
+    const sequenceBlocked =
+        sequenceAllowed.some(
+            allowed => !allowed
+        );
+
+    if (!contextAllowed || sequenceBlocked) {
+        const code =
+            !contextAllowed
+                ? 'P02'
+                : 'P03';
+
+        await holdClient(
+            env,
+            session.id,
+            ip,
+            config.requestHoldSeconds
+        );
+
+        console.warn(
+            '[assets-gateway-policy]',
+            JSON.stringify({
+                code,
+                actor:
+                    await requestLogId(ip),
+                path: url.pathname,
+                country:
+                    request.cf?.country || '',
+                colo:
+                    request.cf?.colo || ''
+            })
+        );
+
+        return blocked(
+            origin,
+            config.requestHoldSeconds
+        );
+    }
+
+    if (
+        !sessionAllowed ||
+        !ipAllowed ||
+        !windowAllowed
+    ) {
         return json(
             {
                 error: 'rate-limited'

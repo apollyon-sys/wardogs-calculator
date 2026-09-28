@@ -30,8 +30,16 @@
     "TURNSTILE_HOSTNAME": "wardogs-artillery.com",
     "TURNSTILE_ACTION": "asset-session",
     "FALLBACK_COUNTRIES": "CN,RU",
-    "EDGE_CACHE_SECONDS": "2592000"
+    "EDGE_CACHE_SECONDS": "2592000",
+    "REQUEST_POLICY_ENABLED": "true",
+    "REQUEST_HOLD_SECONDS": "600"
   },
+  "kv_namespaces": [
+    {
+      "binding": "REQUEST_STATE",
+      "id": "REPLACE_WITH_REQUEST_STATE_NAMESPACE_ID"
+    }
+  ],
   "ratelimits": [
     {
       "name": "SESSION_RATE",
@@ -63,6 +71,30 @@
       "simple": {
         "limit": 3000,
         "period": 60
+      }
+    },
+    {
+      "name": "ASSET_WINDOW_RATE",
+      "namespace_id": "73205",
+      "simple": {
+        "limit": 320,
+        "period": 60
+      }
+    },
+    {
+      "name": "ASSET_CONTEXT_RATE",
+      "namespace_id": "73206",
+      "simple": {
+        "limit": 24,
+        "period": 60
+      }
+    },
+    {
+      "name": "ASSET_SEQUENCE_RATE",
+      "namespace_id": "73207",
+      "simple": {
+        "limit": 20,
+        "period": 10
       }
     }
   ]
