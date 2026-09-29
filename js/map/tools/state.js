@@ -8,7 +8,7 @@ const MAP_TOOLS_STORAGE_KEY =
 const MAP_TOOLS_EXPORT_TYPE =
     'wardogs-map-changes';
 
-const MAP_TOOLS_EXPORT_VERSION = 2;
+const MAP_TOOLS_EXPORT_VERSION = 3;
 
 const MAP_TOOLS_IMPORT_LIMITS = {
     drawings: 2000,
@@ -30,10 +30,30 @@ const MAP_TOOL_COLORS = [
     { id: 'inactive', color: '#59636b', titleKey: 'mapToolColorInactive' }
 ];
 
+const MAP_TOOL_MARKER_COLORS = [
+    { id: 'blue', color: '#5fa8d3', titleKey: 'mapToolMarkerColorBlue' },
+    { id: 'red', color: '#d86666', titleKey: 'mapToolMarkerColorRed' },
+    { id: 'green', color: '#82c596', titleKey: 'mapToolMarkerColorGreen' }
+];
+
+function normalizeMapToolMarkerColor(value) {
+    const color =
+        typeof value === 'string'
+            ? value.toLowerCase()
+            : '';
+
+    return MAP_TOOL_MARKER_COLORS.some(
+        item => item.color === color
+    )
+        ? color
+        : null;
+}
+
 const MAP_TOOL_STATE = {
     tool: null,
     pencilColor: '#d7a452',
     selectedMarkerIcon: null,
+    selectedMarkerColor: '#5fa8d3',
 
     rulerStart: null,
     rulerEnd: null,
@@ -495,12 +515,20 @@ function normalizeImportedMapToolMarker(marker) {
         return null;
     }
 
+    const color =
+        asset.colorable
+            ? normalizeMapToolMarkerColor(
+                marker.color
+            )
+            : null;
+
     return {
         id: mapToolId(),
         mapId: importedMapId(marker.mapId),
         icon: marker.icon,
         x: Number(marker.x),
-        y: Number(marker.y)
+        y: Number(marker.y),
+        ...(color ? { color } : {})
     };
 }
 

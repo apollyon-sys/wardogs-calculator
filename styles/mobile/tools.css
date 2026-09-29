@@ -141,6 +141,17 @@
     height: 44px;
 }
 
+.mobile-app .map-tool-marker-colors {
+    grid-template-columns: minmax(0, 1fr) repeat(3, 32px);
+}
+
+.mobile-app .map-tool-marker-color {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
+}
+
 .mobile-app.mobile-sheet-open .map-tools {
     opacity: .18;
     transform: translateX(8px);

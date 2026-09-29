@@ -363,13 +363,23 @@ function drawMapToolMarker(item) {
     const height =
         asset.height;
 
+    const source =
+        getMarkerImageSource(
+            asset,
+            item.color
+        );
+
+    if (!source) {
+        return;
+    }
+
     ctx.save();
 
     ctx.filter =
         getMapIconCanvasFilter();
 
     ctx.drawImage(
-        entry.image,
+        source,
         pos.x - width * asset.anchorX,
         pos.y - height * asset.anchorY,
         width,

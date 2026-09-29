@@ -1034,6 +1034,18 @@ function handlePresetMarkerTargetMouseDown(
     );
 }
 
+function getPresetTargetCoordinateTolerance() {
+    const coordinatePrecision =
+        getCoordinateMetersPerUnit() === 100
+            ? 100
+            : 1000;
+
+    return (
+        0.5 / coordinatePrecision +
+        1e-9
+    );
+}
+
 function getPresetMarkerSelectionProgress(
     item,
     index
@@ -1052,17 +1064,26 @@ function getPresetMarkerSelectionProgress(
         return null;
     }
 
+    /*
+     * clamp() stores coordinates at the precision exposed by the current
+     * map. Zestafona tower coordinates contain additional source decimals,
+     * so compare within half one editable coordinate step instead of using
+     * a fixed tolerance that only works for already-rounded map data.
+     */
+    const targetTolerance =
+        getPresetTargetCoordinateTolerance();
+
     const targetMatches =
         Math.abs(
             S.target.x -
             storedMetersToWorldCoordinate(item.x)
-        ) <
-        0.0005 &&
+        ) <=
+        targetTolerance &&
         Math.abs(
             S.target.y -
             storedMetersToWorldCoordinate(item.y)
-        ) <
-        0.0005;
+        ) <=
+        targetTolerance;
 
     if (!targetMatches) {
 
@@ -1375,8 +1396,19 @@ function drawMarkerImage(
     ctx.filter =
         getMapIconCanvasFilter();
 
+    const source =
+        getMarkerImageSource(
+            asset,
+            item.color
+        );
+
+    if (!source) {
+        ctx.restore();
+        return null;
+    }
+
     ctx.drawImage(
-        imageEntry.image,
+        source,
         left,
         top,
         drawWidth,

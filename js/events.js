@@ -2,6 +2,136 @@
    EVENTS
    ========================= */
 
+const MAP_PAN_INERTIA_MIN_SPEED =
+    0.32;
+
+const MAP_PAN_INERTIA_MAX_SPEED =
+    2.4;
+
+const MAP_PAN_INERTIA_DECAY =
+    0.90;
+
+let mapPanInertiaFrame =
+    null;
+
+function normalizeMapPanInertiaVelocity(
+    velocityX,
+    velocityY
+) {
+    const x = Number(velocityX);
+    const y = Number(velocityY);
+
+    if (
+        !Number.isFinite(x) ||
+        !Number.isFinite(y)
+    ) {
+        return null;
+    }
+
+    const speed =
+        Math.hypot(x, y);
+
+    if (speed < MAP_PAN_INERTIA_MIN_SPEED) {
+        return null;
+    }
+
+    const scale =
+        speed > MAP_PAN_INERTIA_MAX_SPEED
+            ? MAP_PAN_INERTIA_MAX_SPEED / speed
+            : 1;
+
+    return {
+        x: x * scale,
+        y: y * scale
+    };
+}
+
+function stopMapPanInertia() {
+    if (mapPanInertiaFrame !== null) {
+        cancelAnimationFrame(
+            mapPanInertiaFrame
+        );
+
+        mapPanInertiaFrame = null;
+    }
+}
+
+function startMapPanInertia(
+    velocityX,
+    velocityY
+) {
+    stopMapPanInertia();
+
+    if (
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia(
+            '(prefers-reduced-motion: reduce)'
+        ).matches
+    ) {
+        return false;
+    }
+
+    const velocity =
+        normalizeMapPanInertiaVelocity(
+            velocityX,
+            velocityY
+        );
+
+    if (!velocity) {
+        return false;
+    }
+
+    let lastFrame =
+        performance.now();
+
+    const tick = now => {
+        const elapsed =
+            Math.min(
+                32,
+                Math.max(
+                    0,
+                    now - lastFrame
+                )
+            );
+
+        lastFrame = now;
+
+        S.panX +=
+            velocity.x * elapsed;
+
+        S.panY +=
+            velocity.y * elapsed;
+
+        const decay =
+            Math.pow(
+                MAP_PAN_INERTIA_DECAY,
+                elapsed / (1000 / 60)
+            );
+
+        velocity.x *= decay;
+        velocity.y *= decay;
+
+        draw();
+
+        if (
+            Math.hypot(
+                velocity.x,
+                velocity.y
+            ) >= 0.02
+        ) {
+            mapPanInertiaFrame =
+                requestAnimationFrame(tick);
+        } else {
+            mapPanInertiaFrame = null;
+        }
+    };
+
+    mapPanInertiaFrame =
+        requestAnimationFrame(tick);
+
+    return true;
+}
+
 function bindThemeToggle() {
 
     const toggle =
@@ -175,6 +305,8 @@ function bindEvents() {
     $('mapSelect').addEventListener(
         'change',
         () => {
+            stopMapPanInertia();
+
             if (lobby?.active) { $('mapSelect').value = S.map; return; }
 
             const key =
@@ -392,6 +524,7 @@ function bindEvents() {
     $('zoomIn')?.addEventListener(
         'click',
         () => {
+            stopMapPanInertia();
 
             S.zoom =
                 Math.min(
@@ -407,6 +540,7 @@ function bindEvents() {
     $('zoomOut')?.addEventListener(
         'click',
         () => {
+            stopMapPanInertia();
 
             S.zoom =
                 Math.max(
@@ -422,6 +556,7 @@ function bindEvents() {
     $('fit')?.addEventListener(
         'click',
         () => {
+            stopMapPanInertia();
 
             S.zoom =
                 1;
@@ -511,6 +646,8 @@ function bindEvents() {
 
             e.preventDefault();
 
+            stopMapPanInertia();
+
             const rect =
                 c.getBoundingClientRect();
 
@@ -542,7 +679,20 @@ function bindEvents() {
                     S.panX,
 
                     originY:
-                    S.panY
+                    S.panY,
+
+                    lastX:
+                    e.clientX,
+
+                    lastY:
+                    e.clientY,
+
+                    lastTime:
+                    performance.now(),
+
+                    velocityX: 0,
+                    velocityY: 0,
+                    moved: false
                 };
 
                 $('cursorCoords')
@@ -639,6 +789,45 @@ function bindEvents() {
         e => {
 
             if (pan) {
+
+                const now =
+                    performance.now();
+
+                const elapsed =
+                    Math.max(
+                        1,
+                        now - pan.lastTime
+                    );
+
+                const deltaX =
+                    e.clientX - pan.lastX;
+
+                const deltaY =
+                    e.clientY - pan.lastY;
+
+                pan.velocityX =
+                    pan.velocityX * 0.35 +
+                    deltaX / elapsed * 0.65;
+
+                pan.velocityY =
+                    pan.velocityY * 0.35 +
+                    deltaY / elapsed * 0.65;
+
+                pan.lastX =
+                    e.clientX;
+
+                pan.lastY =
+                    e.clientY;
+
+                pan.lastTime =
+                    now;
+
+                pan.moved =
+                    pan.moved ||
+                    Math.hypot(
+                        e.clientX - pan.startX,
+                        e.clientY - pan.startY
+                    ) >= 3;
 
                 S.panX =
                     pan.originX +
@@ -757,8 +946,18 @@ function bindEvents() {
             drag =
                 null;
 
+            const releasedPan =
+                pan;
+
             pan =
                 null;
+
+            if (releasedPan?.moved) {
+                startMapPanInertia(
+                    releasedPan.velocityX,
+                    releasedPan.velocityY
+                );
+            }
         }
     );
 
@@ -767,6 +966,8 @@ function bindEvents() {
         e => {
 
             e.preventDefault();
+
+            stopMapPanInertia();
 
             const rect =
                 c.getBoundingClientRect();
@@ -884,5 +1085,10 @@ function bindEvents() {
     window.addEventListener(
         'resize',
         resize
+    );
+
+    window.addEventListener(
+        'blur',
+        stopMapPanInertia
     );
 }

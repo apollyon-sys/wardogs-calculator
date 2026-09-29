@@ -213,10 +213,6 @@ function handleMobilePointerDown(event) {
         return;
     }
 
-    closeMapToolMenus();
-
-    const world = toWorld(point.x, point.y);
-
     /*
      * An armed impact pick must not start a tool or marker gesture; the tap
      * resolves in finishMobileTap and a drag still pans the map.
@@ -224,6 +220,17 @@ function handleMobilePointerDown(event) {
     const fireAdjustmentPick =
         typeof isFireAdjustmentPickArmed === 'function' &&
         isFireAdjustmentPickArmed();
+
+    closeMapToolMenus(
+        null,
+        {
+            /* The following map tap is the armed impact selection. */
+            preserveFireAdjustment:
+                fireAdjustmentPick
+        }
+    );
+
+    const world = toWorld(point.x, point.y);
 
     if (
         !fireAdjustmentPick &&

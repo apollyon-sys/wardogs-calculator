@@ -44,6 +44,20 @@ test('collection, geometry, duplicate and byte limits', () => {
     assert.throws(() => P.normalizeDocument({ ...document(), zones: [{ id: 'z', mapId: 'bakurani', color: '#d7a452', x: 1, y: 2, radius: -1 }] }), /bad-coordinate/);
     assert.throws(() => P.normalizeDocument({ ...document(), savedTargets: [{ id: 't', name: '\u0001', x: 1, y: 2 }] }), /bad-name/);
     assert.throws(() => P.normalizeDocument({ ...document(), markers: [{ ...marker('a'), mapId: 'custom' }] }), /wrong-map/);
+    assert.deepEqual(
+        P.normalizeDocument({
+            ...document(),
+            markers: [{ ...marker('blue'), color: '#5FA8D3' }]
+        }).markers[0],
+        { ...marker('blue'), color: '#5fa8d3' }
+    );
+    assert.throws(
+        () => P.normalizeDocument({
+            ...document(),
+            markers: [{ ...marker('bad-color'), color: '#ffffff' }]
+        }),
+        /bad-marker-color/
+    );
     const drawing = i => ({ id: `d${i}`, mapId: 'bakurani', color: '#d7a452', points: Array.from({ length: 2048 }, () => ({ x: 123.123456, y: 456.123456 })) });
     assert.throws(() => P.normalizeDocument({ ...document(), drawings: [drawing(1), drawing(2)] }), /room-too-large/);
 });

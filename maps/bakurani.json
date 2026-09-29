@@ -28,39 +28,39 @@
   "markers": [
     {
       "icon": "tower",
-      "x": 8364,
-      "y": 7285,
+      "x": 8361,
+      "y": 7284,
       "label": "Tower 4",
       "minZoom": 0.4,
       "maxZoom": 100
     },
     {
       "icon": "tower",
-      "x": 7719,
-      "y": 7344,
+      "x": 7716,
+      "y": 7343,
       "label": "Tower 3",
       "minZoom": 0.4,
       "maxZoom": 100
     },
     {
       "icon": "tower",
-      "x": 7719,
-      "y": 7000,
+      "x": 7717,
+      "y": 6999,
       "label": "Tower 2",
       "minZoom": 0.4,
       "maxZoom": 100
     },
     {
       "icon": "tower",
-      "x": 8052,
-      "y": 6985,
+      "x": 8049,
+      "y": 6984,
       "label": "Tower 1",
       "minZoom": 0.4,
       "maxZoom": 100
     },
     {
       "icon": "tower",
-      "x": 8222,
+      "x": 8220,
       "y": 6841,
       "label": "Tower 5",
       "minZoom": 0.4,

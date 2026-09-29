@@ -24,7 +24,23 @@ function createContext() {
             setItem: () => {}
         },
         S: { map: 'bakurani' },
-        getMarkerAsset: icon => icon === 'valid' ? { placeable: true } : null
+        getMarkerAsset: icon => {
+            if (icon === 'valid') {
+                return {
+                    placeable: true,
+                    colorable: true
+                };
+            }
+
+            if (icon === 'plain') {
+                return {
+                    placeable: true,
+                    colorable: false
+                };
+            }
+
+            return null;
+        }
     });
 
     vm.runInContext(source, context);
@@ -54,7 +70,8 @@ test('map tool import normalization sanitizes every supported collection', () =>
                 points: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 0, y: 1 }]
             }],
             markers: [
-                { icon: 'valid', x: 5, y: 6 },
+                { icon: 'valid', color: '#5FA8D3', x: 5, y: 6 },
+                { icon: 'plain', color: '#d86666', x: 6, y: 7 },
                 { icon: 'blocked', x: 7, y: 8 }
             ],
             layers: { grid: false, drawings: true, unknown: false }
@@ -70,7 +87,9 @@ test('map tool import normalization sanitizes every supported collection', () =>
     );
     assert.equal(result.zones.length, 1);
     assert.equal(result.polygons.length, 1);
-    assert.equal(result.markers.length, 1);
+    assert.equal(result.markers.length, 2);
+    assert.equal(result.markers[0].color, '#5fa8d3');
+    assert.equal('color' in result.markers[1], false);
     assert.deepEqual(
         structuredClone(result.layers),
         { grid: false, drawings: true }

@@ -2,6 +2,9 @@
    MAP ASSETS
    ========================= */
 
+const MARKER_TINT_CACHE =
+    new Map();
+
 function normalizeMarkerAsset(
     id,
     asset
@@ -23,7 +26,8 @@ function normalizeMarkerAsset(
             height: 32,
             anchorX: 0.5,
             anchorY: 0.5,
-            placeable: true
+            placeable: true,
+            colorable: false
         };
     }
 
@@ -83,7 +87,10 @@ function normalizeMarkerAsset(
                 : 0.5,
 
         placeable:
-            asset.placeable !== false
+            asset.placeable !== false,
+
+        colorable:
+            asset.colorable === true
     };
 }
 
@@ -263,6 +270,89 @@ function loadMarkerImage(asset) {
     );
 
     return entry;
+}
+
+function getMarkerImageSource(
+    asset,
+    color = null
+) {
+    const entry =
+        loadMarkerImage(asset);
+
+    if (
+        !entry ||
+        !entry.loaded ||
+        entry.failed
+    ) {
+        return null;
+    }
+
+    const tint =
+        asset.colorable &&
+        typeof color === 'string' &&
+        /^#[0-9a-f]{6}$/i.test(color)
+            ? color.toLowerCase()
+            : null;
+
+    if (!tint) {
+        return entry.image;
+    }
+
+    const key =
+        `${asset.path}|${tint}`;
+
+    if (MARKER_TINT_CACHE.has(key)) {
+        return MARKER_TINT_CACHE.get(key);
+    }
+
+    const canvas =
+        document.createElement('canvas');
+
+    canvas.width =
+        entry.image.naturalWidth ||
+        Math.ceil(asset.width);
+
+    canvas.height =
+        entry.image.naturalHeight ||
+        Math.ceil(asset.height);
+
+    const tintContext =
+        canvas.getContext('2d');
+
+    if (!tintContext) {
+        return entry.image;
+    }
+
+    tintContext.drawImage(
+        entry.image,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    tintContext.globalCompositeOperation =
+        'source-atop';
+
+    tintContext.globalAlpha =
+        0.82;
+
+    tintContext.fillStyle =
+        tint;
+
+    tintContext.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    MARKER_TINT_CACHE.set(
+        key,
+        canvas
+    );
+
+    return canvas;
 }
 
 

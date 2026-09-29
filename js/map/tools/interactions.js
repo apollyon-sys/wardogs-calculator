@@ -14,6 +14,36 @@ function isWorldPointInsideMap(point) {
     );
 }
 
+function constrainRulerEnd(
+    start,
+    end,
+    constrained
+) {
+    if (
+        !constrained ||
+        !start ||
+        !end
+    ) {
+        return end;
+    }
+
+    const deltaX =
+        end.x - start.x;
+
+    const deltaY =
+        end.y - start.y;
+
+    return Math.abs(deltaX) >= Math.abs(deltaY)
+        ? {
+            x: end.x,
+            y: start.y
+        }
+        : {
+            x: start.x,
+            y: end.y
+        };
+}
+
 function addPencilPoint(point) {
     const path =
         MAP_TOOL_STATE.activePath;
@@ -278,7 +308,13 @@ function placeMapToolMarker(point) {
         mapId: currentMapToolMapId(),
         icon: MAP_TOOL_STATE.selectedMarkerIcon,
         x: point.x,
-        y: point.y
+        y: point.y,
+        ...(asset.colorable
+            ? {
+                color:
+                    MAP_TOOL_STATE.selectedMarkerColor
+            }
+            : {})
     });
 
     saveMapToolState();
@@ -1021,10 +1057,15 @@ function handleMapToolMouseMove(
         MAP_TOOL_STATE.tool === 'ruler' &&
         MAP_TOOL_STATE.rulerDragging
     ) {
-        MAP_TOOL_STATE.rulerEnd = {
-            x: world.x,
-            y: world.y
-        };
+        MAP_TOOL_STATE.rulerEnd =
+            constrainRulerEnd(
+                MAP_TOOL_STATE.rulerStart,
+                {
+                    x: world.x,
+                    y: world.y
+                },
+                event.shiftKey
+            );
         draw();
         return true;
     }

@@ -59,3 +59,75 @@ test('platform-specific scripts stay isolated', () => {
         assert.ok(MOBILE_SCRIPT_FILES.includes(file));
     }
 });
+
+test('vehicle markers explicitly opt in to team colors', async () => {
+    const assets = JSON.parse(
+        await readFile(
+            resolve(root, 'maps', 'assets.json'),
+            'utf8'
+        )
+    ).markerIcons;
+
+    const vehicles = [
+        'lonestar',
+        'manticore',
+        'valkyra',
+        'wardogs',
+        'bulkhead',
+        'quad',
+        'kodiak',
+        'dune',
+        'ural',
+        'tank',
+        'havoc',
+        'heli',
+        'spawn_vehicle'
+    ];
+
+    vehicles.forEach(id => {
+        assert.equal(
+            assets[id]?.colorable,
+            true,
+            id
+        );
+    });
+
+    assert.notEqual(assets.fob?.colorable, true);
+    assert.notEqual(assets.warning?.colorable, true);
+});
+
+test('every locale labels the marker color picker', async () => {
+    const index = JSON.parse(
+        await readFile(
+            resolve(root, 'locales', 'index.json'),
+            'utf8'
+        )
+    );
+
+    for (const language of index.languages) {
+        const locale = JSON.parse(
+            await readFile(
+                resolve(
+                    root,
+                    'locales',
+                    language.file
+                ),
+                'utf8'
+            )
+        );
+
+        for (const key of [
+            'mapToolMarkerColor',
+            'mapToolMarkerColorBlue',
+            'mapToolMarkerColorRed',
+            'mapToolMarkerColorGreen'
+        ]) {
+            assert.equal(
+                typeof locale[key],
+                'string',
+                `${language.id}: ${key}`
+            );
+            assert.ok(locale[key].trim());
+        }
+    }
+});

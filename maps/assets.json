@@ -80,7 +80,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "manticore": {
       "path": "assets/map-markers/manticore.webp",
@@ -88,7 +89,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "valkyra": {
       "path": "assets/map-markers/valkyra.webp",
@@ -96,7 +98,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "wardogs": {
       "path": "assets/map-markers/wardogs.webp",
@@ -104,7 +107,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "bulkhead": {
       "path": "assets/map-markers/bulkhead.webp",
@@ -112,7 +116,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "garage_vendor": {
       "path": "assets/map-markers/garage_vendor.webp",
@@ -176,7 +181,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "quad": {
       "path": "assets/map-markers/quad.webp",
@@ -184,7 +190,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "kodiak": {
       "path": "assets/map-markers/kodiak.webp",
@@ -192,7 +199,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "dune": {
       "path": "assets/map-markers/dune.webp",
@@ -200,7 +208,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "ural": {
       "path": "assets/map-markers/ural.webp",
@@ -208,7 +217,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "tank": {
       "path": "assets/map-markers/tank.webp",
@@ -216,7 +226,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "havoc": {
       "path": "assets/map-markers/havoc.webp",
@@ -224,7 +235,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "heli": {
       "path": "assets/map-markers/heli.webp",
@@ -232,7 +244,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     },
     "spawn_vehicle": {
       "path": "assets/map-markers/spawn_vehicle.webp",
@@ -240,7 +253,8 @@
       "height": 32,
       "anchorX": 0.5,
       "anchorY": 0.5,
-      "placeable": true
+      "placeable": true,
+      "colorable": true
     }
   }
 }

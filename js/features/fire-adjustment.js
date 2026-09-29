@@ -1055,8 +1055,9 @@ function buildFireAdjustmentPopover() {
  * the pad stays usable while the pick is armed.
  */
 function toggleFireAdjustmentTool() {
-    MAP_TOOL_STATE.tool =
-        'fireAdjust';
+    setMapTool(
+        'fireAdjust'
+    );
 
     buildFireAdjustmentPopover();
 

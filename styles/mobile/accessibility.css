@@ -152,6 +152,7 @@
 :root[data-a11y-large-controls="true"] .mobile-app .mobile-map-tools-toggle,
 :root[data-a11y-large-controls="true"] .mobile-app .map-tool-button,
 :root[data-a11y-large-controls="true"] .mobile-app .map-tool-marker-option,
+:root[data-a11y-large-controls="true"] .mobile-app .map-tool-marker-color,
 :root[data-a11y-large-controls="true"] .mobile-app .map-tool-color {
     width: 44px;
     min-width: 44px;
@@ -161,6 +162,10 @@
 
 :root[data-a11y-large-controls="true"] .mobile-app .map-tool-marker-picker {
     grid-template-columns: repeat(4, 44px);
+}
+
+:root[data-a11y-large-controls="true"] .mobile-app .map-tool-marker-colors {
+    grid-template-columns: 1fr repeat(3, 44px);
 }
 
 :root[data-a11y-large-controls="true"] .mobile-app .map-tool-palette {

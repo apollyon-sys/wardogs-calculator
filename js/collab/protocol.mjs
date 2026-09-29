@@ -87,6 +87,17 @@ function color(value) {
     if (typeof value !== 'string' || !/^#[\da-f]{6}$/i.test(value)) fail('bad-color');
     return value.toLowerCase();
 }
+const MARKER_COLORS = new Set([
+    '#5fa8d3',
+    '#d86666',
+    '#82c596'
+]);
+function markerColor(value) {
+    if (value == null) return null;
+    const normalized = color(value);
+    if (!MARKER_COLORS.has(normalized)) fail('bad-marker-color');
+    return normalized;
+}
 function points(value, minimum) {
     if (!Array.isArray(value) || value.length < minimum || value.length > LIMITS.points) fail('too-many-points');
     return value.map(point);
@@ -101,8 +112,16 @@ export function normalizeItem(collection, value, mapId) {
             return { id, mapId, color: color(value.color), points: points(value.points, collection === 'drawings' ? 2 : 3) };
         case 'zones':
             return { id, mapId, color: color(value.color), ...point(value), radius: number(value.radius, 0.000001) };
-        case 'markers':
-            return { id, mapId, icon: slug(value.icon), ...point(value) };
+        case 'markers': {
+            const tint = markerColor(value.color);
+            return {
+                id,
+                mapId,
+                icon: slug(value.icon),
+                ...point(value),
+                ...(tint ? { color: tint } : {})
+            };
+        }
         case 'savedTargets': {
             if (typeof value.name !== 'string' || [...value.name].length > 120) fail('bad-name');
             const name = plainText(value.name, 120);

@@ -3,10 +3,25 @@
    ========================= */
 
 function setMapTool(tool) {
-    MAP_TOOL_STATE.tool =
+    const previousTool =
+        MAP_TOOL_STATE.tool;
+
+    const nextTool =
         MAP_TOOL_STATE.tool === tool
             ? null
             : tool;
+
+    MAP_TOOL_STATE.tool =
+        nextTool;
+
+    if (
+        previousTool === 'fireAdjust' &&
+        nextTool !== 'fireAdjust' &&
+        typeof setFireAdjustmentPick ===
+            'function'
+    ) {
+        setFireAdjustmentPick(false);
+    }
 
     MAP_TOOL_STATE.rulerStart = null;
     MAP_TOOL_STATE.rulerEnd = null;
@@ -36,6 +51,14 @@ function setMapTool(tool) {
 
     updateMapToolsUI();
     draw();
+}
+
+function selectMapTool(tool) {
+    if (MAP_TOOL_STATE.tool === tool) {
+        return;
+    }
+
+    setMapTool(tool);
 }
 
 function activateColorMapTool(tool) {
@@ -172,7 +195,33 @@ function activateEraserTool() {
     );
 }
 
-function closeMapToolMenus(except = null) {
+function activateMarkerPicker() {
+    /*
+     * Browsing marker icons must not leave another map interaction armed
+     * underneath the picker. An already-selected marker remains active so
+     * reopening the picker only changes its icon or color.
+     */
+    if (
+        MAP_TOOL_STATE.tool !==
+        'marker'
+    ) {
+        setMapTool(null);
+    }
+
+    toggleMapToolMenu(
+        'markerPicker'
+    );
+}
+
+function closeMapToolMenus(
+    except = null,
+    {
+        preserveFireAdjustment = false
+    } = {}
+) {
+    let closedFireAdjustment =
+        false;
+
     ['pencilPalette', 'eraserPopover', 'markerPicker', 'coordinateSearchPopover', 'mapLayersPopover', 'mapDataTransferPopover', 'fireAdjustmentPopover'].forEach(
         id => {
             if (id === except) {
@@ -182,10 +231,36 @@ function closeMapToolMenus(except = null) {
             const element = $(id);
 
             if (element) {
+                if (
+                    id === 'fireAdjustmentPopover' &&
+                    element.classList.contains('open')
+                ) {
+                    closedFireAdjustment = true;
+                }
+
                 element.classList.remove('open');
             }
         }
     );
+
+    if (
+        closedFireAdjustment &&
+        !preserveFireAdjustment
+    ) {
+        if (
+            typeof setFireAdjustmentPick ===
+                'function'
+        ) {
+            setFireAdjustmentPick(false);
+        }
+
+        if (
+            MAP_TOOL_STATE.tool ===
+            'fireAdjust'
+        ) {
+            MAP_TOOL_STATE.tool = null;
+        }
+    }
 
     /*
      * Keep toolbar highlight state synchronized
@@ -339,12 +414,22 @@ function updateMapToolsUI() {
         });
 
     document
-        .querySelectorAll('.map-tool-color')
+        .querySelectorAll('.map-tool-palette .map-tool-color')
         .forEach(button => {
             button.classList.toggle(
                 'active',
                 button.dataset.color ===
                 MAP_TOOL_STATE.pencilColor
+            );
+        });
+
+    document
+        .querySelectorAll('.map-tool-marker-color')
+        .forEach(button => {
+            button.classList.toggle(
+                'active',
+                button.dataset.color ===
+                MAP_TOOL_STATE.selectedMarkerColor
             );
         });
 
@@ -453,8 +538,9 @@ function buildPencilPalette() {
                         MAP_TOOL_STATE.tool
                     )
                 ) {
-                    MAP_TOOL_STATE.tool =
-                        'pencil';
+                    selectMapTool(
+                        'pencil'
+                    );
                 }
 
                 updateMapToolsUI();
@@ -474,6 +560,80 @@ function buildMarkerPicker() {
     }
 
     container.innerHTML = '';
+
+    const colorSection =
+        document.createElement('div');
+
+    colorSection.className =
+        'map-tool-marker-colors';
+
+    colorSection.setAttribute(
+        'role',
+        'group'
+    );
+
+    colorSection.setAttribute(
+        'aria-label',
+        tr('mapToolMarkerColor')
+    );
+
+    const colorTitle =
+        document.createElement('span');
+
+    colorTitle.className =
+        'map-tool-marker-color-title';
+
+    colorTitle.textContent =
+        tr('mapToolMarkerColor');
+
+    colorSection.appendChild(
+        colorTitle
+    );
+
+    MAP_TOOL_MARKER_COLORS.forEach(
+        item => {
+            const button =
+                document.createElement('button');
+
+            const title =
+                tr(item.titleKey);
+
+            button.type = 'button';
+            button.className =
+                'map-tool-marker-color';
+            button.dataset.color =
+                item.color;
+            button.title = title;
+            button.setAttribute(
+                'aria-label',
+                title
+            );
+            button.style.setProperty(
+                '--tool-color',
+                item.color
+            );
+
+            button.addEventListener(
+                'click',
+                event => {
+                    event.stopPropagation();
+
+                    MAP_TOOL_STATE.selectedMarkerColor =
+                        item.color;
+
+                    updateMapToolsUI();
+                }
+            );
+
+            colorSection.appendChild(
+                button
+            );
+        }
+    );
+
+    container.appendChild(
+        colorSection
+    );
 
     const assets =
         Object.values(MAP_ASSETS)
@@ -507,6 +667,11 @@ function buildMarkerPicker() {
 
         button.dataset.icon =
             asset.id;
+
+        button.dataset.colorable =
+            asset.colorable
+                ? 'true'
+                : 'false';
         button.title =
             label;
         button.setAttribute(
@@ -548,8 +713,9 @@ function buildMarkerPicker() {
 
                 MAP_TOOL_STATE.selectedMarkerIcon =
                     asset.id;
-                MAP_TOOL_STATE.tool =
-                    'marker';
+                selectMapTool(
+                    'marker'
+                );
 
                 updateMapToolsUI();
                 closeMapToolMenus();
@@ -1166,16 +1332,12 @@ function handleMapToolShortcut(event) {
     }
 
     if (key === shortcuts.marker) {
-        /*
-         * Opening the picker is not the same as activating the marker tool.
-         * The tool becomes active only after the user chooses an icon.
-         */
-        toggleMapToolMenu('markerPicker');
+        activateMarkerPicker();
         return true;
     }
 
     if (key === shortcuts.coordinateSearch) {
-        MAP_TOOL_STATE.tool = 'coordinateSearch';
+        selectMapTool('coordinateSearch');
         updateMapToolsUI();
         updateCoordinateSearchDefaults();
         toggleMapToolMenu('coordinateSearchPopover');
@@ -1184,7 +1346,7 @@ function handleMapToolShortcut(event) {
     }
 
     if (key === shortcuts.layers) {
-        MAP_TOOL_STATE.tool = 'layers';
+        selectMapTool('layers');
         updateMapToolsUI();
         buildMapLayers();
         toggleMapToolMenu('mapLayersPopover');
@@ -1596,12 +1758,11 @@ function initMapTools() {
             event.stopPropagation();
 
             /*
-             * Keep the previously active tool while browsing marker icons.
-             * Selecting an icon commits marker mode in buildMarkerPicker().
+             * Opening Markers is a real tool switch: cancel any ruler,
+             * drawing, eraser or fire-adjustment mode before showing the
+             * picker. Selecting an icon commits marker placement mode.
              */
-            toggleMapToolMenu(
-                'markerPicker'
-            );
+            activateMarkerPicker();
         }
     );
 
@@ -1609,7 +1770,7 @@ function initMapTools() {
         'click',
         event => {
             event.stopPropagation();
-            MAP_TOOL_STATE.tool = 'coordinateSearch';
+            selectMapTool('coordinateSearch');
             updateMapToolsUI();
             updateCoordinateSearchDefaults();
             toggleMapToolMenu('coordinateSearchPopover');
@@ -1621,7 +1782,7 @@ function initMapTools() {
         'click',
         event => {
             event.stopPropagation();
-            MAP_TOOL_STATE.tool = 'layers';
+            selectMapTool('layers');
             updateMapToolsUI();
             buildMapLayers();
             toggleMapToolMenu('mapLayersPopover');
@@ -1632,7 +1793,7 @@ function initMapTools() {
         'click',
         event => {
             event.stopPropagation();
-            MAP_TOOL_STATE.tool = 'dataTransfer';
+            selectMapTool('dataTransfer');
             updateMapToolsUI();
             buildMapDataTransfer();
             toggleMapToolMenu('mapDataTransferPopover');

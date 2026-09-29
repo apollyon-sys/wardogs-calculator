@@ -199,6 +199,72 @@
     overflow-y: auto;
 }
 
+.map-tool-marker-colors {
+    grid-column: 1 / -1;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) repeat(3, 28px);
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 0 0 7px;
+
+    border-bottom: 1px solid var(--border-light);
+}
+
+.map-tool-marker-color-title {
+    overflow: hidden;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.map-tool-marker-color {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    min-height: 28px;
+
+    padding: 4px;
+
+    border: 1px solid transparent;
+    border-radius: 6px;
+
+    background: transparent;
+
+    cursor: pointer;
+}
+
+.map-tool-marker-color::before {
+    content: '';
+
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: 50%;
+
+    background: var(--tool-color);
+
+    box-shadow:
+        inset 0 0 0 1px
+        rgba(255, 255, 255, .16);
+}
+
+.map-tool-marker-color:hover,
+.map-tool-marker-color.active {
+    border-color: var(--accent-border);
+    background: var(--input-hover-bg);
+}
+
 .map-tool-marker-option {
     width: 42px;
     height: 42px;
