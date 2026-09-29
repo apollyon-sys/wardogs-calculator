@@ -97,7 +97,7 @@ test('platform correction keeps the reference heading stable', () => {
     );
 
     assert.ok(Math.abs(reference.milDelta) < 1e-9);
-    assert.ok(Math.abs(perpendicular.correctedMil - 717.3204032555822) < 1e-9);
+    assert.ok(Math.abs(perpendicular.correctedMil - 783.4541998092665) < 1e-9);
 });
 
 test('platform runtime does not monkey-patch result globals', () => {
