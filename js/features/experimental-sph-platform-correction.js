@@ -32,7 +32,7 @@ const SPH_PLATFORM_MANUAL_MIL_STORAGE_KEY =
 
 const SPH_PLATFORM_CORRECTION = Object.freeze({
     weaponId: 'spg',
-    baselinePitchDeg: 1.0,
+    baselinePitchDeg: 5.0,
     baselineRollDeg: 0.0
 });
 
