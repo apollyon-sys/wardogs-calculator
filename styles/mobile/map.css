@@ -43,6 +43,24 @@
     -webkit-user-select: none;
 }
 
+.mobile-app .local-asset-warning {
+    width: min(360px, calc(100% - 24px));
+    padding: 12px 40px 12px 12px;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 8px;
+}
+
+.mobile-app .local-asset-warning-icon {
+    font-size: 19px;
+}
+
+.mobile-app .local-asset-warning-close {
+    top: 6px;
+    right: 6px;
+    width: 32px;
+    height: 32px;
+}
+
 .mobile-app .cursor-coords {
     display: none !important;
 }

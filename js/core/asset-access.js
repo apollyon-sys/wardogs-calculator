@@ -16,6 +16,172 @@ const ASSET_ACCESS_STATE = {
     regionalFallback: false
 };
 
+const LOCAL_ASSET_DOCUMENTATION_URL =
+    'https://github.com/apollyon-sys/wardogs-calculator/blob/main/docs/cdn.md#forks-and-self-hosted-deployments';
+
+const LOCAL_ASSET_WARNING_SESSION_KEY =
+    'wardogs-local-asset-warning-dismissed';
+
+function isLocalAssetWarningDismissed() {
+    try {
+        return sessionStorage.getItem(
+            LOCAL_ASSET_WARNING_SESSION_KEY
+        ) === 'true';
+    } catch {
+        return false;
+    }
+}
+
+function dismissLocalAssetWarning(warning) {
+    try {
+        sessionStorage.setItem(
+            LOCAL_ASSET_WARNING_SESSION_KEY,
+            'true'
+        );
+    } catch {
+        /* Closing must still work when session storage is unavailable. */
+    }
+
+    warning.remove();
+}
+
+function isLocalAssetCopyHost(value = window.location.hostname) {
+    const hostname = String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/^\[|\]$/g, '');
+
+    if (
+        hostname === 'localhost' ||
+        hostname === '::1' ||
+        hostname.endsWith('.localhost') ||
+        hostname.endsWith('.local')
+    ) {
+        return true;
+    }
+
+    const match = hostname.match(
+        /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/
+    );
+
+    if (!match) {
+        return false;
+    }
+
+    const octets = match.slice(1).map(Number);
+    if (octets.some(octet => octet > 255)) {
+        return false;
+    }
+
+    return (
+        octets[0] === 10 ||
+        octets[0] === 127 ||
+        (
+            octets[0] === 172 &&
+            octets[1] >= 16 &&
+            octets[1] <= 31
+        ) ||
+        (
+            octets[0] === 192 &&
+            octets[1] === 168
+        )
+    );
+}
+
+function shouldShowLocalAssetWarning() {
+    if (!isLocalAssetCopyHost()) {
+        return false;
+    }
+
+    return [
+        getAssetGatewayOrigin(),
+        getAssetDirectOrigin()
+    ].some(origin =>
+        origin ===
+            'https://assets.wardogs-artillery.com' ||
+        origin ===
+            'https://assets-v2.wardogs-artillery.com'
+    );
+}
+
+function showLocalAssetWarning() {
+    if (
+        !shouldShowLocalAssetWarning() ||
+        isLocalAssetWarningDismissed() ||
+        document.getElementById(
+            'localAssetWarning'
+        )
+    ) {
+        return;
+    }
+
+    const map =
+        document.querySelector('.map');
+
+    if (!map) {
+        return;
+    }
+
+    const warning =
+        document.createElement('aside');
+    warning.id = 'localAssetWarning';
+    warning.className = 'local-asset-warning';
+    warning.setAttribute('role', 'alert');
+    warning.setAttribute('aria-live', 'polite');
+
+    const icon =
+        document.createElement('span');
+    icon.className = 'local-asset-warning-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = '⚠';
+
+    const content =
+        document.createElement('div');
+    content.className = 'local-asset-warning-content';
+
+    const title =
+        document.createElement('strong');
+    title.textContent =
+        tr('localAssetWarningTitle');
+
+    const body =
+        document.createElement('p');
+    body.textContent =
+        tr('localAssetWarningBody');
+
+    const link =
+        document.createElement('a');
+    link.href = LOCAL_ASSET_DOCUMENTATION_URL;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent =
+        tr('localAssetWarningLink');
+
+    const close =
+        document.createElement('button');
+    const closeLabel =
+        tr('localAssetWarningClose');
+    close.type = 'button';
+    close.className =
+        'local-asset-warning-close';
+    close.title = closeLabel;
+    close.setAttribute(
+        'aria-label',
+        closeLabel
+    );
+    close.textContent = '×';
+    close.addEventListener(
+        'click',
+        () => dismissLocalAssetWarning(
+            warning
+        )
+    );
+
+    content.append(title, body, link);
+    warning.append(icon, content, close);
+    map.appendChild(warning);
+}
+
 function getAssetGatewayConfig() {
     return (
         APP_CONFIG?.assetGateway ||
@@ -760,5 +926,6 @@ async function fetchAssetResource(
 }
 
 async function initializeAssetAccess() {
+    showLocalAssetWarning();
     return ensureAssetAccess();
 }

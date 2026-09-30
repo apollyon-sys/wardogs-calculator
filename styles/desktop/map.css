@@ -80,6 +80,91 @@
     transform: none;
 }
 
+.local-asset-warning {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 20;
+    width: min(440px, calc(100% - 32px));
+    padding: 14px 42px 14px 16px;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 11px;
+    transform: translate(-50%, -50%);
+    border: 1px solid var(--accent-border);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--header-bg) 96%, transparent);
+    color: var(--text);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .32);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.local-asset-warning-icon {
+    color: var(--accent);
+    font-size: 22px;
+    line-height: 1;
+}
+
+.local-asset-warning-content {
+    min-width: 0;
+}
+
+.local-asset-warning-content strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+    letter-spacing: .02em;
+}
+
+.local-asset-warning-content p {
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.local-asset-warning-content a {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    text-underline-offset: 3px;
+}
+
+.local-asset-warning-content a:hover,
+.local-asset-warning-content a:focus-visible {
+    color: var(--text);
+}
+
+.local-asset-warning-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+
+    width: 28px;
+    height: 28px;
+    padding: 0;
+
+    display: grid;
+    place-items: center;
+
+    border: 1px solid transparent;
+    border-radius: 7px;
+
+    background: transparent;
+    color: var(--muted);
+
+    font: 22px/1 system-ui, sans-serif;
+    cursor: pointer;
+}
+
+.local-asset-warning-close:hover,
+.local-asset-warning-close:focus-visible {
+    border-color: var(--border-light);
+    background: var(--input-hover-bg);
+    color: var(--text);
+}
+
 /* =========================
    FIRING SOLUTION MENU
    ========================= */
