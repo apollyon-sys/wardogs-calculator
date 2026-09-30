@@ -21,6 +21,12 @@ test('production trusts only explicitly configured application origins', () => {
     assert.equal(config.development, false);
     assert.equal(config.fallbackCountries.has('CN'), true);
     assert.equal(config.fallbackCountries.has('RU'), true);
+    assert.equal(config.assetBudgetEnabled, true);
+    assert.equal(config.assetBudgetWindowSeconds, 3600);
+    assert.equal(config.assetBudgetSessionPoints, 800);
+    assert.equal(config.assetBudgetIpPoints, 2400);
+    assert.equal(config.assetBudgetSessionTerrain, 32);
+    assert.equal(config.assetBudgetIpTerrain, 128);
 });
 
 test('local origins are added only by an explicit development flag', () => {

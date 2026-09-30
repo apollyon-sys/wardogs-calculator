@@ -11,6 +11,22 @@
 			"custom_domain": true
 		}
 	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "ASSET_REQUEST_GUARD",
+				"class_name": "AssetRequestGuard"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1-asset-request-guard",
+			"new_sqlite_classes": [
+				"AssetRequestGuard"
+			]
+		}
+	],
 	"observability": {
 		"enabled": true,
 		"head_sampling_rate": 0.01
@@ -32,7 +48,14 @@
 		"FALLBACK_COUNTRIES": "CN,RU",
 		"EDGE_CACHE_SECONDS": "2592000",
 		"REQUEST_POLICY_ENABLED": "true",
-		"REQUEST_HOLD_SECONDS": "600"
+		"REQUEST_HOLD_SECONDS": "600",
+		"ASSET_BUDGET_ENABLED": "true",
+		"ASSET_BUDGET_WINDOW_SECONDS": "3600",
+		"ASSET_BUDGET_SESSION_POINTS": "800",
+		"ASSET_BUDGET_IP_POINTS": "2400",
+		"ASSET_BUDGET_SESSION_TERRAIN": "32",
+		"ASSET_BUDGET_IP_TERRAIN": "128",
+		"ASSET_BUDGET_STRIKE_MEMORY_SECONDS": "604800"
 	},
 	"kv_namespaces": [
 		{

@@ -8,6 +8,7 @@ import {
     validateTurnstile
 } from './turnstile.mjs';
 import {
+    assetBudgetDescriptor,
     hasBrowserRequestContext,
     holdClient,
     isAddressHeldAtAdmission,
@@ -16,6 +17,10 @@ import {
     requestLogId,
     sequenceRateKeys
 } from './request-policy.mjs';
+
+export {
+    AssetRequestGuard
+} from './asset-request-guard.mjs';
 
 const SESSION_PATH = '/__session';
 const SESSION_COOKIE =
@@ -613,6 +618,102 @@ async function handleAsset(
             origin,
             config.requestHoldSeconds
         );
+    }
+
+    if (config.assetBudgetEnabled) {
+        const budget =
+            await assetBudgetDescriptor(
+                url.pathname,
+                config.protectedPrefix
+            );
+
+        const namespace =
+            requireBinding(
+                env,
+                'ASSET_REQUEST_GUARD',
+                config.development
+            );
+
+        if (budget && namespace) {
+            const actor =
+                await requestLogId(ip);
+
+            const object = namespace.get(
+                namespace.idFromName(actor)
+            );
+
+            const response =
+                await object.fetch(
+                    'https://asset-request-guard/check',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type':
+                                'application/json'
+                        },
+                        body: JSON.stringify({
+                            sessionId: session.id,
+                            assetKey: budget.key,
+                            category:
+                                budget.category,
+                            weight: budget.weight,
+                            limits: {
+                                windowSeconds:
+                                    config.assetBudgetWindowSeconds,
+                                sessionPoints:
+                                    config.assetBudgetSessionPoints,
+                                ipPoints:
+                                    config.assetBudgetIpPoints,
+                                sessionTerrain:
+                                    config.assetBudgetSessionTerrain,
+                                ipTerrain:
+                                    config.assetBudgetIpTerrain,
+                                strikeMemorySeconds:
+                                    config.assetBudgetStrikeMemorySeconds
+                            }
+                        })
+                    }
+                );
+
+            if (!response.ok) {
+                throw new Error(
+                    'asset-request-guard-unavailable'
+                );
+            }
+
+            const decision =
+                await response.json();
+
+            if (!decision.allowed) {
+                await holdClient(
+                    env,
+                    session.id,
+                    ip,
+                    decision.holdSeconds
+                );
+
+                console.warn(
+                    '[assets-gateway-policy]',
+                    JSON.stringify({
+                        code: 'P04',
+                        actor,
+                        reason: decision.reason,
+                        level:
+                            decision.strikeLevel,
+                        path: url.pathname,
+                        country:
+                            request.cf?.country || '',
+                        colo:
+                            request.cf?.colo || ''
+                    })
+                );
+
+                return blocked(
+                    origin,
+                    decision.holdSeconds
+                );
+            }
+        }
     }
 
     const sessionRate =

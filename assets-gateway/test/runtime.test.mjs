@@ -376,6 +376,102 @@ test('request policy holds the session and its IP before reading R2', async () =
     assert.equal(replacementSession.status, 429);
 });
 
+test('cumulative asset guard blocks before reading R2 and holds admission', async () => {
+    let reads = 0;
+    let checkedActor = '';
+    let checkedBody;
+
+    const environment = {
+        ...env(),
+        REQUEST_STATE: memoryKv(),
+        ASSET_REQUEST_GUARD: {
+            idFromName(actor) {
+                checkedActor = actor;
+                return actor;
+            },
+            get() {
+                return {
+                    async fetch(
+                        input,
+                        init
+                    ) {
+                        const requestValue =
+                            new Request(
+                                input,
+                                init
+                            );
+
+                        checkedBody =
+                            await requestValue.json();
+
+                        return Response.json({
+                            allowed: false,
+                            holdSeconds: 21600,
+                            reason: 'session-assets',
+                            strikeLevel: 2
+                        });
+                    }
+                };
+            }
+        }
+    };
+
+    environment.ASSETS = {
+        async get() {
+            reads += 1;
+            return null;
+        },
+        async head() {
+            reads += 1;
+            return null;
+        }
+    };
+
+    const cookie =
+        await admittedCookie(environment);
+
+    const rejected =
+        await handleRequest(
+            request(
+                '/releases/assets-v1/maps/test.webp',
+                {
+                    headers: {
+                        Cookie: cookie
+                    }
+                }
+            ),
+            environment
+        );
+
+    assert.equal(rejected.status, 429);
+    assert.equal(
+        rejected.headers.get('Retry-After'),
+        '21600'
+    );
+    assert.equal(reads, 0);
+    assert.equal(checkedActor.length, 16);
+    assert.equal(checkedBody.category, 'other');
+    assert.equal(checkedBody.weight, 4);
+
+    const replacementSession =
+        await handleRequest(
+            request(
+                '/__session',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+                    body: '{}'
+                }
+            ),
+            environment
+        );
+
+    assert.equal(replacementSession.status, 429);
+});
+
 test('reduced-context and sequence limits produce ten-minute holds', async () => {
     const makeLimiter = success => ({
         async limit() {
@@ -392,6 +488,7 @@ test('reduced-context and sequence limits produce ten-minute holds', async () =>
         const environment = {
             ...env(),
             REQUEST_STATE: memoryKv(),
+            ASSET_BUDGET_ENABLED: 'false',
             ASSET_SESSION_RATE:
                 makeLimiter(true),
             ASSET_IP_RATE:

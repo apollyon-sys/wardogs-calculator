@@ -109,6 +109,50 @@ export function settings(env = {}) {
                 60,
                 3600
             ),
+        assetBudgetEnabled:
+            env.ASSET_BUDGET_ENABLED !== 'false',
+        assetBudgetWindowSeconds:
+            integer(
+                env.ASSET_BUDGET_WINDOW_SECONDS,
+                3600,
+                300,
+                86400
+            ),
+        assetBudgetSessionPoints:
+            integer(
+                env.ASSET_BUDGET_SESSION_POINTS,
+                800,
+                100,
+                10000
+            ),
+        assetBudgetIpPoints:
+            integer(
+                env.ASSET_BUDGET_IP_POINTS,
+                2400,
+                200,
+                50000
+            ),
+        assetBudgetSessionTerrain:
+            integer(
+                env.ASSET_BUDGET_SESSION_TERRAIN,
+                32,
+                4,
+                1000
+            ),
+        assetBudgetIpTerrain:
+            integer(
+                env.ASSET_BUDGET_IP_TERRAIN,
+                128,
+                8,
+                5000
+            ),
+        assetBudgetStrikeMemorySeconds:
+            integer(
+                env.ASSET_BUDGET_STRIKE_MEMORY_SECONDS,
+                604800,
+                3600,
+                2592000
+            ),
         turnstileHostname:
             String(
                 env.TURNSTILE_HOSTNAME ||

@@ -5,6 +5,7 @@ import {
 import test from 'node:test';
 
 import {
+    assetBudgetDescriptor,
     isCoverageBoundaryPath,
     sequenceRateKeys
 } from '../src/request-policy.mjs';
@@ -153,5 +154,41 @@ test('terrain boundaries and tile sequence keys are recognized', () => {
             'session:tiles-color:ozeti:5:row:14',
             'session:tiles-color:ozeti:5:column:12'
         ]
+    );
+});
+
+test('all protected assets receive stable weighted budget descriptors', async () => {
+    const tile =
+        await assetBudgetDescriptor(
+            `${prefix}maps/tiles-color/bakurani/zoom_7/116_94.webp`,
+            prefix
+        );
+
+    const terrain =
+        await assetBudgetDescriptor(
+            `${prefix}data/terrain/bakurani/chunks/10_10.bin`,
+            prefix
+        );
+
+    const manifest =
+        await assetBudgetDescriptor(
+            `${prefix}data/terrain/bakurani/manifest.json`,
+            prefix
+        );
+
+    assert.equal(tile.category, 'tile');
+    assert.equal(tile.weight, 1);
+    assert.equal(terrain.category, 'terrain');
+    assert.equal(terrain.weight, 16);
+    assert.equal(manifest.category, 'other');
+    assert.equal(manifest.weight, 4);
+    assert.equal(tile.key.length, 24);
+    assert.notEqual(tile.key, terrain.key);
+    assert.deepEqual(
+        await assetBudgetDescriptor(
+            `${prefix}maps/tiles-color/bakurani/zoom_7/116_94.webp`,
+            prefix
+        ),
+        tile
     );
 });

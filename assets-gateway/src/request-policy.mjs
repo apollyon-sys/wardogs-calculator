@@ -9,6 +9,9 @@ const PROTECTED_MAPS = new Set([
 const TILE_PATTERN =
     /^maps\/(tiles(?:-color)?)\/([a-z0-9-]+)\/zoom_(\d+)\/(\d+)_(\d+)\.webp$/;
 
+const TERRAIN_CHUNK_PATTERN =
+    /^data\/terrain\/([a-z0-9-]+)\/chunks\/(-?\d+)_(-?\d+)\.bin$/;
+
 const TERRAIN_BOUNDARY_PATHS = new Set([
     'data/terrain/bakurani/chunks/15_12.bin',
     'data/terrain/bakurani/chunks/32_27.bin',
@@ -180,6 +183,49 @@ async function digest(value) {
             .toString(16)
             .padStart(2, '0')
     ).join('');
+}
+
+export async function assetBudgetDescriptor(
+    pathname,
+    prefix
+) {
+    const relative =
+        relativeAssetPath(
+            pathname,
+            prefix
+        );
+
+    if (!relative) {
+        return null;
+    }
+
+    const terrain =
+        TERRAIN_CHUNK_PATTERN.exec(relative);
+
+    const tile =
+        tileRequest(pathname, prefix);
+
+    const category = terrain
+        ? 'terrain'
+        : tile
+            ? 'tile'
+            : 'other';
+
+    const weight = category === 'terrain'
+        ? 16
+        : category === 'tile'
+            ? 1
+            : 4;
+
+    return {
+        key: (
+            await digest(
+                `wardogs-asset:${relative}`
+            )
+        ).slice(0, 24),
+        category,
+        weight
+    };
 }
 
 async function clientStateKeys(sessionId, ip) {
