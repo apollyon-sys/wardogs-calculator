@@ -106,11 +106,13 @@ chunks use R2 as described in [Terrain3D hosting](terrain.md#terrain3d-hosting).
 Map JSON, marker images, contours and ballistic configuration keep their
 existing paths on the application host.
 
-The tile loader requests images with `crossOrigin = 'anonymous'`. R2 must return
-an `Access-Control-Allow-Origin` header matching the page origin for `GET` and
-`HEAD` requests. Allow `https://wardogs-artillery.com` and, for local development,
-`http://localhost:8000`. Add `http://127.0.0.1:8000` or a LAN origin if using those
-addresses; the port is part of the origin.
+The tile loader requests images through the protected asset client. The
+production service authorizes the official application origin; merely running
+the repository on `localhost`, a LAN address, or another domain does not grant
+access. A contributor origin may be enabled temporarily by the maintainer, but
+forks and self-hosted deployments must use their own asset host and update the
+map configuration accordingly. See
+[Forks and self-hosted deployments](cdn.md#forks-and-self-hosted-deployments).
 
 `maps/tiles/` is local working data: Git ignores new files there and the build
 excludes the entire directory from `dist/`, even when a local tile copy exists.

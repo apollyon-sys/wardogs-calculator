@@ -74,10 +74,11 @@ test('Discord webhook validation is strict and payload disables mentions', () =>
         message: '@everyone add a range preset',
         page: '/',
         language: 'en'
-    }));
+    }), 'a91f37c2b104');
     assert.deepEqual(payload.allowed_mentions, { parse: [] });
     assert.equal(payload.embeds[0].title, '💡 Feature request');
     assert.equal(payload.embeds[0].description, '@everyone add a range preset');
+    assert.match(payload.embeds[0].footer.text, /sender a91f37c2b104$/);
 });
 
 test('development sink does not require a real Discord webhook', async () => {

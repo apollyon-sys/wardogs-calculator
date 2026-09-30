@@ -68,6 +68,14 @@ Detailed documentation is split into focused files to keep this README concise.
 
 ## Quick Start
 
+> [!WARNING]
+> The application shell can be run locally, but the official protected map and
+> Terrain3D assets will not load in an independent local or self-hosted
+> deployment. The source-code license does not include access to the
+> project-funded CDN. To display maps, host assets you are entitled to use on
+> your own infrastructure and replace the configured asset URLs. See
+> [Forks and self-hosted deployments](docs/cdn.md#forks-and-self-hosted-deployments).
+
 ```bash
 npm run build
 cd dist

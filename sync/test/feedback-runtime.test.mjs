@@ -33,11 +33,13 @@ async function runtime(t, env = {}) {
         compatibilityDate: '2026-04-07',
         durableObjects: {
             ROOMS: { className: 'LobbyRoom', useSQLite: true },
-            BUDGET: { className: 'LobbyBudget', useSQLite: true }
+            BUDGET: { className: 'LobbyBudget', useSQLite: true },
+            FEEDBACK_GUARD: { className: 'FeedbackGuard', useSQLite: true }
         },
         bindings: {
             LOBBIES_DEV: 'true',
             FEEDBACK_DEV_SINK: 'true',
+            FEEDBACK_ABUSE_SECRET: 'test-feedback-abuse-secret-for-runtime',
             ...env
         }
     });
@@ -92,4 +94,24 @@ test('feedback keeps origin checks, kill switch and honeypot behavior', async t 
         { type: 'bug', message: 'valid message' }
     );
     assert.equal(disabled.status, 503);
+});
+
+test('feedback guard deduplicates, applies rolling limits and expires blocks', async t => {
+    const mf = await runtime(t);
+    const namespace = await mf.getDurableObjectNamespace('FEEDBACK_GUARD');
+    const guard = namespace.get(namespace.idFromName('policy-test'));
+    const start = Date.UTC(2026, 8, 30, 10, 0, 0);
+    const digest = value => value.toString(16).padStart(64, '0');
+
+    assert.equal((await guard.admit(digest(1), start)).allowed, true);
+    assert.equal((await guard.admit(digest(1), start + 31000)).reason, 'duplicate');
+    assert.equal((await guard.admit(digest(2), start + 62000)).allowed, true);
+    assert.equal((await guard.admit(digest(3), start + 93000)).allowed, true);
+
+    const limited = await guard.admit(digest(4), start + 124000);
+    assert.equal(limited.allowed, false);
+    assert.equal(limited.reason, 'hourly-limit');
+    assert.ok(limited.blockedUntil > start);
+    assert.equal((await guard.admit(digest(5), start + 2 * 60 * 60 * 1000)).reason, 'blocked');
+    assert.equal((await guard.admit(digest(6), start + 25 * 60 * 60 * 1000)).allowed, true);
 });

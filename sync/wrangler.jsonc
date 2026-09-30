@@ -15,17 +15,19 @@
   "durable_objects": {
     "bindings": [
       { "name": "ROOMS", "class_name": "LobbyRoom" },
-      { "name": "BUDGET", "class_name": "LobbyBudget" }
+      { "name": "BUDGET", "class_name": "LobbyBudget" },
+      { "name": "FEEDBACK_GUARD", "class_name": "FeedbackGuard" }
     ]
   },
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["LobbyRoom", "LobbyBudget"] }
+    { "tag": "v1", "new_sqlite_classes": ["LobbyRoom", "LobbyBudget"] },
+    { "tag": "v2", "new_sqlite_classes": ["FeedbackGuard"] }
   ],
   "ratelimits": [
     { "name": "ENTRY_RATE", "namespace_id": "73101", "simple": { "limit": 60, "period": 60 } },
     { "name": "CREATE_RATE", "namespace_id": "73102", "simple": { "limit": 3, "period": 60 } },
     { "name": "ADMISSION_RATE", "namespace_id": "73103", "simple": { "limit": 10, "period": 60 } },
     { "name": "JOIN_RATE", "namespace_id": "73104", "simple": { "limit": 15, "period": 60 } },
-    { "name": "FEEDBACK_RATE", "namespace_id": "73105", "simple": { "limit": 5, "period": 60 } }
+    { "name": "FEEDBACK_RATE", "namespace_id": "73105", "simple": { "limit": 2, "period": 60 } }
   ]
 }

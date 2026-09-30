@@ -3,3 +3,4 @@
 ROOM_SECRET=local-development-secret-not-for-production-change-me
 # Local feedback succeeds without contacting a real Discord webhook.
 FEEDBACK_DEV_SINK=true
+FEEDBACK_ABUSE_SECRET=local-feedback-abuse-secret-change-me

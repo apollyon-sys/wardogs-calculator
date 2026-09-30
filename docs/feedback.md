@@ -33,9 +33,14 @@ Create a Discord webhook in the channel where reports should arrive, then store 
 cd sync
 npx wrangler login
 npx wrangler secret put FEEDBACK_DISCORD_WEBHOOK_URL
+npx wrangler secret put FEEDBACK_ABUSE_SECRET
 ```
 
-Paste the complete Discord webhook URL when Wrangler prompts. Never put the webhook URL in `wrangler.jsonc`, `.dev.vars.example`, `config/app.json` or any committed file.
+Paste the complete Discord webhook URL for the first command. For
+`FEEDBACK_ABUSE_SECRET`, enter a random value of at least 32 characters. It is
+used only to derive non-reversible sender and message identifiers; never commit
+the production value. Never put either secret in `wrangler.jsonc`,
+`.dev.vars.example`, `config/app.json` or another committed file.
 
 Then verify and deploy:
 
@@ -74,4 +79,27 @@ npm ci
 npm run dev
 ```
 
-The production Worker has a separate `FEEDBACK_RATE` binding, currently limited to five submissions per minute per Cloudflare rate-limit key. This prevents feedback spam from consuming the lobby `ENTRY_RATE` budget.
+The production Worker has a separate `FEEDBACK_RATE` binding limited to two
+submissions per minute per Cloudflare rate-limit key. A dedicated
+`FeedbackGuard` then applies a privacy-preserving rolling policy per derived
+sender:
+
+- at least 30 seconds between accepted reports;
+- no more than three accepted reports per hour and ten per 24 hours;
+- duplicate message text is suppressed for 24 hours;
+- repeated rejections or a rolling-limit violation mute the sender for 24 hours.
+
+Filtered submissions receive the same success response as accepted feedback,
+so an abusive client cannot probe the thresholds. Discord messages include a
+12-character anonymous sender ID, but neither Discord nor Durable Object
+storage receives the raw IP. Durable Object storage contains only timestamps
+and keyed message digests and is removed after the retention window.
+
+To block a sender ID shown in Discord manually, store a comma-separated list:
+
+```powershell
+npx wrangler secret put FEEDBACK_BLOCKED_SENDERS
+```
+
+Run the command again with the updated complete list when adding or removing an
+ID. Delete the secret when the list is empty.

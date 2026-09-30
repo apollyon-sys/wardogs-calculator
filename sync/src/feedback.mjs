@@ -2,6 +2,56 @@ const TEXT_LIMIT = 3800;
 const CONTACT_LIMIT = 160;
 const SMALL_LIMIT = 160;
 
+const encoder = new TextEncoder();
+
+async function hmacHex(secret, value) {
+    const key = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+    );
+    const signature = await crypto.subtle.sign(
+        'HMAC',
+        key,
+        encoder.encode(value)
+    );
+    return [...new Uint8Array(signature)]
+        .map(byte => byte.toString(16).padStart(2, '0'))
+        .join('');
+}
+
+export async function feedbackAbuseIdentity(env, config, ip, feedback) {
+    const configured = String(env.FEEDBACK_ABUSE_SECRET || '');
+    const secret = configured.length >= 32
+        ? configured
+        : config.development
+            ? 'local-feedback-abuse-secret-change-me'
+            : '';
+
+    if (!secret) throw new Error('missing-feedback-abuse-secret');
+
+    const canonicalMessage = String(feedback?.message || '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+    const senderHash = await hmacHex(secret, `sender:${ip}`);
+    const messageHash = await hmacHex(secret, `message:${canonicalMessage}`);
+
+    return {
+        senderId: senderHash.slice(0, 12),
+        messageDigest: messageHash
+    };
+}
+
+export function feedbackSenderBlocked(env, senderId) {
+    return String(env.FEEDBACK_BLOCKED_SENDERS || '')
+        .split(/[\s,]+/)
+        .filter(Boolean)
+        .includes(senderId);
+}
+
 function clean(value, limit) {
     return String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, limit);
 }
@@ -64,7 +114,7 @@ export function validDiscordWebhook(value) {
     }
 }
 
-export function discordFeedbackPayload(feedback) {
+export function discordFeedbackPayload(feedback, senderId = '') {
     const rating = Number.isInteger(feedback.rating)
         ? `${'★'.repeat(feedback.rating)}${'☆'.repeat(5 - feedback.rating)} ${feedback.rating}/5`
         : '';
@@ -103,12 +153,16 @@ export function discordFeedbackPayload(feedback) {
             description: feedback.message,
             fields,
             timestamp: new Date().toISOString(),
-            footer: { text: 'wardogs-artillery.com · anonymous website feedback' }
+            footer: {
+                text: senderId
+                    ? `wardogs-artillery.com · anonymous feedback · sender ${senderId}`
+                    : 'wardogs-artillery.com · anonymous website feedback'
+            }
         }]
     };
 }
 
-export async function deliverFeedback(env, config, feedback) {
+export async function deliverFeedback(env, config, feedback, senderId = '') {
     if (config.development && env.FEEDBACK_DEV_SINK === 'true') return true;
     if (!validDiscordWebhook(env.FEEDBACK_DISCORD_WEBHOOK_URL)) return false;
 
@@ -116,7 +170,7 @@ export async function deliverFeedback(env, config, feedback) {
         const response = await fetch(env.FEEDBACK_DISCORD_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(discordFeedbackPayload(feedback))
+            body: JSON.stringify(discordFeedbackPayload(feedback, senderId))
         });
         return response.ok;
     } catch {

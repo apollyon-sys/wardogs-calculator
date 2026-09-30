@@ -1,12 +1,18 @@
 import { settings } from './config.mjs';
 import { normalizeDocument } from '../../js/collab/protocol.mjs';
 import { validateCatalogDocument } from './catalog.mjs';
-import { normalizeFeedback, deliverFeedback } from './feedback.mjs';
+import {
+    normalizeFeedback,
+    deliverFeedback,
+    feedbackAbuseIdentity,
+    feedbackSenderBlocked
+} from './feedback.mjs';
 import { validateTurnstile, usesRestrictedChinaAdmission } from './admission.mjs';
 import {
     randomKey, hash, mintInvite, verifyInvite, mintAdmission, verifyAdmission
 } from './tokens.mjs';
 export { LobbyRoom, LobbyBudget } from './rooms.mjs';
+export { FeedbackGuard } from './feedback-guard.mjs';
 function headers(origin) {
     return {
         'Content-Type': 'application/json', 'Cache-Control': 'no-store',
@@ -85,7 +91,27 @@ export default {
 
                 const feedback = normalizeFeedback(raw);
 
-                if (!await deliverFeedback(env, config, feedback)) {
+                const identity = await feedbackAbuseIdentity(
+                    env,
+                    config,
+                    ip,
+                    feedback
+                );
+                const guardNamespace = binding(env, 'FEEDBACK_GUARD', config);
+                const decision = feedbackSenderBlocked(env, identity.senderId)
+                    ? { allowed: false }
+                    : guardNamespace
+                        ? await guardNamespace
+                            .getByName(identity.senderId)
+                            .admit(identity.messageDigest)
+                        : { allowed: true };
+
+                // Deliberately acknowledge filtered spam so an attacker cannot tune around the guard.
+                if (!decision.allowed) {
+                    return json({ ok: true }, 201, origin);
+                }
+
+                if (!await deliverFeedback(env, config, feedback, identity.senderId)) {
                     return json({ error: 'feedback-not-configured' }, 503, origin);
                 }
 
