@@ -100,7 +100,12 @@ test('feedback guard deduplicates, applies rolling limits and expires blocks', a
     const mf = await runtime(t);
     const namespace = await mf.getDurableObjectNamespace('FEEDBACK_GUARD');
     const guard = namespace.get(namespace.idFromName('policy-test'));
-    const start = Date.UTC(2026, 8, 30, 10, 0, 0);
+    /*
+     * Keep synthetic policy time ahead of Miniflare's real alarm clock.
+     * A fixed date eventually becomes older than Date.now(), which makes
+     * setAlarm() fire immediately and deletes the state between RPC calls.
+     */
+    const start = Date.now();
     const digest = value => value.toString(16).padStart(64, '0');
 
     assert.equal((await guard.admit(digest(1), start)).allowed, true);
