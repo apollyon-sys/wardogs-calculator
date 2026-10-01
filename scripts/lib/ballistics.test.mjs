@@ -16,6 +16,11 @@ const platformSource = await readFile(
     'utf8'
 );
 
+const resultsSource = await readFile(
+    new URL('../../js/features/results.js', import.meta.url),
+    'utf8'
+);
+
 function weaponsContext() {
     const context = vm.createContext({ console });
     vm.runInContext(weaponsSource, context);
@@ -68,7 +73,7 @@ function platformContext() {
     return context;
 }
 
-test('inactive platform correction preserves both SPH arcs', () => {
+test('SPH arc selection does not depend on hull correction', () => {
     const context = platformContext();
     context.solutions = {
         inRange: true,
@@ -81,8 +86,16 @@ test('inactive platform correction preserves both SPH arcs', () => {
         context
     );
 
-    assert.equal(result.low.mil, 400);
+    assert.equal(result.low, null);
     assert.equal(result.high.mil, 700);
+
+    const low = vm.runInContext(
+        'sphPlatformSelectedArc = "low"; sphPlatformSelectArcSolutions(solutions)',
+        context
+    );
+
+    assert.equal(low.low.mil, 400);
+    assert.equal(low.high, null);
 });
 
 test('platform correction keeps the reference heading stable', () => {
@@ -111,4 +124,48 @@ test('platform runtime does not monkey-patch result globals', () => {
     );
     assert.match(platformSource, /registerElevationSolutionTransform/);
     assert.match(platformSource, /registerResultRenderHook/);
+});
+
+test('platform azimuth can resolve non-current saved-target points', () => {
+    const context = platformContext();
+    context.origin = { x: 10, y: 10 };
+    context.target = { x: 11, y: 10 };
+
+    const azimuth = vm.runInContext(
+        'sphPlatformGetTargetAzimuth(origin, target)',
+        context
+    );
+
+    assert.equal(azimuth, 90);
+});
+
+test('post-transform validation rejects unreachable MIL commands', () => {
+    const context = vm.createContext({ console });
+    vm.runInContext(resultsSource, context);
+    context.weapon = {
+        minElevationMil: 20,
+        maxElevationMil: 1390
+    };
+    context.solutions = {
+        inRange: true,
+        single: null,
+        low: {
+            mil: 400,
+            minMil: 400,
+            maxMil: 400
+        },
+        high: {
+            mil: 1403,
+            minMil: 1403,
+            maxMil: 1403
+        }
+    };
+
+    const result = vm.runInContext(
+        'validateElevationSolutions(weapon, solutions)',
+        context
+    );
+
+    assert.equal(result.low.mil, 400);
+    assert.equal(result.high, null);
 });

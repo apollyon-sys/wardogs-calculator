@@ -234,10 +234,13 @@ function sphPlatformApplyManualMilToSolution(solution) {
     };
 }
 
-function sphPlatformApplyManualMilToSolutionSet(solutions) {
+function sphPlatformApplyManualMilToSolutionSet(
+    solutions,
+    weapon = WEAPONS[S.weapon]
+) {
     if (
         !solutions ||
-        S.weapon !== SPH_PLATFORM_CORRECTION.weaponId
+        weapon?.id !== SPH_PLATFORM_CORRECTION.weaponId
     ) {
         return solutions;
     }
@@ -259,11 +262,13 @@ function sphPlatformApplyManualMilToSolutionSet(solutions) {
     };
 }
 
-function sphPlatformSelectArcSolutions(solutions) {
+function sphPlatformSelectArcSolutions(
+    solutions,
+    weapon = WEAPONS[S.weapon]
+) {
     if (
         !solutions ||
-        S.weapon !== SPH_PLATFORM_CORRECTION.weaponId ||
-        !sphPlatformCorrectionIsActive()
+        weapon?.id !== SPH_PLATFORM_CORRECTION.weaponId
     ) {
         return solutions;
     }
@@ -555,14 +560,17 @@ function sphPlatformCorrectSolution(
     };
 }
 
-function sphPlatformGetTargetAzimuth() {
+function sphPlatformGetTargetAzimuth(
+    origin = S.origin,
+    target = S.target
+) {
     const dx =
-        Number(S.target?.x) -
-        Number(S.origin?.x);
+        Number(target?.x) -
+        Number(origin?.x);
 
     const dy =
-        Number(S.target?.y) -
-        Number(S.origin?.y);
+        Number(target?.y) -
+        Number(origin?.y);
 
     if (
         !Number.isFinite(dx) ||
@@ -1602,17 +1610,26 @@ function initSphPlatformCorrection() {
     sphPlatformEnsureControls();
 
     registerElevationSolutionTransform(
-        ({ weapon, solutions }) => {
+        ({
+            weapon,
+            solutions,
+            origin,
+            target,
+            display
+        }) => {
             let resolvedSolutions =
                 sphPlatformSelectArcSolutions(
-                    solutions
+                    solutions,
+                    weapon
                 );
 
-            sphPlatformLastAimMeta =
-                null;
+            let aimMeta = null;
 
             const targetAzimuthDeg =
-                sphPlatformGetTargetAzimuth();
+                sphPlatformGetTargetAzimuth(
+                    origin,
+                    target
+                );
 
             if (
                 sphPlatformCorrectionIsActive(
@@ -1629,13 +1646,18 @@ function initSphPlatformCorrection() {
                 resolvedSolutions =
                     corrected.solutions;
 
+                aimMeta = corrected.aim;
+            }
+
+            if (display !== false) {
                 sphPlatformLastAimMeta =
-                    corrected.aim;
+                    aimMeta;
             }
 
             resolvedSolutions =
                 sphPlatformApplyManualMilToSolutionSet(
-                    resolvedSolutions
+                    resolvedSolutions,
+                    weapon
                 );
 
             return {
@@ -1650,7 +1672,7 @@ function initSphPlatformCorrection() {
                     manualMilAdjustment:
                         sphPlatformManualMilAdjustment,
                     aim:
-                        sphPlatformLastAimMeta
+                        aimMeta
                 }
             };
         }

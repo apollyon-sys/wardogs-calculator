@@ -615,8 +615,9 @@
             }
 
             /*
-             * Safe release: Terrain3D is informational only.
-             * Never modify the firing solution automatically.
+             * This module only resolves trusted height context. The separate
+             * verified correction layer may replace SAFE candidates and must
+             * preserve the flat-table fallback for every other result.
              */
             syncSphLevelWarning();
             queueResultRerender();
@@ -1186,16 +1187,13 @@
         }
 
         return {
-            /*
-             * RELEASE SAFETY INVARIANT:
-             * Terrain3D never changes MIL in this build.
-             */
+            /* The verified correction layer owns any safe MIL replacement. */
             solutions: context.solutions,
             meta: {
                 available: true,
                 pendingTerrain: false,
                 applied: false,
-                reason: 'information-only',
+                reason: 'terrain-context-ready',
                 mapId: terrain.mapId,
                 originZ,
                 targetZ,
@@ -1211,13 +1209,25 @@
             cachedChunks += terrain.chunkCache.size;
         }
 
+        const correctionState =
+            typeof window.getExperimentalTerrainCorrectionState ===
+            'function'
+                ? window.getExperimentalTerrainCorrectionState()
+                : null;
+
         return {
             initialized: state.initialized,
             enabled: state.enabled,
             ready: state.terrains.size > 0,
-            calibrated: false,
-            autoCorrectionEnabled: false,
-            mode: 'terrain-information-only',
+            calibrated: Boolean(
+                state.config?.calibration?.ready
+            ),
+            autoCorrectionEnabled: Boolean(
+                correctionState?.enabled
+            ),
+            mode: correctionState?.enabled
+                ? 'terrain-safe-correction'
+                : 'terrain-context',
             supportedMaps: [
                 ...state.terrainDefinitions.keys()
             ],

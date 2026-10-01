@@ -87,6 +87,6 @@ test('terrain status resolves through the active locale', async () => {
             pendingTerrain: false,
             deltaZ: 12.34
         }),
-        'ΔZ +12.3 м · MIL без автокоррекции'
+        'ΔZ +12.3 м · Terrain3D готова'
     );
 });

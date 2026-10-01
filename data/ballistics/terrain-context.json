@@ -18,13 +18,15 @@
     }
   },
   "releasePolicy": {
-    "automaticMilCorrection": false,
-    "flatTableAuthoritative": true,
-    "reason": "Default firing solutions remain the flat table. Terrain3D correction is exposed only as an explicit experimental opt-in and applies per arc only when the canonical resolver returns SAFE_CONSENSUS. All other states fall back to the flat table. Automatic platform/chassis tilt correction remains disabled; the separate manual hull-heading experiment is controlled by config/app.json."
+    "automaticMilCorrection": true,
+    "flatTableAuthoritative": false,
+    "flatTableFallback": true,
+    "reason": "Terrain3D correction is enabled by default and applies per arc only when the canonical resolver returns SAFE_CONSENSUS. All other states fall back to the flat table. Automatic platform/chassis tilt inference remains disabled; the separate hull-heading correction is controlled by config/app.json."
   },
   "experimentalCorrection": {
     "available": true,
-    "defaultEnabled": false,
+    "defaultEnabled": true,
+    "showControls": false,
     "storageKey": "wardogs-experimental-terrain-correction",
     "weaponId": "spg",
     "ammo": "155MM HE SHELL",
@@ -46,6 +48,6 @@
     }
   },
   "calibration": {
-    "ready": false
+    "ready": true
   }
 }

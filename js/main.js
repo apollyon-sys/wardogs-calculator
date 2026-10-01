@@ -162,6 +162,41 @@ async function loadRuntimeScript({
 
 let terrainRuntimePromise = null;
 
+async function loadExperimentalTerrainCorrectionRuntime() {
+    try {
+        await loadRuntimeScript({
+            selector:
+                'script[data-experimental-terrain-correction]',
+            dataAttribute:
+                'experimentalTerrainCorrection',
+            url:
+                'js/features/experimental-terrain-correction.js',
+            ready:
+                () =>
+                    typeof initExperimentalTerrainCorrection ===
+                    'function',
+            attempts: 2,
+            retryDelay: 500
+        });
+
+        if (
+            typeof initExperimentalTerrainCorrection ===
+            'function'
+        ) {
+            await initExperimentalTerrainCorrection();
+        }
+
+        return true;
+    } catch (error) {
+        console.warn(
+            '[experimental-terrain-correction] Runtime unavailable; flat-table fallback remains active.',
+            error
+        );
+
+        return false;
+    }
+}
+
 async function loadTerrainBallisticsRuntime() {
     try {
         await loadRuntimeScript({
@@ -185,6 +220,8 @@ async function loadTerrainBallisticsRuntime() {
         ) {
             await initTerrainBallistics();
         }
+
+        await loadExperimentalTerrainCorrectionRuntime();
 
     } catch (error) {
         if (

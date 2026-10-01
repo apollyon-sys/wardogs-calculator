@@ -95,14 +95,21 @@ function formatMilSolution(solution) {
 function resolveElevationSolutions(
     weapon,
     distanceMeters,
-    solutions
+    solutions,
+    {
+        mapId = S.map,
+        origin = S.origin,
+        target = S.target,
+        display = true
+    } = {}
 ) {
     const context = {
         weapon,
         distanceMeters,
-        mapId: S.map,
-        origin: S.origin,
-        target: S.target
+        mapId,
+        origin,
+        target,
+        display
     };
 
     let resolved = {
@@ -114,7 +121,20 @@ function resolveElevationSolutions(
         typeof getTerrainBallisticSolutions !==
         'function'
     ) {
-        return applyElevationSolutionTransforms(context, resolved);
+        const transformed =
+            applyElevationSolutionTransforms(
+                context,
+                resolved
+            );
+
+        return {
+            ...transformed,
+            solutions:
+                validateElevationSolutions(
+                    weapon,
+                    transformed.solutions
+                )
+        };
     }
 
     try {
@@ -140,7 +160,102 @@ function resolveElevationSolutions(
 
     }
 
-    return applyElevationSolutionTransforms(context, resolved);
+    const transformed =
+        applyElevationSolutionTransforms(
+            context,
+            resolved
+        );
+
+    return {
+        ...transformed,
+        solutions:
+            validateElevationSolutions(
+                weapon,
+                transformed.solutions
+            )
+    };
+}
+
+function isElevationSolutionWithinWeaponLimits(
+    weapon,
+    solution
+) {
+    if (!solution) {
+        return false;
+    }
+
+    const values = [
+        solution.mil,
+        solution.minMil,
+        solution.maxMil
+    ]
+        .map(Number)
+        .filter(Number.isFinite);
+
+    if (!values.length) {
+        return false;
+    }
+
+    const minMil =
+        Number(weapon?.minElevationMil);
+
+    const maxMil =
+        Number(weapon?.maxElevationMil);
+
+    return values.every(value => (
+        (!Number.isFinite(minMil) || value >= minMil - 1e-6) &&
+        (!Number.isFinite(maxMil) || value <= maxMil + 1e-6)
+    ));
+}
+
+function validateElevationSolutions(
+    weapon,
+    solutions
+) {
+    if (!solutions) {
+        return solutions;
+    }
+
+    return {
+        ...solutions,
+        single:
+            isElevationSolutionWithinWeaponLimits(
+                weapon,
+                solutions.single
+            )
+                ? solutions.single
+                : null,
+        low:
+            isElevationSolutionWithinWeaponLimits(
+                weapon,
+                solutions.low
+            )
+                ? solutions.low
+                : null,
+        high:
+            isElevationSolutionWithinWeaponLimits(
+                weapon,
+                solutions.high
+            )
+                ? solutions.high
+                : null
+    };
+}
+
+function getResolvedWeaponElevationSolutions(
+    weapon,
+    distanceMeters,
+    options = {}
+) {
+    return resolveElevationSolutions(
+        weapon,
+        distanceMeters,
+        getWeaponElevationSolutions(
+            weapon,
+            distanceMeters
+        ),
+        options
+    );
 }
 
 function formatTerrainBallisticDetail(meta) {
@@ -162,17 +277,10 @@ function renderElevationResult(weapon, distanceMeters) {
         return;
     }
 
-    const flatSolutions =
-        getWeaponElevationSolutions(
+    const resolved =
+        getResolvedWeaponElevationSolutions(
             weapon,
             distanceMeters
-        );
-
-    const resolved =
-        resolveElevationSolutions(
-            weapon,
-            distanceMeters,
-            flatSolutions
         );
 
     const solutions =
@@ -223,6 +331,8 @@ function renderElevationResult(weapon, distanceMeters) {
             detail.hidden = !secondary;
         }
     }
+
+    return resolved;
 }
 
 function result() {
@@ -326,10 +436,11 @@ function result() {
         ' m'
     );
 
-    renderElevationResult(
-        weapon,
-        dMeters
-    );
+    const elevationResult =
+        renderElevationResult(
+            weapon,
+            dMeters
+        );
 
     setText(
         $('solutionSummary'),
@@ -353,9 +464,17 @@ function result() {
         weapon.maxRange ??
         weapon.range;
 
+    const hasElevationSolution =
+        Boolean(
+            elevationResult?.solutions?.single ||
+            elevationResult?.solutions?.low ||
+            elevationResult?.solutions?.high
+        );
+
     const inRange =
         d + 1e-9 >= minRange &&
-        d <= maxRange + 1e-9;
+        d <= maxRange + 1e-9 &&
+        hasElevationSolution;
 
     setText(
         $('range'),
@@ -464,47 +583,20 @@ function getSavedTargetElevationSummary(
     origin,
     targetPoint
 ) {
-    const flatSolutions =
-        getWeaponElevationSolutions(
+    const resolved =
+        getResolvedWeaponElevationSolutions(
             weapon,
-            distanceMeters
+            distanceMeters,
+            {
+                mapId: S.map,
+                origin,
+                target: targetPoint,
+                display: false
+            }
         );
 
-    let solutions =
-        flatSolutions;
-
-    if (
-        typeof getTerrainBallisticSolutions ===
-        'function'
-    ) {
-        try {
-            const resolved =
-                getTerrainBallisticSolutions({
-                    weapon,
-                    distanceMeters,
-                    solutions:
-                        flatSolutions,
-                    mapId:
-                        S.map,
-                    origin,
-                    target:
-                        targetPoint
-                });
-
-            solutions =
-                resolved?.solutions ??
-                flatSolutions;
-        } catch (error) {
-            /*
-             * Saved-target cards are a convenience view.
-             * A terrain resolver failure must never make
-             * the target list unusable; flat-table values
-             * remain the fallback just like the main result.
-             */
-            solutions =
-                flatSolutions;
-        }
-    }
+    const solutions =
+        resolved.solutions;
 
     let primary =
         '—';
@@ -561,7 +653,12 @@ function getSavedTargetElevationSummary(
         secondary,
         inRange:
             Boolean(
-                solutions.inRange
+                solutions.inRange &&
+                Boolean(
+                    solutions.single ||
+                    solutions.low ||
+                    solutions.high
+                )
             )
     };
 }

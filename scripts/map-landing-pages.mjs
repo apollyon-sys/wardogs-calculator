@@ -52,7 +52,7 @@ export const MAP_LANDING_PAGES = [
                 id: 'bakurani-terrain3d',
                 heading: 'Terrain3D on Bakurani',
                 paragraphs: [
-                    'Bakurani includes terrain contour data and Terrain3D elevation coverage. Experimental Terrain3D correction for SPH-2 is opt-in and off by default. The normal firing-table value remains visible for comparison.',
+                    'Bakurani includes terrain contour data and Terrain3D elevation coverage. Terrain3D correction is automatic for SPH-2 when the resolver produces a verified SAFE candidate. The normal firing table remains the fallback.',
                     'A Terrain3D candidate is applied only when the resolver classifies it as SAFE. Uncertain, unsupported or unreachable cases fall back to the normal firing table, and platform or chassis tilt is not corrected.'
                 ]
             },
@@ -88,7 +88,7 @@ export const MAP_LANDING_PAGES = [
             },
             {
                 question: 'Is Terrain3D required for Bakurani calculations?',
-                answer: 'No. Terrain3D correction is experimental, optional and off by default. The standard firing table remains available and is used as the fallback.'
+                answer: 'No. Terrain3D correction runs automatically when supported, applies only verified SAFE candidates and otherwise uses the standard firing table as its fallback.'
             }
         ],
         sources: [
@@ -114,7 +114,7 @@ export const MAP_LANDING_PAGES = [
         highlights: [
             'Corrected Ozeti playable-area alignment',
             'Coordinate search, ruler and saved targets',
-            'Terrain contours and opt-in Terrain3D support',
+            'Terrain contours and automatic safe Terrain3D correction',
             'Shared annotations in live team lobbies'
         ],
         facts: [
@@ -153,7 +153,7 @@ export const MAP_LANDING_PAGES = [
                 id: 'ozeti-terrain3d',
                 heading: 'Ozeti Terrain Contours and Terrain3D',
                 paragraphs: [
-                    'Ozeti has a toggleable contour layer and Terrain3D elevation data for supported SPH-2 previews. Terrain3D correction must be enabled manually and the ordinary firing table remains the default.',
+                    'Ozeti has a toggleable contour layer and Terrain3D elevation data. Terrain3D correction runs automatically for supported SPH-2 solutions, while the ordinary firing table remains the fallback.',
                     'LOW and HIGH candidates are checked separately. Only a SAFE candidate can replace its displayed table result; otherwise the application retains the normal value. Vehicle and platform tilt remain outside the correction model.'
                 ]
             },
@@ -189,7 +189,7 @@ export const MAP_LANDING_PAGES = [
             },
             {
                 question: 'Does Ozeti include terrain elevation support?',
-                answer: 'Yes. Ozeti provides terrain contours and Terrain3D coverage, but experimental SPH-2 correction is opt-in and falls back to the normal firing table unless a candidate is SAFE.'
+                answer: 'Yes. Ozeti provides terrain contours and Terrain3D coverage. SPH-2 correction is automatic for SAFE candidates and falls back to the normal firing table in every other state.'
             }
         ],
         sources: [
@@ -254,7 +254,7 @@ export const MAP_LANDING_PAGES = [
                 id: 'zestafona-terrain3d',
                 heading: 'Terrain3D Context for Zestafona',
                 paragraphs: [
-                    'The Zestafona workspace includes a terrain contour overlay and Terrain3D elevation coverage. Experimental SPH-2 correction is disabled by default and is designed to be compared with the standard firing-table output.',
+                    'The Zestafona workspace includes a terrain contour overlay and Terrain3D elevation coverage. SPH-2 Terrain3D correction runs automatically for verified SAFE candidates and otherwise keeps the standard firing-table output.',
                     'The resolver applies only candidates marked SAFE and evaluates LOW and HIGH arcs independently. Missing, uncertain, unsupported or unreachable terrain results use the normal table, while chassis or platform tilt is not modelled.'
                 ]
             },

@@ -39,7 +39,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             description: 'Интерактивная карта WARDOGS {map}: {detail}. Расчёты L81 и SPH-2, изолинии, Terrain3D, инструменты карты и командные лобби.',
             heading: 'WARDOGS {map} — интерактивная карта',
             highlightWeapons: 'Расчёты для миномёта L81 и SPH-2',
-            highlightTerrain: 'Изолинии и включаемая вручную Terrain3D-коррекция',
+            highlightTerrain: 'Изолинии и автоматическая Terrain3D-коррекция',
             highlightLobby: 'Общие отметки и личные расчёты игроков в лобби',
             factLabels: {
                 setting: 'Опубликованный регион', district: 'Известный район', landmark: 'Известный ориентир',
@@ -62,12 +62,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
                 'Линейка измеряет расстояние, Карандаш создаёт свободные рисунки, а Зона и Полигон обозначают области. Также доступны тактические метки, Ластик, Отмена и Повтор.',
                 'Данные инструментов карты можно импортировать и экспортировать отдельно от сохранённых целей.'
             ],
-            terrainSafety: 'Terrain3D выключена по умолчанию. Кандидат применяется только со статусом SAFE; неопределённые, неподдерживаемые и недостижимые решения используют обычную таблицу. Наклон платформы и корпуса не учитывается.',
+            terrainSafety: 'Terrain3D-коррекция применяется автоматически только для кандидатов со статусом SAFE; неопределённые, неподдерживаемые и недостижимые решения используют обычную таблицу. Наклон платформы и корпуса не измеряется.',
             faq: [
                 { question: 'Как сразу открыть карту {map} в калькуляторе?', answer: 'Нажмите «Открыть карту {map}». Калькулятор загрузится с проверенным параметром карты и сохранит выбранный пресет обычным способом.' },
                 { question: 'Какие орудия поддерживает карта {map}?', answer: 'На карте доступны табличные расчёты миномёта L81 и решения LOW/HIGH для SPH-2.' },
                 { question: 'Можно ли планировать на карте {map} вместе?', answer: 'Да. Лобби синхронизирует рисунки, зоны, полигоны и тактические метки, но оставляет оружие, орудие, цель и круг дальности личными.' },
-                { question: 'Обязательна ли Terrain3D?', answer: 'Нет. Это экспериментальная опция, выключенная по умолчанию. Обычная таблица остаётся доступной и используется как безопасный резервный вариант.' }
+                { question: 'Обязательна ли Terrain3D?', answer: 'Нет. Коррекция запускается автоматически при наличии надёжных данных, а обычная таблица всегда остаётся безопасным резервным вариантом.' }
             ],
             sources: {
                 team17: 'Официальное описание WARDOGS и правил матча — Team17',
@@ -151,7 +151,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             title: 'Інтерактивна мапа WARDOGS {map} | Артилерійський калькулятор',
             description: 'Інтерактивна мапа WARDOGS {map}: {detail}. Розрахунки L81 і SPH-2, ізолінії, Terrain3D, інструменти мапи та командні лобі.',
             heading: 'WARDOGS {map} — інтерактивна мапа',
-            highlightWeapons: 'Розрахунки для міномета L81 і SPH-2', highlightTerrain: 'Ізолінії та Terrain3D-корекція, що вмикається вручну', highlightLobby: 'Спільні позначки й особисті розрахунки гравців у лобі',
+            highlightWeapons: 'Розрахунки для міномета L81 і SPH-2', highlightTerrain: 'Ізолінії та автоматична Terrain3D-корекція', highlightLobby: 'Спільні позначки й особисті розрахунки гравців у лобі',
             factLabels: { setting: 'Опублікований регіон', district: 'Відомий район', landmark: 'Відомий орієнтир', status: 'Статус мапи', focus: 'Візуальна тема', battlefield: 'Розмір поля бою', objective: 'Основна ціль' },
             battlefieldValue: '256 км²', objectiveValue: 'Випадкова контрольна зона 2 × 2 км',
             weaponsHeading: 'Міномет L81 і SPH-2 на мапі {map}',
@@ -160,12 +160,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
             lobby: ['Створіть лобі та надішліть посилання або код запрошення. Малюнки, зони, полігони й користувацькі позначки синхронізуються між учасниками.', 'Союзники бачать підписані позиції інших гравців без чужих кіл дальності. Лобі синхронізує браузери, але не отримує дані ігрового сервера.'],
             toolsHeading: 'Інструменти мапи {map}',
             tools: ['Лінійка вимірює відстань, Олівець створює довільні малюнки, а Зона й Полігон позначають області. Також доступні тактичні позначки, Гумка, Скасувати й Повторити.', 'Дані інструментів мапи можна імпортувати й експортувати окремо від збережених цілей.'],
-            terrainSafety: 'Terrain3D вимкнено за замовчуванням. Кандидат застосовується лише зі статусом SAFE; невизначені, непідтримувані й недосяжні рішення використовують звичайну таблицю. Нахил платформи та корпусу не враховується.',
+            terrainSafety: 'Terrain3D-корекція застосовується автоматично лише для кандидатів зі статусом SAFE; невизначені, непідтримувані й недосяжні рішення використовують звичайну таблицю. Нахил платформи та корпусу не вимірюється.',
             faq: [
                 { question: 'Як одразу відкрити мапу {map} у калькуляторі?', answer: 'Натисніть «Відкрити мапу {map}». Калькулятор завантажиться з перевіреним параметром мапи та збереже вибраний пресет звичайним способом.' },
                 { question: 'Яку артилерію підтримує мапа {map}?', answer: 'На мапі доступні табличні розрахунки міномета L81 і рішення LOW/HIGH для SPH-2.' },
                 { question: 'Чи можна планувати на мапі {map} разом?', answer: 'Так. Лобі синхронізує малюнки, зони, полігони й тактичні позначки, але залишає зброю, гармату, ціль і коло дальності особистими.' },
-                { question: 'Чи обов’язкова Terrain3D?', answer: 'Ні. Це експериментальна опція, вимкнена за замовчуванням. Звичайна таблиця залишається доступною та використовується як безпечний резервний варіант.' }
+                { question: 'Чи обов’язкова Terrain3D?', answer: 'Ні. Корекція запускається автоматично за наявності надійних даних, а звичайна таблиця завжди залишається безпечним резервним варіантом.' }
             ],
             sources: { team17: 'Офіційний опис WARDOGS і правил матчу — Team17', maps: 'Огляд мап WARDOGS — GameWatcher', reveal: 'Анонс мапи Zestafona — відео WARDOGS' }
         },
@@ -212,7 +212,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             title: 'Interaktive WARDOGS-Karte {map} | Artillerierechner',
             description: 'Interaktive WARDOGS-Karte {map}: {detail}. L81- und SPH-2-Berechnung, Höhenlinien, Terrain3D, Kartenwerkzeuge und Team-Lobbys.',
             heading: 'WARDOGS {map} – interaktive Karte',
-            highlightWeapons: 'Feuerlösungen für L81-Mörser und SPH-2', highlightTerrain: 'Höhenlinien und manuell aktivierbare Terrain3D-Korrektur', highlightLobby: 'Gemeinsame Markierungen und getrennte Spielerberechnungen in Lobbys',
+            highlightWeapons: 'Feuerlösungen für L81-Mörser und SPH-2', highlightTerrain: 'Höhenlinien und automatische Terrain3D-Korrektur', highlightLobby: 'Gemeinsame Markierungen und getrennte Spielerberechnungen in Lobbys',
             factLabels: { setting: 'Veröffentlichte Region', district: 'Bekannter Bezirk', landmark: 'Bekannte Landmarke', status: 'Kartenstatus', focus: 'Visueller Schwerpunkt', battlefield: 'Schlachtfeldgröße', objective: 'Hauptziel' },
             battlefieldValue: '256 km²', objectiveValue: 'Zufällige 2 × 2 km große Kontrollzone',
             weaponsHeading: 'L81-Mörser und SPH-2 auf {map}',
@@ -221,12 +221,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
             lobby: ['Erstelle eine Lobby und teile den Einladungslink oder -code. Zeichnungen, Zonen, Polygone und Benutzermarker werden zwischen verbundenen Teilnehmern synchronisiert.', 'Teammitglieder sehen beschriftete Spielerpositionen ohne fremde Reichweitenkreise. Die Lobby synchronisiert Browser, empfängt aber keine Daten von einem Spielserver.'],
             toolsHeading: 'Kartenwerkzeuge für {map}',
             tools: ['Das Lineal misst Entfernungen, der Stift zeichnet frei und Zone sowie Polygon markieren Flächen. Zusätzlich stehen taktische Marker, Radiergummi, Rückgängig und Wiederholen bereit.', 'Kartenwerkzeug-Daten lassen sich getrennt von gespeicherten Zielen importieren und exportieren.'],
-            terrainSafety: 'Terrain3D ist standardmäßig ausgeschaltet. Nur Kandidaten mit dem Status SAFE werden angewendet; unsichere, nicht unterstützte oder unerreichbare Lösungen verwenden die normale Tabelle. Plattform- und Fahrzeugneigung wird nicht berücksichtigt.',
+            terrainSafety: 'Die Terrain3D-Korrektur wird automatisch nur auf Kandidaten mit dem Status SAFE angewendet; unsichere, nicht unterstützte oder unerreichbare Lösungen verwenden die normale Tabelle. Die tatsächliche Plattform- und Fahrzeugneigung wird nicht gemessen.',
             faq: [
                 { question: 'Wie öffne ich {map} direkt im Rechner?', answer: 'Wähle „Karte {map} öffnen“. Der Rechner startet mit einem geprüften Kartenparameter und speichert die Auswahl wie gewohnt.' },
                 { question: 'Welche Geschütze werden auf {map} unterstützt?', answer: 'Verfügbar sind Tabellenwerte für den L81-Mörser sowie LOW- und HIGH-Lösungen für den SPH-2.' },
                 { question: 'Kann ein Team gemeinsam auf {map} planen?', answer: 'Ja. Die Lobby synchronisiert Zeichnungen, Zonen, Polygone und taktische Marker, während Waffe, Geschütz, Ziel und Reichweitenkreis persönlich bleiben.' },
-                { question: 'Ist Terrain3D erforderlich?', answer: 'Nein. Die experimentelle Option ist standardmäßig aus. Die normale Feuertabelle bleibt verfügbar und dient als sicherer Rückfall.' }
+                { question: 'Ist Terrain3D erforderlich?', answer: 'Nein. Die Korrektur läuft bei zuverlässigen Daten automatisch; die normale Feuertabelle bleibt der sichere Rückfall.' }
             ],
             sources: { team17: 'Offizielle WARDOGS-Spiel- und Matchübersicht — Team17', maps: 'Übersicht der WARDOGS-Karten — GameWatcher', reveal: 'Vorstellung der Karte Zestafona — WARDOGS-Video' }
         },
@@ -273,7 +273,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             title: 'Carte interactive WARDOGS {map} | Calculateur d’artillerie',
             description: 'Carte interactive WARDOGS {map} : {detail}. Calculs L81 et SPH-2, courbes de niveau, Terrain3D, outils cartographiques et salons d’équipe.',
             heading: 'WARDOGS {map} — carte interactive',
-            highlightWeapons: 'Solutions de tir pour le mortier L81 et le SPH-2', highlightTerrain: 'Courbes de niveau et correction Terrain3D activable manuellement', highlightLobby: 'Annotations partagées et solutions personnelles dans les salons',
+            highlightWeapons: 'Solutions de tir pour le mortier L81 et le SPH-2', highlightTerrain: 'Courbes de niveau et correction Terrain3D automatique', highlightLobby: 'Annotations partagées et solutions personnelles dans les salons',
             factLabels: { setting: 'Région publiée', district: 'Zone connue', landmark: 'Repère connu', status: 'Statut de la carte', focus: 'Thème visuel', battlefield: 'Taille du champ de bataille', objective: 'Objectif principal' },
             battlefieldValue: '256 km²', objectiveValue: 'Zone de contrôle aléatoire de 2 × 2 km',
             weaponsHeading: 'Mortier L81 et SPH-2 sur {map}',
@@ -282,12 +282,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
             lobby: ['Créez un salon et partagez son lien ou son code d’invitation. Les dessins, zones, polygones et marqueurs utilisateur sont synchronisés entre les participants connectés.', 'Les coéquipiers voient les positions identifiées des autres joueurs sans leurs cercles de portée. Le salon synchronise les navigateurs, mais ne reçoit aucune donnée du serveur de jeu.'],
             toolsHeading: 'Outils de la carte {map}',
             tools: ['La règle mesure les distances, le crayon permet le dessin libre et Zone ou Polygone délimitent des surfaces. Des marqueurs tactiques, une gomme, Annuler et Rétablir sont aussi disponibles.', 'Les données des outils cartographiques peuvent être importées et exportées séparément des cibles enregistrées.'],
-            terrainSafety: 'Terrain3D est désactivé par défaut. Seuls les candidats marqués SAFE sont appliqués ; les solutions incertaines, non prises en charge ou hors d’atteinte utilisent la table normale. L’inclinaison de la plateforme et du châssis n’est pas prise en compte.',
+            terrainSafety: 'La correction Terrain3D s’applique automatiquement uniquement aux candidats marqués SAFE ; les solutions incertaines, non prises en charge ou hors d’atteinte utilisent la table normale. L’inclinaison réelle de la plateforme et du châssis n’est pas mesurée.',
             faq: [
                 { question: 'Comment ouvrir directement la carte {map} dans le calculateur ?', answer: 'Sélectionnez « Ouvrir la carte {map} ». Le calculateur démarre avec un paramètre de carte validé et mémorise ensuite ce choix normalement.' },
                 { question: 'Quelles pièces sont disponibles sur {map} ?', answer: 'La carte prend en charge la table de tir du mortier L81 et les solutions LOW/HIGH du SPH-2.' },
                 { question: 'Une équipe peut-elle planifier ensemble sur {map} ?', answer: 'Oui. Le salon synchronise dessins, zones, polygones et marqueurs tactiques, tandis que l’arme, la pièce, la cible et le cercle de portée restent personnels.' },
-                { question: 'Terrain3D est-il obligatoire ?', answer: 'Non. Cette option expérimentale est désactivée par défaut. La table de tir normale reste disponible et sert de solution de repli sûre.' }
+                { question: 'Terrain3D est-il obligatoire ?', answer: 'Non. La correction fonctionne automatiquement lorsque les données sont fiables ; la table de tir normale reste la solution de repli sûre.' }
             ],
             sources: { team17: 'Présentation officielle de WARDOGS et des règles — Team17', maps: 'Présentation des cartes WARDOGS — GameWatcher', reveal: 'Présentation de la carte Zestafona — vidéo WARDOGS' }
         },
@@ -334,7 +334,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             title: 'Mapa interactivo de WARDOGS {map} | Calculadora de artillería',
             description: 'Mapa interactivo de WARDOGS {map}: {detail}. Cálculos para L81 y SPH-2, curvas de nivel, Terrain3D, herramientas y salas de equipo.',
             heading: 'WARDOGS {map} — mapa interactivo',
-            highlightWeapons: 'Soluciones de tiro para mortero L81 y SPH-2', highlightTerrain: 'Curvas de nivel y corrección Terrain3D opcional', highlightLobby: 'Anotaciones compartidas y cálculos personales en las salas',
+            highlightWeapons: 'Soluciones de tiro para mortero L81 y SPH-2', highlightTerrain: 'Curvas de nivel y corrección Terrain3D automática', highlightLobby: 'Anotaciones compartidas y cálculos personales en las salas',
             factLabels: { setting: 'Región publicada', district: 'Zona conocida', landmark: 'Punto de referencia', status: 'Estado del mapa', focus: 'Tema visual', battlefield: 'Tamaño del campo de batalla', objective: 'Objetivo principal' },
             battlefieldValue: '256 km²', objectiveValue: 'Zona de control aleatoria de 2 × 2 km',
             weaponsHeading: 'Mortero L81 y SPH-2 en {map}',
@@ -343,12 +343,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
             lobby: ['Crea una sala y comparte el enlace o código de invitación. Los dibujos, zonas, polígonos y marcadores de usuario se sincronizan entre los participantes conectados.', 'Los compañeros ven las posiciones identificadas de otros jugadores sin sus círculos de alcance. La sala sincroniza navegadores, pero no recibe datos del servidor del juego.'],
             toolsHeading: 'Herramientas del mapa {map}',
             tools: ['La regla mide distancias, el lápiz permite dibujar y Zona o Polígono delimitan áreas. También hay marcadores tácticos, borrador, Deshacer y Rehacer.', 'Los datos de las herramientas del mapa se pueden importar y exportar por separado de los objetivos guardados.'],
-            terrainSafety: 'Terrain3D está desactivado por defecto. Solo se aplican candidatos SAFE; las soluciones inciertas, no compatibles o inalcanzables usan la tabla normal. No se corrige la inclinación de la plataforma ni del chasis.',
+            terrainSafety: 'La corrección Terrain3D se aplica automáticamente solo a candidatos SAFE; las soluciones inciertas, no compatibles o inalcanzables usan la tabla normal. No se mide la inclinación real de la plataforma ni del chasis.',
             faq: [
                 { question: '¿Cómo abro {map} directamente en la calculadora?', answer: 'Selecciona «Abrir el mapa {map}». La calculadora se inicia con un parámetro de mapa validado y guarda la selección de la forma habitual.' },
                 { question: '¿Qué piezas admite el mapa {map}?', answer: 'Están disponibles la tabla de tiro del mortero L81 y las soluciones LOW/HIGH del SPH-2.' },
                 { question: '¿Puede un equipo planificar junto en {map}?', answer: 'Sí. La sala sincroniza dibujos, zonas, polígonos y marcadores tácticos, mientras arma, pieza, objetivo y círculo de alcance siguen siendo personales.' },
-                { question: '¿Es obligatorio Terrain3D?', answer: 'No. Es una opción experimental desactivada por defecto. La tabla de tiro normal sigue disponible como alternativa segura.' }
+                { question: '¿Es obligatorio Terrain3D?', answer: 'No. La corrección funciona automáticamente cuando los datos son fiables; la tabla de tiro normal sigue siendo la alternativa segura.' }
             ],
             sources: { team17: 'Descripción oficial de WARDOGS y sus partidas — Team17', maps: 'Resumen de los mapas de WARDOGS — GameWatcher', reveal: 'Presentación del mapa Zestafona — vídeo de WARDOGS' }
         },
@@ -395,7 +395,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             title: 'Interaktywna mapa WARDOGS {map} | Kalkulator artyleryjski',
             description: 'Interaktywna mapa WARDOGS {map}: {detail}. Obliczenia L81 i SPH-2, poziomice, Terrain3D, narzędzia mapy i pokoje zespołowe.',
             heading: 'WARDOGS {map} — interaktywna mapa',
-            highlightWeapons: 'Rozwiązania dla moździerza L81 i SPH-2', highlightTerrain: 'Poziomice i ręcznie włączana korekta Terrain3D', highlightLobby: 'Wspólne oznaczenia i osobne obliczenia graczy w pokojach',
+            highlightWeapons: 'Rozwiązania dla moździerza L81 i SPH-2', highlightTerrain: 'Poziomice i automatyczna korekta Terrain3D', highlightLobby: 'Wspólne oznaczenia i osobne obliczenia graczy w pokojach',
             factLabels: { setting: 'Opublikowany region', district: 'Znany obszar', landmark: 'Znany punkt orientacyjny', status: 'Status mapy', focus: 'Motyw wizualny', battlefield: 'Rozmiar pola bitwy', objective: 'Główny cel' },
             battlefieldValue: '256 km²', objectiveValue: 'Losowa strefa kontroli 2 × 2 km',
             weaponsHeading: 'Moździerz L81 i SPH-2 na mapie {map}',
@@ -404,12 +404,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
             lobby: ['Utwórz pokój i udostępnij link lub kod zaproszenia. Rysunki, strefy, wielokąty i znaczniki użytkowników są synchronizowane między połączonymi uczestnikami.', 'Członkowie zespołu widzą podpisane pozycje innych graczy bez cudzych okręgów zasięgu. Pokój synchronizuje przeglądarki, ale nie pobiera danych z serwera gry.'],
             toolsHeading: 'Narzędzia mapy {map}',
             tools: ['Linijka mierzy dystans, Ołówek pozwala rysować, a Strefa i Wielokąt wyznaczają obszary. Dostępne są też markery taktyczne, Gumka, Cofnij i Ponów.', 'Dane narzędzi mapy można importować i eksportować niezależnie od zapisanych celów.'],
-            terrainSafety: 'Terrain3D jest domyślnie wyłączone. Stosowane są tylko kandydaty SAFE; rozwiązania niepewne, nieobsługiwane lub nieosiągalne korzystają ze zwykłej tabeli. Przechył platformy i podwozia nie jest uwzględniany.',
+            terrainSafety: 'Korekta Terrain3D jest stosowana automatycznie tylko dla kandydatów SAFE; rozwiązania niepewne, nieobsługiwane lub nieosiągalne korzystają ze zwykłej tabeli. Rzeczywisty przechył platformy i podwozia nie jest mierzony.',
             faq: [
                 { question: 'Jak otworzyć mapę {map} bezpośrednio w kalkulatorze?', answer: 'Wybierz „Otwórz mapę {map}”. Kalkulator uruchomi się ze sprawdzonym parametrem mapy i zapisze wybór w zwykły sposób.' },
                 { question: 'Jakie uzbrojenie obsługuje mapa {map}?', answer: 'Dostępna jest tabela strzelań moździerza L81 oraz rozwiązania LOW/HIGH dla SPH-2.' },
                 { question: 'Czy zespół może wspólnie planować na {map}?', answer: 'Tak. Pokój synchronizuje rysunki, strefy, wielokąty i markery taktyczne, a broń, działo, cel i okrąg zasięgu pozostają osobiste.' },
-                { question: 'Czy Terrain3D jest wymagane?', answer: 'Nie. To eksperymentalna opcja domyślnie wyłączona. Zwykła tabela pozostaje dostępna jako bezpieczna metoda zapasowa.' }
+                { question: 'Czy Terrain3D jest wymagane?', answer: 'Nie. Korekta działa automatycznie przy wiarygodnych danych, a zwykła tabela pozostaje bezpieczną metodą zapasową.' }
             ],
             sources: { team17: 'Oficjalny opis WARDOGS i zasad meczu — Team17', maps: 'Przegląd map WARDOGS — GameWatcher', reveal: 'Prezentacja mapy Zestafona — film WARDOGS' }
         },
@@ -456,7 +456,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             title: 'Mapa interativo de WARDOGS {map} | Calculadora de artilharia',
             description: 'Mapa interativo de WARDOGS {map}: {detail}. Cálculos para L81 e SPH-2, curvas de nível, Terrain3D, ferramentas de mapa e salas de equipa.',
             heading: 'Mapa interativo de WARDOGS {map}',
-            highlightWeapons: 'Soluções para morteiro L81 e SPH-2', highlightTerrain: 'Curvas de nível e correção Terrain3D opcional', highlightLobby: 'Anotações partilhadas e cálculos individuais nas salas',
+            highlightWeapons: 'Soluções para morteiro L81 e SPH-2', highlightTerrain: 'Curvas de nível e correção Terrain3D automática', highlightLobby: 'Anotações partilhadas e cálculos individuais nas salas',
             factLabels: { setting: 'Região publicada', district: 'Área conhecida', landmark: 'Referência conhecida', status: 'Estado do mapa', focus: 'Tema visual', battlefield: 'Dimensão do campo de batalha', objective: 'Objetivo principal' },
             battlefieldValue: '256 km²', objectiveValue: 'Zona de Controlo aleatória de 2 × 2 km',
             weaponsHeading: 'Morteiro L81 e SPH-2 em {map}',
@@ -465,12 +465,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
             lobby: ['Crie uma sala e partilhe o link ou código de convite. Desenhos, zonas, polígonos e marcadores de utilizador são sincronizados entre os participantes ligados.', 'Os colegas veem as posições identificadas dos outros jogadores sem os seus círculos de alcance. A sala sincroniza os navegadores; não recebe dados de um servidor de jogo em direto.'],
             toolsHeading: 'Ferramentas do mapa {map}',
             tools: ['A Régua mede distâncias, o Lápis permite desenhar e Zona ou Polígono delimitam áreas. Também existem marcadores táticos, Borracha, Desfazer e Refazer.', 'Os dados das ferramentas de mapa podem ser importados e exportados separadamente dos alvos guardados.'],
-            terrainSafety: 'Terrain3D vem desativado. Apenas candidatos SAFE são aplicados; resultados incertos, não suportados ou inalcançáveis usam a tabela normal. A inclinação da plataforma ou do chassis não é corrigida.',
+            terrainSafety: 'A correção Terrain3D é aplicada automaticamente apenas a candidatos SAFE; resultados incertos, não suportados ou inalcançáveis usam a tabela normal. A inclinação real da plataforma ou do chassis não é medida.',
             faq: [
                 { question: 'Como abro {map} diretamente na calculadora?', answer: 'Selecione «Abrir o mapa {map}». A calculadora inicia com um parâmetro de mapa validado e guarda a seleção normalmente.' },
                 { question: 'Que armas são suportadas no mapa {map}?', answer: 'Estão disponíveis a tabela de tiro do morteiro L81 e as soluções LOW/HIGH do SPH-2.' },
                 { question: 'Uma equipa pode planear em conjunto em {map}?', answer: 'Sim. A sala sincroniza desenhos, zonas, polígonos e marcadores táticos, enquanto arma, artilharia, alvo e círculo de alcance permanecem pessoais.' },
-                { question: 'Terrain3D é obrigatório?', answer: 'Não. É uma opção experimental desativada por defeito. A tabela de tiro normal continua disponível como alternativa segura.' }
+                { question: 'Terrain3D é obrigatório?', answer: 'Não. A correção funciona automaticamente quando os dados são fiáveis; a tabela de tiro normal continua a alternativa segura.' }
             ],
             sources: { team17: 'Descrição oficial de WARDOGS e das partidas — Team17', maps: 'Visão geral dos mapas de WARDOGS — GameWatcher', reveal: 'Apresentação do mapa Zestafona — vídeo de WARDOGS' }
         },
@@ -517,7 +517,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             title: 'WARDOGS {map} 互动地图 | 火炮计算器',
             description: 'WARDOGS {map} 互动地图：{detail}。支持 L81 与 SPH-2 计算、等高线、Terrain3D、地图工具和团队房间。',
             heading: 'WARDOGS {map} 互动地图',
-            highlightWeapons: 'L81 迫击炮与 SPH-2 射击解算', highlightTerrain: '等高线与可选 Terrain3D 修正', highlightLobby: '房间内共享标注、玩家各自保留射击解算',
+            highlightWeapons: 'L81 迫击炮与 SPH-2 射击解算', highlightTerrain: '等高线与自动 Terrain3D 修正', highlightLobby: '房间内共享标注、玩家各自保留射击解算',
             factLabels: { setting: '公开地区', district: '已知区域', landmark: '已知地标', status: '地图状态', focus: '视觉主题', battlefield: '战场面积', objective: '核心目标' },
             battlefieldValue: '256 平方公里', objectiveValue: '随机 2 × 2 公里控制区',
             weaponsHeading: '{map} 的 L81 迫击炮与 SPH-2',
@@ -526,12 +526,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
             lobby: ['创建房间并分享邀请链接或代码。已连接参与者之间会同步绘图、区域、多边形和用户标记。', '队友可以看到带昵称的其他玩家位置，但不会看到对方的射程圈。房间只同步浏览器内的规划，不读取实时游戏服务器数据。'],
             toolsHeading: '{map} 地图工具',
             tools: ['标尺用于测距，铅笔用于自由绘制，区域和多边形用于圈定范围；另有战术标记、橡皮擦、撤销和重做。', '地图工具数据可单独导入和导出，不与已保存目标混在一起。'],
-            terrainSafety: 'Terrain3D 默认关闭。只有 SAFE 候选结果会被采用；不确定、不支持或不可达时继续使用普通射表。当前不修正平台或车体倾斜。',
+            terrainSafety: 'Terrain3D 修正会自动运行，并且只采用 SAFE 候选结果；不确定、不支持或不可达时继续使用普通射表。当前不会测量平台或车体的实际倾斜。',
             faq: [
                 { question: '如何在计算器中直接打开 {map}？', answer: '选择“打开 {map} 地图”。计算器会使用经过校验的地图参数启动，并按正常方式保存选择。' },
                 { question: '{map} 支持哪些武器？', answer: '支持 L81 迫击炮射表，以及 SPH-2 的 LOW/HIGH 解算。' },
                 { question: '队伍能在 {map} 上共同规划吗？', answer: '可以。房间同步绘图、区域、多边形和战术标记，而武器、火炮、目标和射程圈仍归个人所有。' },
-                { question: '必须启用 Terrain3D 吗？', answer: '不必。它是默认关闭的实验选项，普通射表始终可作为安全后备。' }
+                { question: '必须启用 Terrain3D 吗？', answer: '不必手动启用。数据可靠时会自动修正，普通射表始终作为安全后备。' }
             ],
             sources: { team17: 'WARDOGS 游戏与对局官方介绍 — Team17', maps: 'WARDOGS 地图概览 — GameWatcher', reveal: 'Zestafona 地图展示 — WARDOGS 视频' }
         },
@@ -578,7 +578,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             title: 'WARDOGS {map} 인터랙티브 지도 | 포병 계산기',
             description: 'WARDOGS {map} 인터랙티브 지도: {detail}. L81 및 SPH-2 계산, 등고선, Terrain3D, 지도 도구와 팀 로비를 제공합니다.',
             heading: 'WARDOGS {map} 인터랙티브 지도',
-            highlightWeapons: 'L81 박격포 및 SPH-2 사격 해법', highlightTerrain: '등고선과 선택형 Terrain3D 보정', highlightLobby: '로비에서 공유 주석과 개인별 사격 해법 제공',
+            highlightWeapons: 'L81 박격포 및 SPH-2 사격 해법', highlightTerrain: '등고선과 자동 Terrain3D 보정', highlightLobby: '로비에서 공유 주석과 개인별 사격 해법 제공',
             factLabels: { setting: '공개 지역', district: '알려진 구역', landmark: '알려진 랜드마크', status: '지도 상태', focus: '시각적 특징', battlefield: '전장 크기', objective: '핵심 목표' },
             battlefieldValue: '256 km²', objectiveValue: '무작위 2 × 2 km 통제 구역',
             weaponsHeading: '{map}의 L81 박격포와 SPH-2',
@@ -587,12 +587,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
             lobby: ['로비를 만들고 초대 링크나 코드를 공유하세요. 연결된 참가자 사이에서 그림, 구역, 다각형과 사용자 마커가 동기화됩니다.', '팀원은 다른 플레이어의 닉네임이 표시된 위치를 볼 수 있지만 그들의 사거리 원은 보지 않습니다. 로비는 브라우저의 계획을 동기화하며 실시간 게임 서버 데이터를 가져오지 않습니다.'],
             toolsHeading: '{map} 지도 도구',
             tools: ['자는 거리를 재고, 연필은 자유롭게 그리며, 구역과 다각형은 영역을 표시합니다. 전술 마커, 지우개, 실행 취소와 다시 실행도 사용할 수 있습니다.', '지도 도구 데이터는 저장된 목표와 별도로 가져오거나 내보낼 수 있습니다.'],
-            terrainSafety: 'Terrain3D는 기본적으로 꺼져 있습니다. SAFE 후보만 적용되며 불확실하거나 지원되지 않거나 도달할 수 없는 결과는 일반 사격표를 사용합니다. 플랫폼과 차체 기울기는 보정하지 않습니다.',
+            terrainSafety: 'Terrain3D 보정은 자동으로 실행되며 SAFE 후보만 적용됩니다. 불확실하거나 지원되지 않거나 도달할 수 없는 결과는 일반 사격표를 사용합니다. 실제 플랫폼과 차체 기울기는 측정하지 않습니다.',
             faq: [
                 { question: '계산기에서 {map}을 바로 여는 방법은 무엇인가요?', answer: '“{map} 지도 열기”를 선택하세요. 검증된 지도 매개변수로 계산기가 시작되고 선택은 평소와 같이 저장됩니다.' },
                 { question: '{map} 지도에서 어떤 무기를 지원하나요?', answer: 'L81 박격포 사격표와 SPH-2 LOW/HIGH 해법을 사용할 수 있습니다.' },
                 { question: '팀이 {map}에서 함께 계획할 수 있나요?', answer: '예. 로비는 그림, 구역, 다각형과 전술 마커를 동기화하며 무기, 포, 목표와 사거리 원은 개인별로 유지합니다.' },
-                { question: 'Terrain3D가 필수인가요?', answer: '아닙니다. 기본적으로 꺼져 있는 실험 기능입니다. 일반 사격표가 안전한 대안으로 계속 제공됩니다.' }
+                { question: 'Terrain3D가 필수인가요?', answer: '수동으로 켤 필요는 없습니다. 데이터가 신뢰할 수 있을 때 자동으로 보정하며 일반 사격표는 안전한 대안으로 유지됩니다.' }
             ],
             sources: { team17: 'WARDOGS 게임 및 매치 공식 소개 — Team17', maps: 'WARDOGS 지도 개요 — GameWatcher', reveal: 'Zestafona 지도 공개 — WARDOGS 영상' }
         },
@@ -639,7 +639,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             title: 'WARDOGS {map} インタラクティブマップ | 砲撃計算機',
             description: 'WARDOGS {map} インタラクティブマップ：{detail}。L81 と SPH-2 の計算、等高線、Terrain3D、マップツール、チームロビーに対応。',
             heading: 'WARDOGS {map} インタラクティブマップ',
-            highlightWeapons: 'L81 迫撃砲と SPH-2 の射撃解', highlightTerrain: '等高線と任意の Terrain3D 補正', highlightLobby: 'ロビーで注釈を共有し、射撃解はプレイヤー別に保持',
+            highlightWeapons: 'L81 迫撃砲と SPH-2 の射撃解', highlightTerrain: '等高線と自動 Terrain3D 補正', highlightLobby: 'ロビーで注釈を共有し、射撃解はプレイヤー別に保持',
             factLabels: { setting: '公開地域', district: '既知の区域', landmark: '既知のランドマーク', status: 'マップ状況', focus: 'ビジュアルテーマ', battlefield: '戦場規模', objective: '主要目標' },
             battlefieldValue: '256 km²', objectiveValue: 'ランダムな 2 × 2 km のコントロールゾーン',
             weaponsHeading: '{map} の L81 迫撃砲と SPH-2',
@@ -648,12 +648,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
             lobby: ['ロビーを作成して招待リンクまたはコードを共有できます。接続した参加者間で描画、ゾーン、ポリゴン、ユーザーマーカーが同期されます。', 'チームメイトは他プレイヤーの名前付き位置を確認できますが、他人の射程円は表示されません。ロビーはブラウザ上の計画を同期するもので、ライブのゲームサーバーデータは取得しません。'],
             toolsHeading: '{map} のマップツール',
             tools: ['ルーラーで距離を測り、ペンシルで描画し、ゾーンやポリゴンで範囲を囲めます。戦術マーカー、消しゴム、元に戻す、やり直しも利用できます。', 'マップツールのデータは保存した目標とは別にインポート・エクスポートできます。'],
-            terrainSafety: 'Terrain3D はデフォルトでオフです。SAFE の候補だけを適用し、不確実、未対応、到達不能な結果には通常の射表を使用します。プラットフォームや車体の傾斜は補正しません。',
+            terrainSafety: 'Terrain3D 補正は自動で動作し、SAFE の候補だけを適用します。不確実、未対応、到達不能な結果には通常の射表を使用します。実際のプラットフォームや車体の傾斜は測定しません。',
             faq: [
                 { question: '計算機で {map} を直接開くには？', answer: '「{map} マップを開く」を選択してください。検証済みのマップパラメーターで計算機が起動し、選択は通常どおり保存されます。' },
                 { question: '{map} ではどの兵器に対応していますか？', answer: 'L81 迫撃砲の射表と SPH-2 の LOW/HIGH 解に対応しています。' },
                 { question: 'チームで {map} を共同計画できますか？', answer: 'はい。ロビーは描画、ゾーン、ポリゴン、戦術マーカーを同期し、武器、砲、目標、射程円は個人別に保ちます。' },
-                { question: 'Terrain3D は必須ですか？', answer: 'いいえ。デフォルトでオフの実験機能です。通常の射表を安全な代替として常に利用できます。' }
+                { question: 'Terrain3D は必須ですか？', answer: '手動で有効にする必要はありません。信頼できるデータがある場合に自動補正し、通常の射表を安全な代替として常に利用できます。' }
             ],
             sources: { team17: 'WARDOGS のゲームとマッチに関する公式紹介 — Team17', maps: 'WARDOGS マップ概要 — GameWatcher', reveal: 'Zestafona マップ公開 — WARDOGS 動画' }
         },
@@ -700,7 +700,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             title: 'Interaktivní mapa WARDOGS {map} | Artilerijní kalkulátor',
             description: 'Interaktivní mapa WARDOGS {map}: {detail}. Výpočty pro L81 a SPH-2, izolinie, Terrain3D, nástroje mapy a týmová lobby.',
             heading: 'WARDOGS {map} – interaktivní mapa',
-            highlightWeapons: 'Palebná řešení pro minomet L81 a SPH-2', highlightTerrain: 'Izolinie a volitelná korekce Terrain3D', highlightLobby: 'Společné poznámky v lobby a oddělené výpočty každého hráče',
+            highlightWeapons: 'Palebná řešení pro minomet L81 a SPH-2', highlightTerrain: 'Izolinie a automatická korekce Terrain3D', highlightLobby: 'Společné poznámky v lobby a oddělené výpočty každého hráče',
             factLabels: { setting: 'Zveřejněná oblast', district: 'Známá čtvrť', landmark: 'Známá dominanta', status: 'Stav mapy', focus: 'Vizuální téma', battlefield: 'Rozsah bojiště', objective: 'Hlavní cíl' },
             battlefieldValue: '256 km²', objectiveValue: 'Náhodná kontrolní zóna 2 × 2 km',
             weaponsHeading: 'Minomet L81 a SPH-2 na mapě {map}',
@@ -709,12 +709,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
             lobby: ['Vytvořte lobby a pošlete odkaz nebo kód pozvánky. Kresby, zóny, polygony a uživatelské značky se synchronizují mezi připojenými účastníky.', 'Spoluhráči vidí popsané pozice hráčů bez cizích kružnic dostřelu. Lobby synchronizuje plánování v prohlížeči, žádná data z herního serveru nečte.'],
             toolsHeading: 'Nástroje mapy pro {map}',
             tools: ['Pravítkem změříte vzdálenost, tužkou kreslíte volně a zónou nebo polygonem vyznačíte plochu. K dispozici jsou také taktické značky, guma, krok zpět a vpřed.', 'Data nástrojů mapy lze importovat a exportovat odděleně od uložených cílů.'],
-            terrainSafety: 'Terrain3D je ve výchozím stavu vypnutý. Použijí se pouze kandidáti se stavem SAFE; nejistá, nepodporovaná nebo nedosažitelná řešení používají běžnou palebnou tabulku. Náklon plošiny ani podvozku se nekoriguje.',
+            terrainSafety: 'Korekce Terrain3D se spouští automaticky a používá pouze kandidáty se stavem SAFE; nejistá, nepodporovaná nebo nedosažitelná řešení používají běžnou palebnou tabulku. Skutečný náklon plošiny ani podvozku se neměří.',
             faq: [
                 { question: 'Jak otevřu mapu {map} přímo v kalkulátoru?', answer: 'Zvolte „Otevřít mapu {map}“. Kalkulátor se spustí s ověřeným parametrem mapy a volbu si uloží jako obvykle.' },
                 { question: 'Jaké zbraně jsou na mapě {map} podporované?', answer: 'K dispozici jsou tabulkové hodnoty pro minomet L81 a řešení pro plochou i horní dráhu SPH-2.' },
                 { question: 'Může tým plánovat na mapě {map} společně?', answer: 'Ano. Lobby synchronizuje kresby, zóny, polygony a taktické značky, zatímco zbraň, postavení, cíl a kružnice dostřelu zůstávají osobní.' },
-                { question: 'Je Terrain3D potřeba?', answer: 'Ne. Jde o experimentální funkci, která je ve výchozím stavu vypnutá. Běžná palebná tabulka zůstává dostupná jako bezpečné řešení.' }
+                { question: 'Je Terrain3D potřeba?', answer: 'Není nutné ji zapínat ručně. Při spolehlivých datech pracuje automaticky a běžná palebná tabulka zůstává bezpečným řešením.' }
             ],
             sources: { team17: 'Oficiální představení hry a zápasů WARDOGS — Team17', maps: 'Přehled map WARDOGS — GameWatcher', reveal: 'Představení mapy Zestafona — video WARDOGS' }
         },
@@ -761,7 +761,7 @@ export const MAP_LANDING_LOCALIZATIONS = {
             title: 'WARDOGS {map} Interactive Meowp | Artillery Catculator',
             description: 'WARDOGS {map} interactive meowp: {detail}. L81 and SPH-2 catculations, contours, Terrain3D, map paws and team lobbies.',
             heading: 'WARDOGS {map} Interactive Meowp',
-            highlightWeapons: 'L81 Mortar and SPH-2 firing catculations', highlightTerrain: 'Contour lines and opt-in Terrain3D meowgic', highlightLobby: 'Shared scribbles with personal firing solutions in lobbies',
+            highlightWeapons: 'L81 Mortar and SPH-2 firing catculations', highlightTerrain: 'Contour lines and automatic Terrain3D meowgic', highlightLobby: 'Shared scribbles with personal firing solutions in lobbies',
             factLabels: { setting: 'Published region', district: 'Known area', landmark: 'Known landmark', status: 'Meowp status', focus: 'Visual focus', battlefield: 'Battlefield size', objective: 'Core objective' },
             battlefieldValue: '256 km²', objectiveValue: 'Randomised 2 × 2 km Control Zone',
             weaponsHeading: 'L81 Mortar and SPH-2 on {map}',
@@ -770,12 +770,12 @@ export const MAP_LANDING_LOCALIZATIONS = {
             lobby: ['Create a lobby and share its invite link or code. Drawings, zones, polygons and user markers synchronise between connected cats and humans.', 'Teammates see labelled player positions but not somebody else’s range circle. The lobby synchronises browser planning; it does not chase live game-server data.'],
             toolsHeading: '{map} map paws',
             tools: ['Ruler measures, Pencil scribbles, and Zone or Polygon fences an area. Tactical markers, Eraser, Undo and Redo are also ready under the paw.', 'Map-tool data can be imported and exported separately from saved targets.'],
-            terrainSafety: 'Terrain3D sleeps by default. Only SAFE candidates wake it; uncertain, unsupported or unreachable results use the normal firing table. Platform and chassis tilt are not catculated.',
+            terrainSafety: 'Terrain3D meowgic runs automatically for SAFE candidates; uncertain, unsupported or unreachable results use the normal firing table. Actual platform and chassis tilt are not catculated.',
             faq: [
                 { question: 'How do I open {map} in the catculator?', answer: 'Choose “Open {map} Meowp”. The catculator starts with a validated map parameter and remembers the selection normally.' },
                 { question: 'Which big tubes work on {map}?', answer: 'The L81 Mortar firing table and SPH-2 LOW/HIGH solutions are supported.' },
                 { question: 'Can the squad plan together on {map}?', answer: 'Yes. The lobby shares drawings, zones, polygons and tactical markers while weapon, gun, target and range circle remain personal.' },
-                { question: 'Must Terrain3D be enabled?', answer: 'No. It is an experimental option that sleeps by default. The normal firing table remains the safe fallback.' }
+                { question: 'Must Terrain3D be enabled?', answer: 'No manual switch is needed. It runs automatically with reliable data, and the normal firing table remains the safe fallback.' }
             ],
             sources: { team17: 'Official WARDOGS game and match overview — Team17', maps: 'WARDOGS maps overview — GameWatcher', reveal: 'Zestafona map reveal — WARDOGS video' }
         },

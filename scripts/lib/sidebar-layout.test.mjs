@@ -123,15 +123,37 @@ test('every language has a useful guide and FAQ', () => {
     }
 });
 
-test('the removed Terrain3D opt-in panel is not loaded', async () => {
+test('Terrain3D correction is automatic without restoring the removed opt-in panel', async () => {
     const source = await readFile(
         join(root, 'js', 'main.js'),
         'utf8'
     );
 
-    assert.doesNotMatch(
+    const config = JSON.parse(
+        await readFile(
+            join(
+                root,
+                'data',
+                'ballistics',
+                'terrain-context.json'
+            ),
+            'utf8'
+        )
+    );
+
+    assert.match(
         source,
-        /data-experimental-terrain-correction|initExperimentalTerrainCorrection/
+        /initExperimentalTerrainCorrection/
+    );
+
+    assert.equal(
+        config.experimentalCorrection.defaultEnabled,
+        true
+    );
+
+    assert.equal(
+        config.experimentalCorrection.showControls,
+        false
     );
 });
 

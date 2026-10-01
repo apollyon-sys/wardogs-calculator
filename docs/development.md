@@ -201,12 +201,12 @@ For map landing pages, `npm run test:build` checks every language/map combinatio
 
 ## Terrain3D verification
 
-Terrain3D remains a release resource and should be verified independently of localization work. The public safety contract remains:
+Terrain3D remains a release resource and should be verified independently of localization work. The public safety contract is:
 
 ```text
-Terrain3D available   -> show elevation / ΔZ context
-Terrain3D unavailable -> keep normal firing solution
-MIL                   -> existing firing tables remain authoritative
+SAFE candidate        -> apply the Terrain3D MIL command
+Any other state       -> keep the normal firing-table solution
+Terrain unavailable   -> keep the calculator operational
 ```
 
 Localization changes must not change the terrain calibration, firing tables, release safety flags, or automatic-correction behavior.

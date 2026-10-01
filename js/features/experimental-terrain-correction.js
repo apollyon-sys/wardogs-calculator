@@ -58,7 +58,7 @@
     const TERRAIN_TEXT_FALLBACK = Object.freeze({
         title: 'Experimental Terrain3D correction',
         toggle: 'Use experimental Terrain3D correction',
-        note: 'Opt-in only. Platform/chassis tilt is not corrected. The flat table is used automatically whenever a candidate is not SAFE.',
+        note: 'Terrain3D correction is automatic. Platform/chassis tilt is not corrected. The flat table is used whenever a candidate is not SAFE.',
         table: 'Table',
         terrain: 'Terrain3D',
         low: 'LOW',
@@ -2688,6 +2688,13 @@
     }
 
     function syncPanel() {
+        if (
+            state.config?.showControls !==
+            true
+        ) {
+            return;
+        }
+
         const root =
             ensurePanel();
 
@@ -2903,12 +2910,23 @@
             }
 
             state.enabled =
-                readStoredEnabled();
+                state.config?.showControls === true
+                    ? readStoredEnabled()
+                    : Boolean(
+                        state.config
+                            ?.defaultEnabled
+                    );
 
             wrapResolver();
             installFormatter();
-            ensurePanel();
-            syncPanel();
+
+            if (
+                state.config?.showControls ===
+                true
+            ) {
+                ensurePanel();
+                syncPanel();
+            }
 
             return true;
 

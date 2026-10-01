@@ -189,4 +189,4 @@ Each point has a compact Lock action. Locking a point prevents touch taps and dr
 
 The map HUD prioritizes Distance, MIL, and Azimuth equally in a compact three-column solution panel. Range status remains visible below the primary values, while ΔX/ΔY stay in the expanded Result sheet as secondary details.
 
-The SPH-2 leveling warning uses the shared localization system and remains informational only. Terrain3D elevation context does not automatically change MIL in this release.
+The SPH-2 leveling warning uses the shared localization system and remains informational only. Terrain3D correction is automatic for verified `SAFE_CONSENSUS` candidates and otherwise keeps the normal firing-table MIL.

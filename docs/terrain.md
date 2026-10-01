@@ -6,6 +6,7 @@ Supported Terrain3D datasets:
 
 - **Bakurani**
 - **Ozeti**
+- **Zestafona**
 
 ---
 
@@ -33,16 +34,18 @@ The value is shown as secondary firing-solution context.
 
 ### Current release behavior
 
-Terrain3D is informational only.
+Terrain3D correction is enabled automatically for SPH-2.
 
 ```text
 Distance -> normal coordinate calculation
 Azimuth  -> normal coordinate calculation
-MIL      -> existing weapon firing table
+MIL      -> SAFE Terrain3D candidate or firing-table fallback
 ΔZ       -> Terrain3D elevation context
 ```
 
-Automatic terrain, ΔZ, or vehicle-attitude MIL correction is **not enabled**.
+Only a candidate classified as `SAFE_CONSENSUS` can replace the firing-table
+MIL. Missing, uncertain, unsupported or unreachable terrain results keep the
+normal table value. Terrain3D still does not infer the actual vehicle attitude.
 
 ### The elevation datum is offset
 
@@ -310,9 +313,9 @@ Before publishing a terrain-enabled build, verify every registered dataset:
 - every chunk has the declared byte length
 - every chunk SHA-256 matches the manifest
 - map-specific coordinate coverage is verified
-- `releasePolicy.automaticMilCorrection` remains `false`
-- `releasePolicy.flatTableAuthoritative` remains `true`
-- `calibration.ready` remains `false` until projectile/platform correction is independently validated
+- `releasePolicy.automaticMilCorrection` is `true`
+- `releasePolicy.flatTableFallback` remains `true`
+- `calibration.ready` is `true`
 
 Then build normally:
 
@@ -367,4 +370,5 @@ Terrain3D extraction and display are separate from ballistic compensation.
 
 A terrain dataset can be considered valid for elevation display without implying that an automatic firing correction is valid. Vehicle pose, suspension, chassis attitude, projectile model, and final barrel transform may affect real firing elevation independently of map terrain height.
 
-For that reason, verified elevation context is exposed while the existing firing tables remain authoritative.
+For that reason, only verified `SAFE_CONSENSUS` candidates are applied. The
+existing firing tables remain the fail-safe fallback for every other state.
