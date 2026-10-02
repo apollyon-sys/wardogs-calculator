@@ -10,7 +10,7 @@
   },
   "engines": { "node": ">=22" },
   "devDependencies": {
-    "wrangler": "^4.129.0",
+    "wrangler": "^4.142.0",
     "miniflare": "^4.20260730.0",
     "esbuild": "^0.28.2",
     "happy-dom": "^20.0.0"
