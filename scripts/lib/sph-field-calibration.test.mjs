@@ -211,6 +211,68 @@ test('all measured HIGH groups fit inside 25 m about their own mean, not necessa
     }
 });
 
+test('production 2300 m snapshot uses verified calculator hull and no field calibration', async () => {
+    const context = await runtime();
+    const sample = field.series.find(s => s.id === 'production-2300');
+    const resolved = resolve(context, sample, sample.calculatorHull);
+    const candidate = resolved.terrainMeta.experimentalTerrainCorrection.arcs.high;
+    assert.equal(candidate.status, 'SAFE_CONSENSUS');
+    assert.equal(candidate.applied, true);
+    assert.equal(candidate.commandMrad, 940);
+    assert.equal(resolved.platformHeadingCorrection.hullHeadingDeg, 242);
+    assert.ok(Math.abs(resolved.solutions.high.mil - 949.9152568562012) < 1e-9);
+    assert.equal(Math.round(resolved.solutions.high.mil), sample.displayedMil);
+    assert.equal(resolved.platformHeadingCorrection.fieldCalibrationMilAdjustment, 0);
+    assert.equal(resolved.platformHeadingCorrection.fieldCalibration.reason, 'outside-distance-profile');
+    const declaredGameHull = resolve(context, sample, sample.hull);
+    assert.equal(Math.round(declaredGameHull.solutions.high.mil), 951);
+});
+
+test('production 2600 m snapshot preserves table fallback outside the certified terrain domain', async () => {
+    const context = await runtime();
+    const sample = field.series.find(s => s.id === 'production-2600');
+    const resolved = resolve(context, sample, sample.calculatorHull);
+    const candidate = resolved.terrainMeta.experimentalTerrainCorrection.arcs.high;
+    assert.equal(candidate.status, 'OUTSIDE_CERTIFIED_DOMAIN');
+    assert.equal(candidate.reason, 'outside-supported-domain');
+    assert.equal(candidate.applied, false);
+    assert.equal(candidate.commandMrad, null);
+    assert.ok(Math.abs(candidate.tableMrad - 708.422709488781) < 1e-9);
+    assert.equal(resolved.platformHeadingCorrection.hullHeadingDeg, 243);
+    assert.ok(Math.abs(resolved.platformHeadingCorrection.aim.high.center.milDelta - sample.hullCorrection) < 1e-9);
+    assert.ok(Math.abs(resolved.solutions.high.mil - 719.5121955818587) < 1e-9);
+    assert.equal(Math.round(resolved.solutions.high.mil), sample.displayedMil);
+    assert.equal(resolved.platformHeadingCorrection.fieldCalibrationMilAdjustment, 0);
+    assert.equal(resolved.platformHeadingCorrection.fieldCalibration.reason, 'terrain-not-applied');
+});
+
+test('production 900 m snapshot reproduces the prior fade and uses the new bounded estimate', async () => {
+    const context = await runtime();
+    const sample = field.series.find(s => s.id === 'production-900');
+    const calibration = context.APP_CONFIG.features.sphPlatformCorrection.highArcCalibration;
+    const updatedProfile = calibration.profile;
+    calibration.profile = updatedProfile.filter(row => row[0] !== 900);
+    const recorded = resolve(context, sample, sample.calculatorHull);
+    const prior = recorded.platformHeadingCorrection;
+    assert.ok(Math.abs(recorded.solutions.high.mil - 1370.4923869580844) < 1e-9);
+    assert.equal(Math.round(recorded.solutions.high.mil), sample.displayedMil);
+    assert.ok(Math.abs(prior.fieldCalibrationMilAdjustment - sample.fieldCalibrationMilAdjustment) < 1e-9);
+    assert.ok(Math.abs(prior.fieldCalibration.weight - sample.fieldCalibrationWeight) < 1e-9);
+
+    calibration.profile = updatedProfile;
+    const estimated = resolve(context, sample, sample.calculatorHull);
+    const candidate = estimated.terrainMeta.experimentalTerrainCorrection.arcs.high;
+    assert.equal(candidate.status, 'SAFE_CONSENSUS');
+    assert.equal(candidate.applied, true);
+    assert.equal(candidate.commandMrad, 1360);
+    assert.ok(Math.abs(estimated.platformHeadingCorrection.aim.high.center.milDelta - sample.hullCorrection) < 1e-9);
+    assert.equal(estimated.platformHeadingCorrection.fieldCalibration.weight, 1);
+    assert.ok(Math.abs(estimated.platformHeadingCorrection.fieldCalibrationMilAdjustment - 13) < 0.01);
+    // This asserts integration and the proposed command, not field accuracy.
+    assert.equal(Math.round(estimated.solutions.high.mil), 1380);
+    assert.equal(estimated.solutions.low, null);
+});
+
 test('mortar solution and geometric azimuth are unaffected by the SPH calibration', async () => {
     const context = await runtime();
     const raw = JSON.parse(source.get('data/weapons.json')).weapons.find(w => w.id === 'mortar');

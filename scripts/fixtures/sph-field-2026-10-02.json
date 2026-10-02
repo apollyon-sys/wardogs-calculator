@@ -77,6 +77,42 @@
       "displayedMil": 1053, "usedMil": 1053, "reportedAzimuth": 207.9, "hullCorrection": 12.9,
       "excludedFromDistanceCalibration": "Same hull-state mismatch; whether the requested +0.4 azimuth was applied was not confirmed.",
       "impacts": [[78.08, 77.08], [78.00, 77.12], [78.04, 77.10], [77.95, 77.05], [78.20, 76.96]]
+    },
+    {
+      "id": "production-2300", "origin": [94.45, 108.74], "hull": 243,
+      "calculatorHull": 242, "runtimeHullVerified": true,
+      "target": [82.06, 89.36], "distance": 2300.20977304245, "deltaZ": -49.78004835202569,
+      "originZ": -862.2363941977569, "targetZ": -912.0164425497826,
+      "terrainEnabled": true, "calculatorCommit": "7f163f119d28806b3881caa89dcf50ea2ef26212",
+      "displayedMil": 950, "usedMil": 950, "usedAzimuth": 212.6, "hullCorrection": 9.9,
+      "fieldCalibrationMilAdjustment": 0,
+      "note": "Game hull was reported as 243. The production diagnostic confirms both input and runtime hull 242, SAFE_CONSENSUS Terrain3D HIGH command 940, and final command 949.9152568562012. The actual five-shot group used 950 MIL; do not treat it as shots fired with a calculator hull of 243.",
+      "impacts": [[82.13, 89.32], [81.94, 89.46], [82.13, 89.40], [82.08, 89.51], [82.07, 89.54]]
+    },
+    {
+      "id": "production-2600", "origin": [94.45, 108.74], "hull": 243,
+      "calculatorHull": 243, "runtimeHullVerified": true,
+      "target": [80.44, 86.84], "distance": 2599.7886452556095, "deltaZ": -49.5708746995881,
+      "originZ": -862.2363941977569, "targetZ": -911.807268897345,
+      "terrainEnabled": true, "terrainApplied": false,
+      "calculatorCommit": "7f163f119d28806b3881caa89dcf50ea2ef26212",
+      "displayedMil": 720, "usedMil": 720, "reportedAzimuth": 212.6, "azimuthApproximate": true,
+      "hullCorrection": 11.089486093077653, "fieldCalibrationMilAdjustment": 0,
+      "note": "Game hull, calculator input and runtime hull all confirmed as 243. Terrain height context is loaded, but both arcs are OUTSIDE_CERTIFIED_DOMAIN: HIGH payload distance maximum is 2536 m. The resolver preserves the flat HIGH table command 708.422709488781 and adds only hull correction, yielding 719.5121955818587. Actual azimuth was reported as approximate.",
+      "impacts": [[80.39, 86.90], [80.38, 86.90], [80.53, 86.80], [80.35, 86.97], [80.35, 86.95]]
+    },
+    {
+      "id": "production-900", "origin": [94.45, 108.74], "hull": 243,
+      "calculatorHull": 243, "runtimeHullVerified": true,
+      "target": [89.60, 101.16], "distance": 899.8827701428673, "deltaZ": -7.4541217240788455,
+      "originZ": -862.2363941977569, "targetZ": -869.6905159218358,
+      "terrainEnabled": true, "terrainApplied": true,
+      "calculatorCommit": "7f163f119d28806b3881caa89dcf50ea2ef26212",
+      "displayedMil": 1370, "usedMil": 1370, "reportedAzimuth": 212.6, "azimuthApproximate": true,
+      "hullCorrection": 7.170765932051836,
+      "fieldCalibrationMilAdjustment": 3.3216210260325, "fieldCalibrationWeight": 0.25175319059377727,
+      "note": "Game hull, input and runtime hull all confirmed as 243. SAFE_CONSENSUS Terrain3D HIGH command 1360 plus hull and the existing attenuated field correction yielded 1370.4923869580844. The five-shot mean overshot by 39.0944 m. Approximately 1380 MIL is an unverified estimate for a future correction, not a command used in this recorded series.",
+      "impacts": [[89.36, 100.74], [89.36, 100.85], [89.33, 100.88], [89.37, 100.90], [89.36, 100.89]]
     }
   ]
 }
