@@ -116,6 +116,8 @@
   "sphHullCorrectionShort": "车体修正",
   "sphPlatformMilAdjustment": "平台 MIL 修正",
   "sphPlatformMilAdjustmentShort": "平台修正",
+  "sphDispersionRadius": "散布半径约 {radius} 米",
+  "sphDistanceCorrection": "实测修正",
   "noFiringSolution": "没有可用射击解算",
   "copyCoordinates": "复制",
   "pasteCoordinates": "粘贴",

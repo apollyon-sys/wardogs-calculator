@@ -120,6 +120,8 @@
   "sphHullCorrectionShort": "Кор. корпусу",
   "sphPlatformMilAdjustment": "Поправка MIL платформи",
   "sphPlatformMilAdjustmentShort": "Поправка платформи",
+  "sphDispersionRadius": "Радіус розсіювання ≈{radius} м",
+  "sphDistanceCorrection": "Польова поправка",
   "noFiringSolution": "Немає рішення для стрільби",
   "copyCoordinates": "Копіювати",
   "pasteCoordinates": "Вставити",

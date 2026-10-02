@@ -116,6 +116,8 @@
   "sphHullCorrectionShort": "Корр. корпуса",
   "sphPlatformMilAdjustment": "Поправка MIL платформы",
   "sphPlatformMilAdjustmentShort": "Поправка платформы",
+  "sphDispersionRadius": "Радиус разброса ≈{radius} м",
+  "sphDistanceCorrection": "Полевая поправка",
   "noFiringSolution": "Нет решения для стрельбы",
   "copyCoordinates": "Копировать",
   "pasteCoordinates": "Вставить",

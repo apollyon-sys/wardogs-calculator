@@ -120,6 +120,8 @@
   "sphHullCorrectionShort": "Corr. chassis",
   "sphPlatformMilAdjustment": "Ajuste MIL da plataforma",
   "sphPlatformMilAdjustmentShort": "Ajuste plataforma",
+  "sphDispersionRadius": "Raio de dispersão ≈{radius} m",
+  "sphDistanceCorrection": "Correção de campo",
   "noFiringSolution": "Sem solução de tiro",
   "copyCoordinates": "Copiar",
   "pasteCoordinates": "Colar",

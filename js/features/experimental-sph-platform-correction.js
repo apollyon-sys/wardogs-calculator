@@ -5,10 +5,10 @@
 /*
  * Research-only / test implementation.
  *
- * The field data currently supports a repeatable ~1 degree fore/aft
+ * The configured model uses a 5 degree fore/aft
  * heading-dependent component on visually level SPH-2 placements. The
  * correction below deliberately normalizes to the forward-hull reference
- * (relative gun yaw = 0 degrees) instead of treating +1 degree as an
+ * (relative gun yaw = 0 degrees) instead of treating +5 degrees as an
  * absolute world-level correction. This keeps hull == gun unchanged and
  * only compensates the validated heading-dependent part of the error.
  *
@@ -33,7 +33,14 @@ const SPH_PLATFORM_MANUAL_MIL_STORAGE_KEY =
 const SPH_PLATFORM_CORRECTION = Object.freeze({
     weaponId: 'spg',
     baselinePitchDeg: 5.0,
-    baselineRollDeg: 0.0
+    baselineRollDeg: 0.0,
+
+    // Field calibration is opt-in through config/app.json, not a global bias.
+    highArcCalibration: Object.freeze({
+        enabled: false,
+        profile: []
+    }),
+    dispersionRadiusMeters: 0
 });
 
 let sphPlatformHullHeadingDeg = null;
@@ -41,8 +48,14 @@ let sphPlatformSelectedArc = 'high';
 let sphPlatformManualMilAdjustment = 0;
 let sphPlatformLastAimMeta = null;
 let sphPlatformCorrectionInitialized = false;
+let sphPlatformLastFieldCalibration = null;
+let sphPlatformLastHasHighSolution = false;
 
 function sphPlatformNormalizeDegrees(value) {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
     const degrees = Number(value);
 
     if (!Number.isFinite(degrees)) {
@@ -90,9 +103,43 @@ function sphPlatformLabels() {
             tr('sphPlatformMilAdjustment'),
         manualMilShort:
             tr('sphPlatformMilAdjustmentShort'),
+        dispersion:
+            tr('sphDispersionRadius'),
+        fieldCorrection:
+            tr('sphDistanceCorrection'),
         lowHigh:
             `${tr('lowArc')} / ${tr('highArc')}`
     };
+}
+
+function sphPlatformRuntimeConfig() {
+    const configured =
+        typeof APP_CONFIG === 'object' && APP_CONFIG
+            ? APP_CONFIG.features?.sphPlatformCorrection
+            : null;
+
+    return {
+        ...SPH_PLATFORM_CORRECTION,
+        ...(configured || {}),
+        highArcCalibration: {
+            ...SPH_PLATFORM_CORRECTION.highArcCalibration,
+            ...(configured?.highArcCalibration || {})
+        }
+    };
+}
+
+function sphPlatformDispersionRadiusMeters() {
+    if (sphPlatformSelectedArc !== 'high') {
+        return 0;
+    }
+
+    const radius = Number(
+        sphPlatformRuntimeConfig().dispersionRadiusMeters
+    );
+
+    return Number.isFinite(radius) && radius > 0
+        ? radius
+        : 0;
 }
 
 function sphPlatformLoadHullHeading() {
@@ -222,7 +269,7 @@ function sphPlatformApplyManualMilToSolution(solution) {
     }
 
     const add = value =>
-        Number.isFinite(Number(value))
+        value !== null && value !== undefined && Number.isFinite(Number(value))
             ? Number(value) + delta
             : value;
 
@@ -259,6 +306,159 @@ function sphPlatformApplyManualMilToSolutionSet(
             sphPlatformApplyManualMilToSolution(
                 solutions.high
             )
+    };
+}
+
+function sphPlatformAddMilDelta(solution, delta) {
+    if (
+        !solution ||
+        !Number.isFinite(delta) ||
+        Math.abs(delta) < 1e-9
+    ) {
+        return solution;
+    }
+
+    const add = value =>
+        value !== null && value !== undefined && Number.isFinite(Number(value))
+            ? Number(value) + delta
+            : value;
+
+    return {
+        ...solution,
+        mil: add(solution.mil),
+        minMil: add(solution.minMil),
+        maxMil: add(solution.maxMil)
+    };
+}
+
+function sphPlatformCalibrationWindowWeight(offset, full, fade) {
+    if (![offset, full, fade].every(Number.isFinite) || full < 0 || fade <= full) {
+        return 0;
+    }
+
+    return offset <= full ? 1 : Math.max(0, (fade - offset) / (fade - full));
+}
+
+/* Profile rows: distance metres, additive MIL, reference deltaZ, relative yaw.
+ * The curve is deliberately bounded; it is NOT a new universal terrain model.
+ */
+function sphPlatformInterpolateCalibration(profile, distance) {
+    if (!Number.isFinite(distance) || !Array.isArray(profile) || profile.length < 2) {
+        return null;
+    }
+
+    for (let i = 0; i < profile.length; i++) {
+        const row = profile[i];
+        if (!Array.isArray(row) || row.length !== 4 || !row.every(Number.isFinite) ||
+            row[0] < 0 || Math.abs(row[1]) > 30 ||
+            (i > 0 && row[0] <= profile[i - 1][0])) {
+            return null;
+        }
+    }
+
+    if (distance < profile[0][0] || distance > profile.at(-1)[0]) {
+        return null;
+    }
+
+    for (let i = 1; i < profile.length; i++) {
+        const left = profile[i - 1];
+        const right = profile[i];
+        if (distance <= right[0]) {
+            const fraction = (distance - left[0]) / (right[0] - left[0]);
+            return {
+                milDelta: left[1] + (right[1] - left[1]) * fraction,
+                deltaZ: left[2] + (right[2] - left[2]) * fraction,
+                relativeYaw: left[3] + (right[3] - left[3]) * fraction
+            };
+        }
+    }
+
+    return null;
+}
+
+function sphPlatformResolveHighArcCalibration({
+    weapon, distanceMeters, mapId, terrainMeta, targetAzimuthDeg
+}) {
+    const config = sphPlatformRuntimeConfig();
+    const calibration = config.highArcCalibration;
+    const none = reason => ({ milDelta: 0, weight: 0, reason });
+    const terrain = terrainMeta?.experimentalTerrainCorrection;
+
+    if (config.enabled !== true || calibration?.enabled !== true ||
+        weapon?.id !== SPH_PLATFORM_CORRECTION.weaponId) {
+        return none('disabled');
+    }
+    if (mapId !== calibration.mapId) {
+        return none('unsupported-map');
+    }
+    if (!sphPlatformCorrectionIsActive(weapon) || !Number.isFinite(targetAzimuthDeg)) {
+        return none('missing-hull');
+    }
+    if (terrainMeta?.mapId !== mapId ||
+        !Number.isFinite(terrainMeta?.deltaZ) || terrainMeta.pendingTerrain ||
+        terrain?.enabled !== true || terrain?.ready !== true ||
+        terrain?.arcs?.high?.status !== 'SAFE_CONSENSUS' ||
+        terrain.arcs.high.applied !== true) {
+        return none('terrain-not-applied');
+    }
+
+    const reference = sphPlatformInterpolateCalibration(calibration.profile, distanceMeters);
+    if (!reference) {
+        return none('outside-distance-profile');
+    }
+
+    const relativeYaw = sphPlatformNormalizeDegreesSigned(
+        targetAzimuthDeg - sphPlatformHullHeadingDeg
+    );
+    const heightWeight = sphPlatformCalibrationWindowWeight(
+        Math.abs(terrainMeta.deltaZ - reference.deltaZ),
+        calibration.fullDeltaZWindowMeters,
+        calibration.fadeDeltaZWindowMeters
+    );
+    const yawWeight = sphPlatformCalibrationWindowWeight(
+        Math.abs(sphPlatformNormalizeDegreesSigned(relativeYaw - reference.relativeYaw)),
+        calibration.fullYawWindowDegrees,
+        calibration.fadeYawWindowDegrees
+    );
+    const weight = heightWeight * yawWeight;
+
+    return {
+        milDelta: reference.milDelta * weight,
+        weight,
+        reason: weight > 0 ? 'field-profile' : 'outside-field-geometry',
+        referenceDeltaZ: reference.deltaZ,
+        referenceRelativeYaw: reference.relativeYaw
+    };
+}
+
+function sphPlatformApplyHighArcCalibration(
+    solutions,
+    context
+) {
+    const calibration = sphPlatformResolveHighArcCalibration(context);
+    const milDelta = calibration.milDelta;
+
+    if (
+        !solutions?.high ||
+        Math.abs(milDelta) < 1e-9
+    ) {
+        return {
+            solutions,
+            ...calibration,
+            milDelta: 0
+        };
+    }
+
+    return {
+        solutions: {
+            ...solutions,
+            high:
+                sphPlatformAddMilDelta(
+                    solutions.high,
+                    milDelta
+                )
+        },
+        ...calibration
     };
 }
 
@@ -645,6 +845,43 @@ function sphPlatformRepresentativeMilDelta(aim) {
     return null;
 }
 
+/* Read-only snapshot: call copy(JSON.stringify(getSphFiringDiagnostics(), null, 2))
+ * in DevTools instead of transcribing state from several UI fields.
+ */
+function getSphFiringDiagnostics() {
+    const weapon = WEAPONS[S.weapon];
+    const origin = { ...S.origin };
+    const target = { ...S.target };
+    const distanceMeters = worldDistanceToMeters(Math.hypot(
+        target.x - origin.x, target.y - origin.y
+    ));
+    const flat = getWeaponElevationSolutions(weapon, distanceMeters);
+    const resolved = getResolvedWeaponElevationSolutions(weapon, distanceMeters, {
+        mapId: S.map, origin, target, display: false
+    });
+    const input = $('sphHullHeading')?.value?.trim();
+    const inputHull = input ? sphPlatformNormalizeDegrees(input) : null;
+
+    return {
+        schema: 'wardogs-sph-firing-diagnostics-v1',
+        version: typeof APP_CONFIG === 'object' ? APP_CONFIG?.site?.footer?.version : null,
+        mapId: S.map,
+        weaponId: weapon?.id,
+        origin, target, distanceMeters,
+        selectedArc: sphPlatformSelectedArc,
+        hullHeadingDeg: sphPlatformHullHeadingDeg,
+        hullInputDeg: inputHull,
+        hullInputMatchesState: inputHull === sphPlatformHullHeadingDeg,
+        azimuthDeg: sphPlatformGetTargetAzimuth(origin, target),
+        flatSolutions: flat,
+        terrainMeta: resolved.terrainMeta,
+        platformCorrection: resolved.platformHeadingCorrection,
+        finalSolutions: resolved.solutions,
+        displayedMil: $('mil')?.textContent ?? null,
+        dispersionRadiusMeters: sphPlatformDispersionRadiusMeters()
+    };
+}
+
 function sphPlatformRenderCorrectedAim() {
     const details = [];
 
@@ -692,6 +929,35 @@ function sphPlatformRenderCorrectedAim() {
         );
     }
 
+    const dispersionRadius =
+        sphPlatformDispersionRadiusMeters();
+
+    const fieldDelta = sphPlatformLastFieldCalibration?.milDelta;
+    if (Number.isFinite(fieldDelta) && Math.abs(fieldDelta) >= 0.05) {
+        details.push(
+            `${sphPlatformLabels().fieldCorrection} ` +
+            `${fieldDelta >= 0 ? '+' : ''}${fieldDelta.toFixed(1)} MIL`
+        );
+    }
+
+    if (
+        S.weapon === SPH_PLATFORM_CORRECTION.weaponId &&
+        sphPlatformLastHasHighSolution &&
+        dispersionRadius > 0
+    ) {
+        const template =
+            sphPlatformLabels().dispersion;
+
+        details.push(
+            template && template !== 'sphDispersionRadius'
+                ? template.replace(
+                    '{radius}',
+                    `${Math.round(dispersionRadius)}`
+                )
+                : `Dispersion radius ≈${Math.round(dispersionRadius)} m`
+        );
+    }
+
     if (!details.length) {
         return;
     }
@@ -719,6 +985,86 @@ function sphPlatformRenderCorrectedAim() {
     );
 
     detail.hidden = false;
+}
+
+/*
+ * Draw an approximate HIGH-arc spread radius around the current aim point.
+ * This is a field estimate, not a guaranteed containment/confidence region.
+ * The radius is expressed in world metres, so the overlay scales with the map instead
+ * of becoming a fixed-size decoration while zooming.
+ */
+function drawSphDispersionOverlay() {
+    const radiusMeters =
+        sphPlatformDispersionRadiusMeters();
+
+    if (
+        S.weapon !== SPH_PLATFORM_CORRECTION.weaponId ||
+        !sphPlatformLastHasHighSolution ||
+        radiusMeters <= 0 ||
+        !S.target ||
+        typeof worldToLocalScreen !== 'function' ||
+        typeof metersToWorldDistance !== 'function' ||
+        typeof view !== 'function'
+    ) {
+        return;
+    }
+
+    const center =
+        worldToLocalScreen(
+            S.target.x,
+            S.target.y
+        );
+
+    const radiusPx =
+        metersToWorldDistance(radiusMeters) *
+        view().scale;
+
+    if (!Number.isFinite(radiusPx) || radiusPx <= 0) {
+        return;
+    }
+
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.arc(
+        center.x,
+        center.y,
+        radiusPx,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle =
+        'rgba(216,102,102,.10)';
+    ctx.fill();
+
+    ctx.strokeStyle =
+        'rgba(216,102,102,.9)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    if (radiusPx >= 8) {
+        const labelScale =
+            typeof getMapLabelAccessibilityScale === 'function'
+                ? getMapLabelAccessibilityScale()
+                : 1;
+
+        ctx.fillStyle =
+            'rgba(255,235,235,.95)';
+        ctx.font =
+            `bold ${10 * labelScale}px system-ui`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(
+            `≈${Math.round(radiusMeters)} m`,
+            center.x,
+            center.y - radiusPx - 4
+        );
+    }
+
+    ctx.restore();
 }
 
 
@@ -1613,6 +1959,9 @@ function initSphPlatformCorrection() {
         ({
             weapon,
             solutions,
+            distanceMeters,
+            mapId,
+            terrainMeta,
             origin,
             target,
             display
@@ -1649,9 +1998,19 @@ function initSphPlatformCorrection() {
                 aimMeta = corrected.aim;
             }
 
+            const fieldCalibration =
+                sphPlatformApplyHighArcCalibration(
+                    resolvedSolutions,
+                    { weapon, distanceMeters, mapId, terrainMeta, targetAzimuthDeg }
+                );
+
+            resolvedSolutions =
+                fieldCalibration.solutions;
+
             if (display !== false) {
                 sphPlatformLastAimMeta =
                     aimMeta;
+                sphPlatformLastFieldCalibration = fieldCalibration;
             }
 
             resolvedSolutions =
@@ -1659,6 +2018,12 @@ function initSphPlatformCorrection() {
                     resolvedSolutions,
                     weapon
                 );
+
+            if (display !== false) {
+                sphPlatformLastHasHighSolution = isElevationSolutionWithinWeaponLimits(
+                    weapon, resolvedSolutions?.high
+                );
+            }
 
             return {
                 solutions: resolvedSolutions,
@@ -1671,6 +2036,12 @@ function initSphPlatformCorrection() {
                         SPH_PLATFORM_CORRECTION.baselineRollDeg,
                     manualMilAdjustment:
                         sphPlatformManualMilAdjustment,
+                    fieldCalibrationMilAdjustment:
+                        fieldCalibration.milDelta,
+                    fieldCalibration: {
+                        reason: fieldCalibration.reason,
+                        weight: fieldCalibration.weight
+                    },
                     aim:
                         aimMeta
                 }

@@ -120,6 +120,8 @@
   "sphHullCorrectionShort": "Fahrzeugkorr.",
   "sphPlatformMilAdjustment": "Plattform-MIL-Korrektur",
   "sphPlatformMilAdjustmentShort": "Plattformkorr.",
+  "sphDispersionRadius": "Streuradius ≈{radius} m",
+  "sphDistanceCorrection": "Feldkorrektur",
   "noFiringSolution": "Keine Feuerlösung",
   "copyCoordinates": "Kopieren",
   "pasteCoordinates": "Einfügen",

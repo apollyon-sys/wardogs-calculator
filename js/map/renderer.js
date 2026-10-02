@@ -308,6 +308,13 @@ function draw() {
          * Layer 8:
          * artillery / target markers.
          */
+        if (
+            typeof drawSphDispersionOverlay ===
+                'function'
+        ) {
+            drawSphDispersionOverlay();
+        }
+
         marker(
             S.origin,
             'O'

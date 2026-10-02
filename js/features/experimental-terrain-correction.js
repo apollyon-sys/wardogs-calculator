@@ -129,9 +129,10 @@
     }
 
     function finite(value) {
-        return Number.isFinite(
-            Number(value)
-        );
+        return (
+            typeof value === 'number' ||
+            (typeof value === 'string' && value.trim() !== '')
+        ) && Number.isFinite(Number(value));
     }
 
     function storageKey() {
@@ -1561,7 +1562,7 @@
         const direct =
             Number(solution.mil);
 
-        if (finite(direct)) {
+        if (finite(solution.mil)) {
             return direct;
         }
 
@@ -1572,8 +1573,8 @@
             Number(solution.maxMil);
 
         if (
-            finite(min) &&
-            finite(max) &&
+            finite(solution.minMil) &&
+            finite(solution.maxMil) &&
             Math.abs(min - max) <=
                 1e-9
         ) {

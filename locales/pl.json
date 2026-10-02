@@ -120,6 +120,8 @@
   "sphHullCorrectionShort": "Kor. kadłuba",
   "sphPlatformMilAdjustment": "Korekta MIL platformy",
   "sphPlatformMilAdjustmentShort": "Korekta platformy",
+  "sphDispersionRadius": "Promień rozrzutu ≈{radius} m",
+  "sphDistanceCorrection": "Korekta polowa",
   "noFiringSolution": "Brak rozwiązania ogniowego",
   "copyCoordinates": "Kopiuj",
   "pasteCoordinates": "Wklej",

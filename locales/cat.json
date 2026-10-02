@@ -123,6 +123,8 @@
   "sphHullCorrectionShort": "HULL CORR.",
   "sphPlatformMilAdjustment": "MEOWTFORM MIL ADJUSTMENT",
   "sphPlatformMilAdjustmentShort": "MEOWTFORM ADJ.",
+  "sphDispersionRadius": "RADI DE DISPERSIÓ ≈{radius} m",
+  "sphDistanceCorrection": "Correcció de camp",
   "noFiringSolution": "NO FIRING SOLUTION, MEOW",
   "copyCoordinates": "COPY COORDS",
   "pasteCoordinates": "PASTE COORDS",

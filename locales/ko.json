@@ -116,6 +116,8 @@
   "sphHullCorrectionShort": "차체 보정",
   "sphPlatformMilAdjustment": "플랫폼 MIL 보정",
   "sphPlatformMilAdjustmentShort": "플랫폼 보정",
+  "sphDispersionRadius": "분산 반경 ≈{radius} m",
+  "sphDistanceCorrection": "실측 보정",
   "noFiringSolution": "사격 제원 없음",
   "copyCoordinates": "복사",
   "pasteCoordinates": "붙여넣기",

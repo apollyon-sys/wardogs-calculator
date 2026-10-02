@@ -20,7 +20,17 @@ const DEFAULT_APP_CONFIG = {
 
     features: {
         sphPlatformCorrection: {
-            enabled: false
+            enabled: false,
+            highArcCalibration: {
+                enabled: false,
+                mapId: 'bakurani',
+                profile: [],
+                fullDeltaZWindowMeters: 5,
+                fadeDeltaZWindowMeters: 20,
+                fullYawWindowDegrees: 5,
+                fadeYawWindowDegrees: 20
+            },
+            dispersionRadiusMeters: 0
         }
     },
 
@@ -116,7 +126,12 @@ function mergeAppConfig(base, override) {
             ...(override?.features || {}),
             sphPlatformCorrection: {
                 ...base.features.sphPlatformCorrection,
-                ...(override?.features?.sphPlatformCorrection || {})
+                ...(override?.features?.sphPlatformCorrection || {}),
+                highArcCalibration: {
+                    ...base.features.sphPlatformCorrection.highArcCalibration,
+                    ...(override?.features?.sphPlatformCorrection
+                        ?.highArcCalibration || {})
+                }
             }
         }
     };

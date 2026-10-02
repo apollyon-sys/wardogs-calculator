@@ -116,6 +116,8 @@
   "sphHullCorrectionShort": "Hull corr.",
   "sphPlatformMilAdjustment": "Platform MIL adjustment",
   "sphPlatformMilAdjustmentShort": "Platform adj.",
+  "sphDispersionRadius": "Dispersion radius ≈{radius} m",
+  "sphDistanceCorrection": "Field correction",
   "noFiringSolution": "No firing solution",
   "copyCoordinates": "Copy",
   "pasteCoordinates": "Paste",

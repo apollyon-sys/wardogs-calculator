@@ -116,6 +116,8 @@
   "sphHullCorrectionShort": "Kor. korby",
   "sphPlatformMilAdjustment": "Korekce MIL platformy",
   "sphPlatformMilAdjustmentShort": "Korekce platformy",
+  "sphDispersionRadius": "Poloměr rozptylu ≈{radius} m",
+  "sphDistanceCorrection": "Terénní kalibrace",
   "noFiringSolution": "Žádné řešení palby",
   "copyCoordinates": "Kopírovat",
   "pasteCoordinates": "Vložit",

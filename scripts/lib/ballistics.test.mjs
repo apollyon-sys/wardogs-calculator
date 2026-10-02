@@ -21,6 +21,10 @@ const resultsSource = await readFile(
     'utf8'
 );
 
+const deployedConfig = JSON.parse(await readFile(
+    new URL('../../config/app.json', import.meta.url), 'utf8'
+));
+
 function weaponsContext() {
     const context = vm.createContext({ console });
     vm.runInContext(weaponsSource, context);
@@ -62,6 +66,7 @@ test('duplicate ballistic distances remain a bounded MIL range', () => {
 function platformContext() {
     const context = vm.createContext({
         console,
+        APP_CONFIG: deployedConfig,
         S: {
             weapon: 'spg',
             origin: { x: 0, y: 0 },
@@ -69,6 +74,7 @@ function platformContext() {
         },
         WEAPONS: { spg: { id: 'spg' } }
     });
+    vm.runInContext(weaponsSource, context);
     vm.runInContext(platformSource, context);
     return context;
 }
@@ -111,6 +117,113 @@ test('platform correction keeps the reference heading stable', () => {
 
     assert.ok(Math.abs(reference.milDelta) < 1e-9);
     assert.ok(Math.abs(perpendicular.correctedMil - 783.4541998092665) < 1e-9);
+});
+
+test('SPH measured impact group is distinct from systematic range error', () => {
+    const origin = { x: 94.37, y: 108.71 };
+    const target = { x: 87.74, y: 95.69 };
+    const impacts = [
+        [87.58, 95.26],
+        [87.40, 95.34],
+        [87.50, 95.30],
+        [87.49, 95.26],
+        [87.65, 95.27],
+        [87.41, 95.25]
+    ];
+
+    const mean = impacts.reduce(
+        (sum, point) => ({
+            x: sum.x + point[0] / impacts.length,
+            y: sum.y + point[1] / impacts.length
+        }),
+        { x: 0, y: 0 }
+    );
+
+    const shotX = target.x - origin.x;
+    const shotY = target.y - origin.y;
+    const shotLength = Math.hypot(shotX, shotY);
+    const alongX = shotX / shotLength;
+    const alongY = shotY / shotLength;
+    const errorX = (mean.x - target.x) * 100;
+    const errorY = (mean.y - target.y) * 100;
+    const rangeBias =
+        errorX * alongX +
+        errorY * alongY;
+    const maximumRadius = Math.max(
+        ...impacts.map(point => Math.hypot(
+            (point[0] - mean.x) * 100,
+            (point[1] - mean.y) * 100
+        ))
+    );
+
+    assert.ok(Math.abs(rangeBias - 47.2) < 0.01);
+    assert.ok(maximumRadius < 15);
+
+    const context = platformContext();
+    assert.equal(
+        vm.runInContext(
+            'sphPlatformDispersionRadiusMeters()',
+            context
+        ),
+        25
+    );
+});
+
+test('SPH dispersion overlay uses an approximate world-scaled 25 m radius', () => {
+    const context = platformContext();
+    const arcs = [];
+    const labels = [];
+
+    context.ctx = {
+        save() {},
+        restore() {},
+        beginPath() {},
+        arc(...args) { arcs.push(args); },
+        fill() {},
+        stroke() {},
+        setLineDash() {},
+        fillText(...args) { labels.push(args); }
+    };
+    context.worldToLocalScreen = () => ({ x: 40, y: 50 });
+    context.metersToWorldDistance = meters => meters / 100;
+    context.view = () => ({ scale: 100 });
+
+    vm.runInContext(
+        'sphPlatformLastHasHighSolution = true; drawSphDispersionOverlay()',
+        context
+    );
+
+    assert.equal(arcs.length, 1);
+    assert.equal(arcs[0][0], 40);
+    assert.equal(arcs[0][1], 50);
+    assert.equal(arcs[0][2], 25);
+    assert.equal(labels[0][0], '≈25 m');
+
+    vm.runInContext('sphPlatformSelectedArc = "low"; drawSphDispersionOverlay()', context);
+    assert.equal(arcs.length, 1, 'LOW has no measured spread calibration');
+    vm.runInContext(
+        'sphPlatformSelectedArc = "high"; sphPlatformLastHasHighSolution = false; drawSphDispersionOverlay()',
+        context
+    );
+    assert.equal(arcs.length, 1, 'unreachable HIGH has no landing circle');
+});
+
+test('MIL ranges preserve an ambiguous centre through additive correction and validation', () => {
+    const context = platformContext();
+    vm.runInContext(resultsSource, context);
+    context.weapon = { minElevationMil: 20, maxElevationMil: 1390 };
+    context.solution = { mil: null, minMil: 610, maxMil: 620 };
+    const result = vm.runInContext(
+        'sphPlatformAddMilDelta(solution, 2)', context
+    );
+    assert.equal(result.mil, null);
+    assert.equal(result.minMil, 612);
+    assert.equal(result.maxMil, 622);
+    assert.equal(vm.runInContext('isElevationSolutionWithinWeaponLimits(weapon, solution)', context), true);
+
+    context.solution.mil = NaN;
+    assert.equal(vm.runInContext('isElevationSolutionWithinWeaponLimits(weapon, solution)', context), false);
+    assert.equal(vm.runInContext('sphPlatformNormalizeDegrees(null)', context), null);
 });
 
 test('platform runtime does not monkey-patch result globals', () => {

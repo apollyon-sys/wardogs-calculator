@@ -189,18 +189,18 @@ function isElevationSolutionWithinWeaponLimits(
         solution.minMil,
         solution.maxMil
     ]
-        .map(Number)
-        .filter(Number.isFinite);
+        .filter(value => value !== null && value !== undefined)
+        .map(Number);
 
-    if (!values.length) {
+    if (!values.length || !values.every(Number.isFinite)) {
         return false;
     }
 
     const minMil =
-        Number(weapon?.minElevationMil);
+        weapon?.minElevationMil == null ? NaN : Number(weapon.minElevationMil);
 
     const maxMil =
-        Number(weapon?.maxElevationMil);
+        weapon?.maxElevationMil == null ? NaN : Number(weapon.maxElevationMil);
 
     return values.every(value => (
         (!Number.isFinite(minMil) || value >= minMil - 1e-6) &&

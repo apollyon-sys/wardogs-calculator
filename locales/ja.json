@@ -116,6 +116,8 @@
   "sphHullCorrectionShort": "車体補正",
   "sphPlatformMilAdjustment": "プラットフォームMIL補正",
   "sphPlatformMilAdjustmentShort": "プラットフォーム補正",
+  "sphDispersionRadius": "散布半径 約{radius} m",
+  "sphDistanceCorrection": "実測補正",
   "noFiringSolution": "射撃諸元なし",
   "copyCoordinates": "コピー",
   "pasteCoordinates": "貼り付け",
