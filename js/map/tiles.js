@@ -241,24 +241,19 @@ function finishTileRequest(
     tile,
     failed
 ) {
-    releaseTileRequestSlot(
-        tile
-    );
-
     tile.loaded = !failed;
     tile.failed = failed;
     tile.retryPending = false;
+
+    releaseTileRequestSlot(tile);
 
     draw();
 }
 
 function scheduleTileRetry(tile) {
-    releaseTileRequestSlot(
-        tile
-    );
-
     tile.retryPending = true;
     tile.image = null;
+    releaseTileRequestSlot(tile);
 
     /*
      * Redraw immediately so a cached lower-resolution ancestor remains
@@ -292,114 +287,117 @@ function scheduleTileRetry(tile) {
     );
 }
 
-function startTileRequest(tile) {
-    const {
-        map,
-        styleId,
-        zoom,
-        x,
-        y
-    } = tile.request;
+function isTileRequestRelevant(tile) {
+    const map = typeof getCurrentMap === 'function' ? getCurrentMap() : null;
+    return map?.id === tile.request.map.id &&
+        getMapTileStyleId(map) === tile.request.styleId &&
+        (typeof isMapLayerVisible !== 'function' || isMapLayerVisible('tiles')) &&
+        tile.lastSeenEpoch === TILE_QUEUE_EPOCH;
+}
 
-    const image =
-        new Image();
-
-    const tileUrl =
-        getTileURL(
-            map,
-            zoom,
-            x,
-            y,
-            styleId
-        );
-
-    // Credentialed CORS carries either the signed legacy session or
-    // Cloudflare's cf_clearance cookie to the selected asset hostname.
-    image.crossOrigin =
-        isProtectedAssetURL(tileUrl)
-            ? 'use-credentials'
-            : 'anonymous';
-
-    image.decoding =
-        'async';
-
-    if (
-        'fetchPriority' in image
-    ) {
-        image.fetchPriority =
-            tile.priority < 0
-                ? 'high'
-                : 'auto';
+function resumeProtectedTileLoads() {
+    for (const tile of TILE_CACHE.values()) {
+        if (tile.deferred && !tile.loading) {
+            tile.deferred = false;
+            tile.failed = false;
+            tile.attempts = 0;
+        }
     }
+    draw();
+    pumpTileLoadQueue();
+}
 
-    tile.image = image;
+if (typeof onAssetAccessRetry === 'function') {
+    onAssetAccessRetry(resumeProtectedTileLoads);
+}
+
+async function startTileRequest(tile) {
+    const { map, styleId, zoom, x, y } = tile.request;
+    const protectedAsset = typeof isProtectedAssetURL === 'function' &&
+        isProtectedAssetURL(getTileURL(map, zoom, x, y, styleId));
+
     tile.loading = true;
     tile.queued = false;
     tile.retryPending = false;
-    tile.attempts =
-        (tile.attempts || 0) + 1;
-
+    tile.attempts = (tile.attempts || 0) + 1;
     TILE_ACTIVE_REQUESTS++;
 
-    image.onload =
-        () => {
-            finishTileRequest(
-                tile,
-                false
-            );
-        };
+    let objectUrl = null;
+    const cleanup = () => {
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+        }
+    };
+    const fail = error => {
+        cleanup();
+        tile.image = null;
+        if (protectedAsset && error?.retryAt) {
+            tile.deferred = true;
+        } else if (error?.retryable !== false && tile.attempts < TILE_REQUEST_ATTEMPTS) {
+            scheduleTileRetry(tile);
+            return;
+        }
+        if (!tile.deferred) {
+            console.warn('Failed to load tile:', map.id, styleId, zoom, x, y, error);
+            if (typeof trackOperationalFailure === 'function') {
+                trackOperationalFailure('asset-load-failed', {
+                    area: 'map', type: 'tile', map: map.id,
+                    resource: `tile-${styleId}`, code: 'tile-load'
+                });
+            }
+        }
+        finishTileRequest(tile, true);
+    };
 
-    image.onerror =
-        async () => {
-            if (
-                tile.attempts <
-                    TILE_REQUEST_ATTEMPTS
-            ) {
-                if (
-                    isProtectedAssetURL(tileUrl)
-                ) {
-                    await recoverAssetAccessAfterFailure();
-                }
-
-                scheduleTileRetry(
-                    tile
-                );
+    try {
+        if (protectedAsset) {
+            if (!await ensureAssetAccess()) {
+                throw assetAccessBlockedError();
+            }
+            // Authorization can outlast the viewport that requested this tile.
+            if (!isTileRequestRelevant(tile)) {
+                releaseTileRequestSlot(tile);
                 return;
             }
+        }
 
-            console.warn(
-                `Failed to load tile after retry: ${getTileURL(
-                    map,
-                    zoom,
-                    x,
-                    y,
-                    styleId
-                )}`
-            );
-
-            if (
-                typeof trackOperationalFailure ===
-                    'function'
-            ) {
-                trackOperationalFailure(
-                    'asset-load-failed',
-                    {
-                        area: 'map',
-                        type: 'tile',
-                        map: map.id,
-                        resource: `tile-${styleId}`,
-                        code: 'image-load-after-retry'
-                    }
-                );
+        // Select the delivery hostname only after authorization succeeds.
+        const tileUrl = getTileURL(map, zoom, x, y, styleId);
+        let imageUrl = tileUrl;
+        if (protectedAsset) {
+            const response = await fetchAssetResource(tileUrl);
+            if (!response.ok) {
+                const error = new Error(`tile-http-${response.status}`);
+                error.retryable = response.status >= 500;
+                throw error;
             }
+            const blob = await response.blob();
+            if (!isTileRequestRelevant(tile)) {
+                releaseTileRequestSlot(tile);
+                return;
+            }
+            objectUrl = URL.createObjectURL(blob);
+            imageUrl = objectUrl;
+        }
 
-            finishTileRequest(
-                tile,
-                true
-            );
+        const image = new Image();
+        image.crossOrigin = protectedAsset ? 'use-credentials' : 'anonymous';
+        image.decoding = 'async';
+        if ('fetchPriority' in image) {
+            image.fetchPriority = tile.priority < 0 ? 'high' : 'auto';
+        }
+        tile.image = image;
+        image.onload = () => {
+            cleanup();
+            tile.deferred = false;
+            finishTileRequest(tile, false);
         };
-
-    image.src = tileUrl;
+        image.onerror = () => fail(new Error('tile-image-decode-failed'));
+        image.src = imageUrl;
+    } catch (error) {
+        fail(error);
+    }
 }
 
 function pumpTileLoadQueue() {
@@ -429,27 +427,16 @@ function pumpTileLoadQueue() {
          * request slot; loadTile() will enqueue the tile again if a later
          * viewport needs it.
          */
-        const currentMap =
-            typeof getCurrentMap === 'function'
-                ? getCurrentMap()
-                : null;
-
-        const layerVisible =
-            typeof isMapLayerVisible !== 'function' ||
-            isMapLayerVisible('tiles');
-
-        const stillRelevant =
-            currentMap?.id ===
-                tile.request.map.id &&
-            getMapTileStyleId(currentMap) ===
-                tile.request.styleId &&
-            layerVisible &&
-            tile.lastSeenEpoch ===
-                TILE_QUEUE_EPOCH;
-
-        if (!stillRelevant) {
+        if (!isTileRequestRelevant(tile)) {
             tile.queued = false;
             continue;
+        }
+
+        const { map, styleId, zoom, x, y } = tile.request;
+        if (typeof isAssetAccessPaused === 'function' && isAssetAccessPaused() &&
+            isProtectedAssetURL(getTileURL(map, zoom, x, y, styleId))) {
+            TILE_LOAD_QUEUE.unshift(tile);
+            return;
         }
 
         startTileRequest(

@@ -13,8 +13,198 @@ const ASSET_ACCESS_STATE = {
     challengeReject: null,
     challengeTimer: null,
     lastFailureRefresh: 0,
-    regionalFallback: false
+    regionalFallback: false,
+    retryAt: 0,
+    retryTimer: null,
+    noticeTimer: null,
+    automaticRetries: 0,
+    awaitingRetry: false,
+    lastError: null,
+    failureGeneration: 0,
+    retryListeners: new Set()
 };
+
+const ASSET_RETRY_DELAY_MS = 10000;
+const ASSET_AUTOMATIC_RETRIES = 2;
+
+function assetRetryAfter(response, fallbackMs = ASSET_RETRY_DELAY_MS) {
+    const value = response?.headers?.get('Retry-After')?.trim();
+    const seconds = value && /^\d+(?:\.\d+)?$/.test(value)
+        ? Number(value)
+        : NaN;
+    const date = value && !Number.isFinite(seconds)
+        ? Date.parse(value)
+        : NaN;
+
+    return Math.max(
+        Date.now() + fallbackMs,
+        Number.isFinite(seconds)
+            ? Date.now() + seconds * 1000
+            : Number.isFinite(date) ? date : 0
+    );
+}
+
+function getAssetAccessRetryAt() {
+    return ASSET_ACCESS_STATE.awaitingRetry
+        ? Infinity
+        : ASSET_ACCESS_STATE.retryAt;
+}
+
+function isAssetAccessPaused() {
+    return getAssetAccessRetryAt() > Date.now();
+}
+
+function onAssetAccessRetry(listener) {
+    ASSET_ACCESS_STATE.retryListeners.add(listener);
+}
+
+function resumeAssetLoads() {
+    for (const listener of ASSET_ACCESS_STATE.retryListeners) {
+        listener();
+    }
+}
+
+function assetAccessBlockedError() {
+    const error = new Error('asset-access-paused');
+    error.status = ASSET_ACCESS_STATE.lastError?.status || 0;
+    error.retryAt = getAssetAccessRetryAt();
+    error.retryable = true;
+    return error;
+}
+
+function assetResponseError(response, message = `asset-http-${response.status}`) {
+    const error = new Error(message);
+    error.status = response.status;
+    error.response = response;
+    error.retryable = response.status === 401 || response.status === 403 ||
+        response.status === 408 || response.status === 425 ||
+        response.status === 429 || response.status >= 500;
+    return error;
+}
+
+function pauseAssetAccess(error, response = null) {
+    const delay = Math.min(
+        60000,
+        ASSET_RETRY_DELAY_MS * 2 ** ASSET_ACCESS_STATE.automaticRetries
+    );
+    const retryAt = assetRetryAfter(response, Math.max(
+        delay,
+        error.status === 401 || error.status === 403 ? 30000 : 0
+    ));
+
+    // Concurrent failures share a deadline and one recovery attempt.
+    ASSET_ACCESS_STATE.retryAt = Math.max(ASSET_ACCESS_STATE.retryAt, retryAt);
+    ASSET_ACCESS_STATE.lastError = error;
+    ASSET_ACCESS_STATE.failureGeneration++;
+    ASSET_ACCESS_STATE.awaitingRetry =
+        ASSET_ACCESS_STATE.automaticRetries >= ASSET_AUTOMATIC_RETRIES;
+    error.retryable = true;
+    error.retryAt = getAssetAccessRetryAt();
+
+    window.clearTimeout(ASSET_ACCESS_STATE.retryTimer);
+    ASSET_ACCESS_STATE.retryTimer = window.setTimeout(() => {
+        ASSET_ACCESS_STATE.retryTimer = null;
+        if (ASSET_ACCESS_STATE.retryAt > Date.now()) {
+            return;
+        }
+        updateAssetAccessNotice();
+        if (!ASSET_ACCESS_STATE.awaitingRetry) {
+            ASSET_ACCESS_STATE.automaticRetries++;
+            resumeAssetLoads();
+        }
+    }, Math.min(2147483647, ASSET_ACCESS_STATE.retryAt - Date.now()));
+
+    updateAssetAccessNotice();
+    return error;
+}
+
+function clearAssetAccessFailure() {
+    if (isAssetAccessPaused()) {
+        return;
+    }
+    ASSET_ACCESS_STATE.lastError = null;
+    ASSET_ACCESS_STATE.retryAt = 0;
+    ASSET_ACCESS_STATE.automaticRetries = 0;
+    window.clearTimeout(ASSET_ACCESS_STATE.retryTimer);
+    window.clearTimeout(ASSET_ACCESS_STATE.noticeTimer);
+    ASSET_ACCESS_STATE.retryTimer = null;
+    ASSET_ACCESS_STATE.noticeTimer = null;
+    updateAssetAccessNotice();
+}
+
+async function retryAssetAccess() {
+    if (Date.now() < ASSET_ACCESS_STATE.retryAt) {
+        return false;
+    }
+    ASSET_ACCESS_STATE.awaitingRetry = false;
+    ASSET_ACCESS_STATE.retryAt = 0;
+    ASSET_ACCESS_STATE.automaticRetries = 0;
+    ASSET_ACCESS_STATE.expiresAt = 0;
+    const pending = ensureAssetAccess();
+    updateAssetAccessNotice();
+    const allowed = await pending;
+    if (allowed) {
+        resumeAssetLoads();
+    }
+    updateAssetAccessNotice();
+    return allowed;
+}
+
+function updateAssetAccessNotice() {
+    window.clearTimeout(ASSET_ACCESS_STATE.noticeTimer);
+    ASSET_ACCESS_STATE.noticeTimer = null;
+    let notice = document.getElementById('assetAccessNotice');
+
+    if (!ASSET_ACCESS_STATE.lastError) {
+        if (notice) notice.hidden = true;
+        return;
+    }
+    // The existing local-copy warning already explains this case.
+    if (shouldShowLocalAssetWarning()) {
+        return;
+    }
+    if (!notice) {
+        const map = document.querySelector('.map');
+        if (!map) return;
+        notice = document.createElement('aside');
+        notice.id = 'assetAccessNotice';
+        notice.className = 'local-asset-warning asset-access-notice';
+        const content = document.createElement('div');
+        content.className = 'local-asset-warning-content';
+        const title = document.createElement('strong');
+        title.setAttribute('role', 'status');
+        title.setAttribute('aria-live', 'polite');
+        const message = document.createElement('p');
+        const retry = document.createElement('button');
+        retry.type = 'button';
+        retry.addEventListener('click', () => { void retryAssetAccess(); });
+        content.append(title, message, retry);
+        notice.append(content);
+        map.append(notice);
+    }
+
+    const text = (key, fallback) => {
+        const translated = typeof tr === 'function' ? tr(key) : '';
+        return translated && translated !== key ? translated : fallback;
+    };
+    const seconds = Math.max(0, Math.ceil(
+        (ASSET_ACCESS_STATE.retryAt - Date.now()) / 1000
+    ));
+    notice.hidden = false;
+    const title = notice.querySelector('strong');
+    const titleText = text('assetAccessUnavailable', 'Map loading is temporarily unavailable');
+    // Keep the live-region text stable while the silent countdown updates.
+    if (title.textContent !== titleText) title.textContent = titleText;
+    notice.querySelector('p').textContent = seconds
+        ? text('assetAccessWaiting', 'Try again in {seconds} s.').replace('{seconds}', seconds)
+        : text('assetAccessRetryHint', 'Retry loading the map and terrain data.');
+    const retry = notice.querySelector('button');
+    retry.disabled = seconds > 0 || Boolean(ASSET_ACCESS_STATE.pending);
+    retry.textContent = text('assetAccessRetry', 'Retry loading');
+    if (seconds > 0 || ASSET_ACCESS_STATE.pending) {
+        ASSET_ACCESS_STATE.noticeTimer = window.setTimeout(updateAssetAccessNotice, 1000);
+    }
+}
 
 const LOCAL_ASSET_DOCUMENTATION_URL =
     'https://github.com/apollyon-sys/wardogs-calculator/blob/main/docs/cdn.md#forks-and-self-hosted-deployments';
@@ -313,17 +503,16 @@ function resolveProtectedAssetURL(value) {
 
     if (
         !isProtectedAssetURL(source.href) ||
-        source.origin !==
-            getAssetGatewayOrigin() ||
-        !shouldUseDirectAssetOrigin()
+        !isAssetGatewayEnabled()
     ) {
         return source.href;
     }
 
-    const directOrigin =
-        getAssetDirectOrigin();
+    const deliveryOrigin = shouldUseDirectAssetOrigin()
+        ? getAssetDirectOrigin()
+        : getAssetGatewayOrigin();
 
-    if (!directOrigin) {
+    if (!deliveryOrigin) {
         return source.href;
     }
 
@@ -332,7 +521,7 @@ function resolveProtectedAssetURL(value) {
             source.pathname +
                 source.search +
                 source.hash,
-            directOrigin
+            deliveryOrigin
         );
 
     return target.href;
@@ -543,6 +732,10 @@ function loadAssetTurnstile() {
             document.head.appendChild(
                 script
             );
+        }).catch(error => {
+            ASSET_ACCESS_STATE.turnstileLoader = null;
+            document.querySelector('script[data-wardogs-turnstile]')?.remove();
+            throw error;
         });
 
     return ASSET_ACCESS_STATE.turnstileLoader;
@@ -688,7 +881,8 @@ async function parseAssetSessionResponse(response) {
     }
 
     if (!response.ok) {
-        throw new Error(
+        throw assetResponseError(
+            response,
             data.error ||
             `asset-session-http-${response.status}`
         );
@@ -766,42 +960,29 @@ async function ensureAssetAccess({
         return true;
     }
 
-    if (!force && hasValidAssetAccess()) {
-        return true;
+    if (isAssetAccessPaused()) {
+        return false;
     }
 
     if (ASSET_ACCESS_STATE.pending) {
         return ASSET_ACCESS_STATE.pending;
     }
 
+    if (!force && hasValidAssetAccess()) {
+        return true;
+    }
+
     ASSET_ACCESS_STATE.pending =
         (async () => {
             if (!force) {
-                try {
-                    const reused =
-                        await probeAssetSession();
+                const reused = await probeAssetSession();
 
-                    if (
-                        reused &&
-                        (
-                            !usesPreclearanceAssetDelivery() ||
-                            ASSET_ACCESS_STATE.mode ===
-                                'restricted'
-                        )
-                    ) {
-                        return true;
-                    }
-                } catch (error) {
-                    if (
-                        !/^asset-session-http-5/.test(
-                            error?.message || ''
-                        )
-                    ) {
-                        console.info(
-                            '[asset-access] Existing session could not be reused.',
-                            error
-                        );
-                    }
+                if (
+                    reused &&
+                    (!usesPreclearanceAssetDelivery() ||
+                        ASSET_ACCESS_STATE.mode === 'restricted')
+                ) {
+                    return true;
                 }
             }
 
@@ -810,6 +991,8 @@ async function ensureAssetAccess({
             .catch(error => {
                 ASSET_ACCESS_STATE.expiresAt = 0;
                 ASSET_ACCESS_STATE.mode = '';
+                clearAssetRefreshTimer();
+                pauseAssetAccess(error, error.response);
 
                 console.warn(
                     '[asset-access] Protected map assets are unavailable.',
@@ -832,8 +1015,12 @@ function refreshAssetAccess() {
 }
 
 async function recoverAssetAccessAfterFailure() {
-    if (!isAssetGatewayEnabled()) {
+    if (!isAssetGatewayEnabled() || isAssetAccessPaused()) {
         return false;
+    }
+
+    if (ASSET_ACCESS_STATE.pending) {
+        return ASSET_ACCESS_STATE.pending;
     }
 
     const now = Date.now();
@@ -843,10 +1030,11 @@ async function recoverAssetAccessAfterFailure() {
             ASSET_ACCESS_STATE.lastFailureRefresh <
         30000
     ) {
-        return false;
+        return hasValidAssetAccess();
     }
 
     ASSET_ACCESS_STATE.lastFailureRefresh = now;
+    ASSET_ACCESS_STATE.expiresAt = 0;
     return refreshAssetAccess();
 }
 
@@ -867,13 +1055,20 @@ async function fetchAssetResource(
         );
     }
 
-    await ensureAssetAccess();
+    if (!await ensureAssetAccess()) {
+        throw assetAccessBlockedError();
+    }
+
+    if (isAssetAccessPaused()) {
+        throw assetAccessBlockedError();
+    }
 
     const requestOptions = {
         ...options,
         credentials: 'include',
         referrerPolicy: 'no-referrer'
     };
+    const generation = ASSET_ACCESS_STATE.failureGeneration;
 
     let requestUrl =
         resolveProtectedAssetURL(
@@ -889,37 +1084,48 @@ async function fetchAssetResource(
                 requestOptions
             );
     } catch (error) {
-        if (!await refreshAssetAccess()) {
+        if (error.name === 'AbortError' || options.signal?.aborted) {
             throw error;
         }
-
-        requestUrl =
-            resolveProtectedAssetURL(
-                sourceUrl
-            );
-
-        return fetch(
-            requestUrl,
-            requestOptions
-        );
+        // A WAF response without CORS headers also appears as a network
+        // error. Do not launch new challenges or immediate request loops.
+        throw pauseAssetAccess(error);
     }
 
     if (
         response.status === 401 ||
         response.status === 403
     ) {
-        if (await refreshAssetAccess()) {
+        if (await recoverAssetAccessAfterFailure()) {
+            if (isAssetAccessPaused()) {
+                throw assetAccessBlockedError();
+            }
             requestUrl =
                 resolveProtectedAssetURL(
                     sourceUrl
                 );
 
-            response =
-                await fetch(
-                    requestUrl,
-                    requestOptions
-                );
+            try {
+                response = await fetch(requestUrl, requestOptions);
+            } catch (error) {
+                if (error.name === 'AbortError' || options.signal?.aborted) {
+                    throw error;
+                }
+                throw pauseAssetAccess(error);
+            }
         }
+    }
+
+    if (
+        response.status === 401 || response.status === 403 ||
+        response.status === 408 || response.status === 425 ||
+        response.status === 429 || response.status >= 500
+    ) {
+        throw pauseAssetAccess(assetResponseError(response), response);
+    }
+
+    if (response.ok && generation === ASSET_ACCESS_STATE.failureGeneration) {
+        clearAssetAccessFailure();
     }
 
     return response;

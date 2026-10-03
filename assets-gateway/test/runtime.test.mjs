@@ -335,6 +335,7 @@ test('request policy holds the session and its IP before reading R2', async () =
         );
 
     assert.equal(rejected.status, 429);
+    assert.match(rejected.headers.get('Access-Control-Expose-Headers'), /\bRetry-After\b/);
     assert.equal(
         rejected.headers.get('Retry-After'),
         '600'

@@ -61,6 +61,11 @@
     height: 32px;
 }
 
+.mobile-app .asset-access-notice {
+    padding: 12px;
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .mobile-app .cursor-coords {
     display: none !important;
 }

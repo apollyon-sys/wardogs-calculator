@@ -49,7 +49,7 @@ function corsHeaders(origin) {
         'Access-Control-Allow-Headers':
             'Content-Type',
         'Access-Control-Expose-Headers':
-            'Content-Length, Content-Type, ETag, X-Wardogs-Asset-Access, X-Wardogs-Asset-Fallback',
+            'Content-Length, Content-Type, ETag, Retry-After, X-Wardogs-Asset-Access, X-Wardogs-Asset-Fallback',
         'Access-Control-Max-Age': '86400',
         Vary: 'Origin'
     };

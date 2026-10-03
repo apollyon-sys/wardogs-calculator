@@ -15,7 +15,9 @@
         terrainDefinitions: new Map(),
         terrains: new Map(),
         terrainPending: new Map(),
-        terrainFailures: new Set(),
+        terrainFailures: new Map(),
+        retryTimer: null,
+        retryAt: 0,
         rerenderQueued: false,
         lastWarning: null,
         confirmedOrigin: null,
@@ -276,6 +278,53 @@
 
     const TERRAIN_FETCH_ATTEMPTS = 2;
     const TERRAIN_RETRY_DELAY_MS = 500;
+    const TERRAIN_FAILURE_COOLDOWN_MS = 10000;
+
+    function scheduleTerrainRetry(retryAt) {
+        if (!Number.isFinite(retryAt) || retryAt <= Date.now() ||
+            (state.retryTimer && state.retryAt <= retryAt)) {
+            return;
+        }
+        window.clearTimeout(state.retryTimer);
+        state.retryAt = retryAt;
+        state.retryTimer = window.setTimeout(() => {
+            state.retryTimer = null;
+            state.retryAt = 0;
+            queueResultRerender();
+        }, Math.min(2147483647, retryAt - Date.now()));
+    }
+
+    function rememberTerrainFailure(failures, key, error) {
+        const retryAt = error?.retryable === true
+            ? Math.max(Date.now() + TERRAIN_FAILURE_COOLDOWN_MS, error.retryAt || 0)
+            : Infinity;
+        failures.set(key, { error, retryAt });
+        scheduleTerrainRetry(retryAt);
+    }
+
+    function terrainFailureIsCooling(failures, key) {
+        const failure = failures.get(key);
+        if (!failure) return false;
+        if (failure.retryAt > Date.now()) {
+            scheduleTerrainRetry(failure.retryAt);
+            return true;
+        }
+        failures.delete(key);
+        return false;
+    }
+
+    if (typeof onAssetAccessRetry === 'function') {
+        onAssetAccessRetry(() => {
+            const caches = [state.terrainFailures, ...[...state.terrains.values()]
+                .map(terrain => terrain.chunkFailures)];
+            for (const cache of caches) {
+                for (const [key, failure] of cache) {
+                    if (failure.error?.retryable === true) cache.delete(key);
+                }
+            }
+            queueResultRerender();
+        });
+    }
 
     function waitForTerrainRetry() {
         return new Promise(
@@ -321,6 +370,15 @@
                 const error = new Error(
                     `${response.status} ${response.statusText} for ${url}`
                 );
+                error.status = response.status;
+                error.retryable = isRetryableTerrainStatus(response.status);
+
+                if (response.status === 429) {
+                    error.retryAt = typeof assetRetryAfter === 'function'
+                        ? assetRetryAfter(response)
+                        : Date.now() + TERRAIN_FAILURE_COOLDOWN_MS;
+                    throw error;
+                }
 
                 if (
                     !isRetryableTerrainStatus(
@@ -341,8 +399,10 @@
 
             } catch (error) {
                 lastError = error;
+                error.retryable ??= true;
 
                 if (
+                    error?.retryAt ||
                     error?.retryable === false ||
                     attempt >= TERRAIN_FETCH_ATTEMPTS
                 ) {
@@ -483,7 +543,8 @@
             manifest,
             manifestUrl,
             chunkCache: new Map(),
-            chunkPending: new Map()
+            chunkPending: new Map(),
+            chunkFailures: new Map()
         };
     }
 
@@ -500,7 +561,7 @@
             return true;
         }
 
-        if (state.terrainFailures.has(mapId)) {
+        if (terrainFailureIsCooling(state.terrainFailures, mapId)) {
             return false;
         }
 
@@ -533,9 +594,7 @@
                     return true;
                 })
                 .catch(error => {
-                    state.terrainFailures.add(
-                        definition.mapId
-                    );
+                    rememberTerrainFailure(state.terrainFailures, definition.mapId, error);
 
                     if (
                         typeof trackOperationalFailure ===
@@ -770,6 +829,10 @@
             return terrain.chunkPending.get(key);
         }
 
+        if (terrainFailureIsCooling(terrain.chunkFailures, key)) {
+            throw terrain.chunkFailures.get(key).error;
+        }
+
         const entry = getChunkEntry(terrain, key);
 
         if (!entry) {
@@ -812,6 +875,9 @@
 
         try {
             return await promise;
+        } catch (error) {
+            rememberTerrainFailure(terrain.chunkFailures, key, error);
+            throw error;
         } finally {
             terrain.chunkPending.delete(key);
         }
@@ -845,7 +911,9 @@
         }
 
         const missing = [...keys].filter(
-            key => !terrain.chunkCache.has(key)
+            key => !terrain.chunkCache.has(key) &&
+                !terrain.chunkPending.has(key) &&
+                !terrainFailureIsCooling(terrain.chunkFailures, key)
         );
 
         if (!missing.length) {
@@ -1119,8 +1187,7 @@
 
         if (
             !state.terrains.has(context.mapId) &&
-            state.terrainDefinitions.has(context.mapId) &&
-            !state.terrainFailures.has(context.mapId)
+            state.terrainDefinitions.has(context.mapId)
         ) {
             ensureTerrainBallisticsMap(
                 context.mapId

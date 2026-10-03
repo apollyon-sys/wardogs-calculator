@@ -54,7 +54,8 @@ test('protected assets use credentialed requests and session recovery', async ()
     assert.match(access, /sessionStorage\.setItem/);
     assert.match(access, /docs\/cdn\.md#forks-and-self-hosted-deployments/);
     assert.match(tiles, /'use-credentials'/);
-    assert.match(tiles, /recoverAssetAccessAfterFailure/);
+    assert.match(tiles, /fetchAssetResource/);
+    assert.match(tiles, /ensureAssetAccess/);
     assert.match(terrain, /fetchAssetResource/);
     assert.match(experimental, /fetchAssetResource/);
 });
@@ -110,7 +111,11 @@ test('every locale explains unavailable protected assets to local copies', async
             'localAssetWarningTitle',
             'localAssetWarningBody',
             'localAssetWarningLink',
-            'localAssetWarningClose'
+            'localAssetWarningClose',
+            'assetAccessUnavailable',
+            'assetAccessWaiting',
+            'assetAccessRetryHint',
+            'assetAccessRetry'
         ]) {
             assert.equal(
                 typeof locale[key],

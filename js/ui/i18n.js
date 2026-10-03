@@ -807,6 +807,10 @@ function applyLanguage() {
         syncAccessibilityLocalization();
     }
 
+    if (typeof updateAssetAccessNotice === 'function') {
+        updateAssetAccessNotice();
+    }
+
     if (
         typeof updateMotdLocalization ===
         'function'

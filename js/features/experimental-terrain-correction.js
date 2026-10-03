@@ -2997,6 +2997,15 @@
         };
     }
 
+    if (typeof onAssetAccessRetry === 'function') {
+        onAssetAccessRetry(() => {
+            if (state.lastError?.retryable === true) {
+                state.lastError = null;
+                queueRerender();
+            }
+        });
+    }
+
     window
         .initExperimentalTerrainCorrection =
         initExperimentalTerrainCorrection;

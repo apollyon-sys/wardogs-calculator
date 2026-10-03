@@ -165,6 +165,40 @@
     color: var(--text);
 }
 
+.asset-access-notice {
+    top: auto;
+    bottom: 16px;
+    width: min(360px, calc(100% - 32px));
+    padding: 12px 16px;
+    grid-template-columns: minmax(0, 1fr);
+    transform: translateX(-50%);
+}
+
+.asset-access-notice[hidden] {
+    display: none !important;
+}
+
+.asset-access-notice button {
+    min-height: 36px;
+    padding: 6px 12px;
+    border: 1px solid var(--accent-border);
+    border-radius: 7px;
+    background: var(--input-bg);
+    color: var(--accent);
+    font: inherit;
+    cursor: pointer;
+}
+
+.asset-access-notice button:disabled {
+    opacity: .6;
+    cursor: default;
+}
+
+.asset-access-notice button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
 /* =========================
    FIRING SOLUTION MENU
    ========================= */
