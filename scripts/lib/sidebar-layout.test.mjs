@@ -276,7 +276,7 @@ test('release MOTD is concise user-facing copy in every language', async () => {
         )
     );
 
-    assert.equal(motd.id, 'release-1-10-1-2026-09-29');
+    assert.equal(motd.id, 'release-1-10-2-2026-10-03');
     assert.equal(Object.keys(motd.title).length, 13);
     assert.equal(Object.keys(motd.message).length, 13);
 
