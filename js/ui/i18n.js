@@ -811,6 +811,10 @@ function applyLanguage() {
         updateAssetAccessNotice();
     }
 
+    if (typeof syncDeveloperLocalization === 'function') {
+        syncDeveloperLocalization();
+    }
+
     if (
         typeof updateMotdLocalization ===
         'function'

@@ -70,7 +70,8 @@ const desktopStyleFiles = [
     'styles/desktop/lobby.css',
     'styles/desktop/feedback.css',
     'styles/desktop/seo.css',
-    'styles/desktop/accessibility.css'
+    'styles/desktop/accessibility.css',
+    'styles/desktop/developer.css'
 ];
 
 const mobileStyleFiles = [
@@ -158,6 +159,8 @@ function addProductionSecurityMeta(html, appConfig) {
     if (turnstileEnabled) connectSources.add('https://challenges.cloudflare.com');
 
     const scriptSources = ["'self'", 'https://cloud.umami.is'];
+    // Only the authenticated menu endpoint can supply additional application code.
+    scriptSources.push('https://assets.wardogs-artillery.com/__developer/module');
     if (turnstileEnabled) scriptSources.push('https://challenges.cloudflare.com');
 
     const imageSources = [

@@ -46,6 +46,50 @@ function origins(value, fallback = []) {
         .concat(fallback);
 }
 
+function isLoopbackOrigin(origin) {
+    try {
+        return [
+            'localhost',
+            '127.0.0.1',
+            '[::1]'
+        ].includes(new URL(origin).hostname);
+    } catch {
+        return false;
+    }
+}
+
+function ipAddress(value) {
+    if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(value)) {
+        return value.split('.').every(octet =>
+            Number(octet) <= 255 &&
+            String(Number(octet)) === octet
+        ) ? value : null;
+    }
+
+    if (!value.includes(':') || !/^[a-f0-9:.]+$/i.test(value)) {
+        return null;
+    }
+
+    try {
+        return new URL(`http://[${value}]/`)
+            .hostname.slice(1, -1);
+    } catch {
+        return null;
+    }
+}
+
+export function allowsLocalDevelopment(request, config, origin) {
+    const ip = ipAddress(
+        request.headers.get('CF-Connecting-IP') || ''
+    );
+
+    return (
+        ip !== null &&
+        config.localDevelopmentIps.has(ip) &&
+        config.localDevelopmentOrigins.includes(origin)
+    );
+}
+
 export function settings(env = {}) {
     const development =
         env.ASSETS_DEV === 'true';
@@ -54,11 +98,14 @@ export function settings(env = {}) {
         origins(
             env.ALLOWED_ORIGINS,
             [DEFAULT_PRODUCTION_ORIGIN]
-        );
+        ).filter(origin => !isLoopbackOrigin(origin));
+
+    const configuredDevelopmentOrigins =
+        origins(env.DEVELOPMENT_ORIGINS);
 
     const developmentOrigins =
         development
-            ? origins(env.DEVELOPMENT_ORIGINS)
+            ? configuredDevelopmentOrigins
             : [];
 
     const prefix =
@@ -77,6 +124,13 @@ export function settings(env = {}) {
 
     return {
         development,
+        localDevelopmentOrigins:
+            configuredDevelopmentOrigins.filter(isLoopbackOrigin),
+        localDevelopmentIps: new Set(
+            strings(env.LOCAL_DEVELOPMENT_IPS)
+                .map(ipAddress)
+                .filter(Boolean)
+        ),
         allowedOrigins: [
             ...new Set([
                 ...productionOrigins,
@@ -121,28 +175,28 @@ export function settings(env = {}) {
         assetBudgetSessionPoints:
             integer(
                 env.ASSET_BUDGET_SESSION_POINTS,
-                800,
+                2000,
                 100,
                 10000
             ),
         assetBudgetIpPoints:
             integer(
                 env.ASSET_BUDGET_IP_POINTS,
-                2400,
+                6000,
                 200,
                 50000
             ),
         assetBudgetSessionTerrain:
             integer(
                 env.ASSET_BUDGET_SESSION_TERRAIN,
-                32,
+                64,
                 4,
                 1000
             ),
         assetBudgetIpTerrain:
             integer(
                 env.ASSET_BUDGET_IP_TERRAIN,
-                128,
+                256,
                 8,
                 5000
             ),

@@ -1271,10 +1271,20 @@
 
     function getTerrainBallisticsState() {
         let cachedChunks = 0;
+        let pendingChunks = 0;
+        let failedChunks = 0;
 
         for (const terrain of state.terrains.values()) {
             cachedChunks += terrain.chunkCache.size;
+            pendingChunks += terrain.chunkPending.size;
+            failedChunks += terrain.chunkFailures.size;
         }
+
+        const current = state.terrains.get(S.map);
+        // Cache-only reads: status refresh must never start chunk downloads.
+        const hasPoint = point => Number.isFinite(point?.x) && Number.isFinite(point?.y);
+        const originZ = current && hasPoint(S.origin) ? terrainHeightAtPointSync(current, S.origin) : null;
+        const targetZ = current && hasPoint(S.target) ? terrainHeightAtPointSync(current, S.target) : null;
 
         const correctionState =
             typeof window.getExperimentalTerrainCorrectionState ===
@@ -1299,7 +1309,20 @@
                 ...state.terrainDefinitions.keys()
             ],
             loadedMaps: [...state.terrains.keys()],
-            cachedChunks
+            cachedChunks,
+            pendingMaps: state.terrainPending.size,
+            pendingChunks,
+            failedChunks,
+            retryAt: state.retryAt || null,
+            currentMapId: S.map,
+            currentMapLoaded: Boolean(current),
+            currentPointsReady: Number.isFinite(originZ) && Number.isFinite(targetZ),
+            currentHeights: {
+                originZ,
+                targetZ,
+                deltaZ: Number.isFinite(originZ) && Number.isFinite(targetZ)
+                    ? targetZ - originZ : null
+            }
         };
     }
 

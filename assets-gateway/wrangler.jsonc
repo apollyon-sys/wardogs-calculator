@@ -5,6 +5,13 @@
 	"compatibility_date": "2026-04-07",
 	"workers_dev": false,
 	"preview_urls": false,
+	"rules": [
+		{
+			"type": "Text",
+			"globs": ["**/private/developer-menu.txt"],
+			"fallthrough": true
+		}
+	],
 	"routes": [
 		{
 			"pattern": "assets.wardogs-artillery.com",
@@ -51,10 +58,10 @@
 		"REQUEST_HOLD_SECONDS": "600",
 		"ASSET_BUDGET_ENABLED": "true",
 		"ASSET_BUDGET_WINDOW_SECONDS": "3600",
-		"ASSET_BUDGET_SESSION_POINTS": "800",
-		"ASSET_BUDGET_IP_POINTS": "2400",
-		"ASSET_BUDGET_SESSION_TERRAIN": "32",
-		"ASSET_BUDGET_IP_TERRAIN": "128",
+		"ASSET_BUDGET_SESSION_POINTS": "2000",
+		"ASSET_BUDGET_IP_POINTS": "6000",
+		"ASSET_BUDGET_SESSION_TERRAIN": "64",
+		"ASSET_BUDGET_IP_TERRAIN": "256",
 		"ASSET_BUDGET_STRIKE_MEMORY_SECONDS": "604800"
 	},
 	"kv_namespaces": [
@@ -64,6 +71,14 @@
 		}
 	],
 	"ratelimits": [
+		{
+			"name": "DEVELOPER_LOGIN_RATE",
+			"namespace_id": "73208",
+			"simple": {
+				"limit": 5,
+				"period": 60
+			}
+		},
 		{
 			"name": "SESSION_RATE",
 			"namespace_id": "73201",
@@ -84,7 +99,7 @@
 			"name": "ASSET_RESTRICTED_RATE",
 			"namespace_id": "73203",
 			"simple": {
-				"limit": 240,
+				"limit": 600,
 				"period": 60
 			}
 		},
@@ -100,7 +115,7 @@
 			"name": "ASSET_WINDOW_RATE",
 			"namespace_id": "73205",
 			"simple": {
-				"limit": 320,
+				"limit": 800,
 				"period": 60
 			}
 		},
@@ -116,7 +131,7 @@
 			"name": "ASSET_SEQUENCE_RATE",
 			"namespace_id": "73207",
 			"simple": {
-				"limit": 20,
+				"limit": 60,
 				"period": 10
 			}
 		}

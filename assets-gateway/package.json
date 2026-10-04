@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "wrangler dev --port 8788 --var ASSETS_DEV:true",
     "deploy": "wrangler deploy",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --import ./test/register-text.mjs --test test/*.test.mjs"
   },
   "engines": {
     "node": ">=22"

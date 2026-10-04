@@ -1,9 +1,13 @@
-import { settings } from './config.mjs';
+import {
+    allowsLocalDevelopment,
+    settings
+} from './config.mjs';
 import {
     mintSession,
     sessionSubject,
     verifySession
 } from './tokens.mjs';
+import { DEVELOPER_PATH, DEVELOPER_MODULE_PATH, handleDeveloperRequest } from './developer-access.mjs';
 import {
     validateTurnstile
 } from './turnstile.mjs';
@@ -140,8 +144,9 @@ function sessionCookie(token, lifetimeSeconds) {
     ].join('; ');
 }
 
-async function allowedBy(rateLimit, key) {
+async function allowedBy(rateLimit, key, exempt = false) {
     return (
+        exempt ||
         !rateLimit ||
         (
             await rateLimit.limit({
@@ -243,6 +248,7 @@ async function handleSession(
         ).toUpperCase();
 
     if (
+        !config.localDevelopmentAccess &&
         await isAddressHeldAtAdmission(
             env,
             ip
@@ -300,16 +306,18 @@ async function handleSession(
                 env
             );
 
-        if (!session) {
+        if (
+            !session ||
+            (config.localDevelopmentAccess && session.mode !== 'restricted')
+        ) {
             return json(
                 {
                     error: 'session-required'
                 },
                 401,
                 origin,
-                config.fallbackCountries.has(
-                    country
-                )
+                (config.localDevelopmentAccess ||
+                    config.fallbackCountries.has(country))
                     ? {
                         'X-Wardogs-Asset-Fallback':
                             'restricted'
@@ -333,9 +341,12 @@ async function handleSession(
         await limitedJson(request);
 
     const fallback =
-        !config.development &&
-        config.fallbackCountries.has(country) &&
-        !body.token;
+        config.localDevelopmentAccess ||
+        (
+            !config.development &&
+            config.fallbackCountries.has(country) &&
+            !body.token
+        );
 
     if (!fallback) {
         const challenge =
@@ -574,6 +585,7 @@ async function handleAsset(
         ) || 'local';
 
     if (
+        !config.localDevelopmentAccess &&
         await isClientHeld(
             env,
             session.id,
@@ -587,6 +599,7 @@ async function handleAsset(
     }
 
     if (
+        !config.localDevelopmentAccess &&
         config.requestPolicyEnabled &&
         isCoverageBoundaryPath(
             url.pathname,
@@ -620,7 +633,7 @@ async function handleAsset(
         );
     }
 
-    if (config.assetBudgetEnabled) {
+    if (!config.localDevelopmentAccess && config.assetBudgetEnabled) {
         const budget =
             await assetBudgetDescriptor(
                 url.pathname,
@@ -737,6 +750,7 @@ async function handleAsset(
         );
 
     const reducedContext =
+        !config.localDevelopmentAccess &&
         !hasBrowserRequestContext(
             request,
             config.development
@@ -752,7 +766,8 @@ async function handleAsset(
     const checks = [
         allowedBy(
             sessionRate,
-            session.id
+            session.id,
+            config.localDevelopmentAccess
         ),
         allowedBy(
             requireBinding(
@@ -760,7 +775,8 @@ async function handleAsset(
                 'ASSET_IP_RATE',
                 config.development
             ),
-            ip
+            ip,
+            config.localDevelopmentAccess
         ),
         allowedBy(
             requireBinding(
@@ -768,7 +784,8 @@ async function handleAsset(
                 'ASSET_WINDOW_RATE',
                 config.development
             ),
-            session.id
+            session.id,
+            config.localDevelopmentAccess
         ),
         reducedContext
             ? allowedBy(
@@ -783,7 +800,8 @@ async function handleAsset(
         ...sequenceKeys.map(key =>
             allowedBy(
                 sequenceRate,
-                key
+                key,
+                config.localDevelopmentAccess
             )
         )
     ];
@@ -993,7 +1011,13 @@ export async function handleRequest(
         request.headers.get('Origin') ||
         '';
 
-    if (!config.allowedOrigins.includes(origin)) {
+    config.localDevelopmentAccess =
+        allowsLocalDevelopment(request, config, origin);
+
+    if (
+        !config.allowedOrigins.includes(origin) &&
+        !config.localDevelopmentAccess
+    ) {
         return json(
             {
                 error: 'forbidden-origin'
@@ -1018,6 +1042,10 @@ export async function handleRequest(
     }
 
     try {
+        if (url.pathname === DEVELOPER_PATH || url.pathname === DEVELOPER_MODULE_PATH) {
+            return await handleDeveloperRequest(request, env, { origin, corsHeaders, cookieValue, limitedJson });
+        }
+
         if (url.pathname === SESSION_PATH) {
             return await handleSession(
                 request,

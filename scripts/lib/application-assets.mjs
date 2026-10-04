@@ -43,7 +43,8 @@ const COMMON_SCRIPT_FILES = Object.freeze([
     'js/features/results.js',
     'js/ui/inputs.js',
     'js/ui/cursor.js',
-    'js/events.js'
+    'js/events.js',
+    'js/ui/developer-access.js'
 ]);
 
 export function applicationScriptFiles({ mobile = false } = {}) {

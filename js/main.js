@@ -398,6 +398,8 @@ async function init() {
 
     try {
 
+        document.documentElement.dataset.appInitState = 'loading';
+
         if (
             typeof initializeAccessibilityPreferences ===
                 'function'
@@ -430,6 +432,7 @@ async function init() {
         applyStaticLanguage();
 
         await appConfigPromise;
+        initDeveloperMode();
 
         renderFooter();
 
@@ -518,6 +521,8 @@ async function init() {
         resize();
 
         renderSavedTargets();
+
+        document.documentElement.dataset.appInitState = 'ready';
 
         /*
          * The useful calculator is now interactive. Optional network work is

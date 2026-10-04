@@ -1,0 +1,501 @@
+/* Delivered only after owner authentication; excluded from the public site build. */
+(function installDeveloperMenu() {
+    if (!window.WardogsDeveloperAccess?.isAuthorized()) return;
+    /* Read-only diagnostic snapshots. No additional fetches or telemetry. */
+    function developerReadState(getter) {
+        try {
+            return getter();
+        } catch (error) {
+            return { diagnosticError: error?.name || 'Error' };
+        }
+    }
+
+    function developerTerrainCorrectionState() {
+        const state = typeof getExperimentalTerrainCorrectionState === 'function'
+            ? developerReadState(getExperimentalTerrainCorrectionState) : null;
+        // Runtime errors may contain URLs. Keep only the error presence.
+        return state ? { ...state, lastError: Boolean(state.lastError) } : null;
+    }
+
+    function getDeveloperDiagnostics() {
+        const app = typeof APP_CONFIG === 'object' ? APP_CONFIG : {};
+        const terrain = typeof getTerrainBallisticsState === 'function'
+            ? developerReadState(getTerrainBallisticsState) : null;
+        const correction = developerTerrainCorrectionState();
+        const tools = typeof MAP_TOOL_STATE === 'object' ? MAP_TOOL_STATE : null;
+        return {
+            schema: 'wardogs-app-diagnostics-v1',
+            capturedAt: new Date().toISOString(),
+            version: app.site?.footer?.version || null,
+            clientAssetVersion: typeof getStaticResourceVersion === 'function'
+                ? getStaticResourceVersion() : null,
+            environment: {
+                origin: window.location.origin,
+                language: typeof LANG === 'string' ? LANG : null,
+                theme: document.documentElement.dataset.theme || 'dark',
+                online: navigator.onLine,
+                secureContext: window.isSecureContext,
+                userAgent: navigator.userAgent,
+                viewport: { width: window.innerWidth, height: window.innerHeight }
+            },
+            systems: {
+                application: {
+                    state: document.documentElement.dataset.appInitState || 'loading',
+                    maps: typeof MAPS === 'object' ? Object.keys(MAPS).length : 0,
+                    weapons: typeof WEAPONS === 'object' ? Object.keys(WEAPONS).length : 0
+                },
+                assets: typeof getAssetAccessDiagnostics === 'function'
+                    ? developerReadState(getAssetAccessDiagnostics) : null,
+                tiles: typeof getMapTileDiagnostics === 'function'
+                    ? developerReadState(getMapTileDiagnostics) : null,
+                terrain,
+                correction,
+                hull: {
+                    configured: app.features?.sphPlatformCorrection?.enabled === true,
+                    initialized: typeof sphPlatformCorrectionInitialized !== 'undefined'
+                        && sphPlatformCorrectionInitialized,
+                    headingDeg: typeof sphPlatformHullHeadingDeg === 'number'
+                        ? sphPlatformHullHeadingDeg : null,
+                    selectedArc: typeof sphPlatformSelectedArc === 'string'
+                        ? sphPlatformSelectedArc : null,
+                    active: typeof sphPlatformCorrectionIsActive === 'function'
+                        && sphPlatformCorrectionIsActive()
+                },
+                lobby: {
+                    enabled: app.collab?.enabled === true,
+                    runtimeLoaded: typeof lobby === 'object' && Boolean(lobby),
+                    state: document.getElementById('lobbyControls')?.dataset.state || 'idle'
+                },
+                tools: tools ? {
+                    active: tools.tool,
+                    drawings: tools.drawings.length,
+                    zones: tools.zones.length,
+                    polygons: tools.polygons.length,
+                    markers: tools.markers.length,
+                    layers: { ...tools.layers }
+                } : null,
+                accessibility: typeof getAccessibilityDiagnostics === 'function'
+                    ? developerReadState(getAccessibilityDiagnostics) : null
+            },
+            selection: typeof S === 'object' ? {
+                mapId: S.map, weaponId: S.weapon, style: S.mapStyle,
+                origin: { ...S.origin }, target: { ...S.target }
+            } : null
+        };
+    }
+
+    function captureDeveloperFiringDiagnostics() {
+        if (!WEAPONS[S.weapon] || ![S.origin.x, S.origin.y, S.target.x, S.target.y].every(Number.isFinite)) {
+            throw new Error('developerFiringUnavailable');
+        }
+        let diagnostics;
+        if (S.weapon === 'spg' && typeof getSphFiringDiagnostics === 'function') {
+            diagnostics = getSphFiringDiagnostics();
+        } else {
+            const weapon = WEAPONS[S.weapon];
+            const origin = { ...S.origin }, target = { ...S.target };
+            const distanceMeters = worldDistanceToMeters(Math.hypot(target.x - origin.x, target.y - origin.y));
+            const flat = getWeaponElevationSolutions(weapon, distanceMeters);
+            const resolved = getResolvedWeaponElevationSolutions(weapon, distanceMeters, {
+                mapId: S.map, origin, target, display: false
+            });
+            diagnostics = {
+                schema: 'wardogs-firing-diagnostics-v1',
+                version: APP_CONFIG.site?.footer?.version || null,
+                mapId: S.map, weaponId: S.weapon, origin, target, distanceMeters,
+                selectedArc: S.weapon === 'spg'
+                    ? (typeof sphPlatformSelectedArc === 'string' ? sphPlatformSelectedArc : 'high') : 'single',
+                hullHeadingDeg: null,
+                platformRuntimeMissing: S.weapon === 'spg',
+                azimuthDeg: (Math.atan2(target.x - origin.x, target.y - origin.y) * 180 / Math.PI + 360) % 360,
+                flatSolutions: flat,
+                terrainMeta: resolved.terrainMeta,
+                platformCorrection: resolved.platformHeadingCorrection,
+                finalSolutions: resolved.solutions,
+                displayedMil: document.getElementById('mil')?.textContent || null
+            };
+        }
+        // Detach nested resolver metadata as well as positions from future changes.
+        return JSON.parse(JSON.stringify({
+            ...diagnostics,
+            capturedAt: new Date().toISOString(),
+            terrainState: typeof getTerrainBallisticsState === 'function'
+                ? developerReadState(getTerrainBallisticsState) : null,
+            correctionState: developerTerrainCorrectionState()
+        }));
+    }
+
+    function developerOptionalNumber(value, min, max, integer = false) {
+        if (value === null || value === undefined || String(value).trim() === '') return null;
+        const text = String(value).trim();
+        if (!/^\d+(?:\.\d+)?$/.test(text)) throw new Error('developerInvalidShotData');
+        const number = Number(text);
+        if (!Number.isFinite(number) || number < min || number > max || (integer && !Number.isInteger(number))) {
+            throw new Error('developerInvalidShotData');
+        }
+        return number;
+    }
+
+    function parseDeveloperImpacts(text) {
+        if (String(text).length > 10000) throw new Error('developerInvalidImpacts');
+        const lines = String(text).split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+        if (lines.length > 100) throw new Error('developerInvalidImpacts');
+        return lines.map(line => {
+            const match = line.match(/^(?:x\s*=?\s*)?(-?\d+(?:\.\d+)?)\s*(?:[,;]\s*|\s+)(?:y\s*=?\s*)?(-?\d+(?:\.\d+)?)$/i);
+            if (!match) throw new Error('developerInvalidImpacts');
+            const point = { x: Number(match[1]), y: Number(match[2]) };
+            if (![point.x, point.y].every(Number.isFinite)) throw new Error('developerInvalidImpacts');
+            return point;
+        });
+    }
+
+    function createDeveloperFiringReport(snapshot, input = {}) {
+        if (!snapshot) throw new Error('developerCaptureFirst');
+        const impacts = parseDeveloperImpacts(input.impacts || '');
+        const actual = {
+            mil: developerOptionalNumber(input.mil, 0, 6400),
+            azimuthDeg: developerOptionalNumber(input.azimuth, 0, 359.999999),
+            hullHeadingDeg: developerOptionalNumber(input.hull, 0, 359.999999),
+            shotsFired: developerOptionalNumber(input.shots, 1, 100, true)
+        };
+        if (actual.shotsFired !== null && actual.shotsFired < impacts.length) throw new Error('developerInvalidShotData');
+        const safeSnapshot = JSON.parse(JSON.stringify(snapshot));
+        return {
+            schema: 'wardogs-test-firing-v1',
+            exportedAt: new Date().toISOString(),
+            calculator: safeSnapshot,
+            actual,
+            recordedImpacts: impacts.length,
+            impacts,
+            measurementUncertainty: {
+                mil: developerOptionalNumber(input.milUncertainty, 0, 100),
+                azimuthDegrees: developerOptionalNumber(input.azimuthUncertainty, 0, 10)
+            }
+        };
+    }
+
+    function developerReportText(report) {
+        const s = report.calculator, a = report.actual;
+        const shown = value => value === null || value === undefined ? 'not recorded' : value;
+        return [
+            `Map: ${s.mapId}`,
+            `Version: ${shown(s.version)}`,
+            `Weapon: ${s.weaponId === 'spg' ? 'SPH-2' : s.weaponId}`,
+            `Origin: x${s.origin.x}, y${s.origin.y}`,
+            `Target: x${s.target.x}, y${s.target.y}`,
+            `Distance: ${s.distanceMeters.toFixed(1)} m`,
+            `Arc: ${String(s.selectedArc).toUpperCase()}`,
+            `Terrain3D: ${s.terrainState?.enabled ? (s.terrainState.currentPointsReady ? 'ON, current heights ready' : 'ON, current heights pending') : 'OFF or not loaded'}`,
+            `Delta Z: ${shown(s.terrainMeta?.deltaZ)} m`,
+            `Terrain correction: ${shown(s.terrainMeta?.experimentalTerrainCorrection?.arcs?.[s.selectedArc]?.status)}`,
+            `Field calibration MIL: ${shown(s.platformCorrection?.fieldCalibrationMilAdjustment)}`,
+            `Calculator MIL: ${shown(s.displayedMil)}`,
+            `Actual MIL: ${shown(a.mil)}`,
+            `Calculator azimuth: ${s.azimuthDeg.toFixed(3)}°`,
+            `Actual azimuth: ${shown(a.azimuthDeg)}`,
+            `Calculator hull: ${shown(s.hullHeadingDeg)}`,
+            `Actual hull: ${shown(a.hullHeadingDeg)}`,
+            `Shots fired: ${shown(a.shotsFired)}`,
+            `Recorded impacts: ${report.recordedImpacts}`,
+            '', 'Impacts:',
+            ...report.impacts.map(point => `x${point.x}, y${point.y}`),
+            '', 'Diagnostics JSON:', JSON.stringify(report, null, 2)
+        ].join('\n');
+    }
+
+    /* Opt-in developer menu. Closing it stops the local status refresh timer. */
+    const DEVELOPER_UI = { enabled: false, timer: null, firing: null, launcher: null };
+    const DEVELOPER_TEXT = {
+        developerMode: 'Developer mode', developerSystems: 'System status',
+        developerRefresh: 'Refresh', developerCopyDiagnostics: 'Copy diagnostics',
+        developerDisable: 'Disable mode', developerFiring: 'Test firing',
+        developerCapture: 'Capture a new series', developerCaptureFirst: 'Capture a series first.',
+        developerCaptureHint: 'Capture before firing. Position and calculator commands stay fixed until you capture a new series.',
+        developerActualHint: 'Enter what you actually set in the game. Empty fields are reported as unknown.',
+        developerActualMil: 'Actual MIL', developerActualAzimuth: 'Actual azimuth (°)',
+        developerActualHull: 'Actual hull direction (°)', developerShots: 'Shots fired',
+        developerImpacts: 'Impacts: one x, y pair per line', developerCopyFiring: 'Copy firing report',
+        developerMilUncertainty: 'MIL uncertainty (±)', developerAzimuthUncertainty: 'Azimuth uncertainty (±°)',
+        developerCopied: 'Copied.', developerCopyManual: 'Clipboard unavailable. Select the text below and copy it manually.',
+        developerInvalidShotData: 'Check the numeric fields and shot count.',
+        developerInvalidImpacts: 'Use one x, y pair per line, with decimal points. Up to 100 impacts.',
+        developerFiringUnavailable: 'Wait for the calculator and select a weapon.',
+        developerSeriesChanged: 'The current map, position, weapon, hull or arc differs from the captured series. The report still uses the captured values.',
+        developerApplication: 'Application', developerAssets: 'Asset access', developerTiles: 'Map tiles',
+        developerTerrain: 'Terrain3D', developerCorrection: 'Terrain correction', developerHull: 'Hull correction',
+        developerLobby: 'Lobby', developerReady: 'Ready', developerLoading: 'Loading',
+        developerIdle: 'Idle', developerOff: 'Off', developerPaused: 'Paused', developerError: 'Error',
+        developerDetails: 'Diagnostic details', developerOutput: 'Copied data',
+        developerPrivacy: 'Diagnostics are copied locally. Cookies, tokens and lobby invitation links are excluded.',
+        developerClose: 'Close', developerSnapshot: 'Captured series',
+        developerClear: 'Clear series', developerClearSeries: 'Copy your report, then clear the recorded fields before capturing another series.'
+    };
+
+    function developerText(key) {
+        const value = typeof tr === 'function' ? tr(key) : key;
+        return value === key ? DEVELOPER_TEXT[key] || key : value;
+    }
+
+    function syncDeveloperLocalization() {
+        if (!DEVELOPER_UI.enabled) return;
+        for (const element of document.querySelectorAll('[data-developer-text]')) {
+            element.textContent = developerText(element.dataset.developerText);
+        }
+        if (DEVELOPER_UI.launcher) {
+            DEVELOPER_UI.launcher.title = developerText('developerMode');
+            DEVELOPER_UI.launcher.setAttribute('aria-label', developerText('developerMode'));
+        }
+        if ($('developerDialog')?.open) refreshDeveloperMenu();
+    }
+
+    function developerSetStatus(key) {
+        $('developerStatus').textContent = developerText(key);
+    }
+
+    function stopDeveloperRefresh() {
+        window.clearInterval(DEVELOPER_UI.timer);
+        DEVELOPER_UI.timer = null;
+    }
+
+    function closeDeveloperMenu() {
+        stopDeveloperRefresh();
+        const dialog = $('developerDialog');
+        if (dialog?.open) dialog.close();
+        DEVELOPER_UI.launcher?.setAttribute('aria-expanded', 'false');
+    }
+
+    function setDeveloperModeEnabled(enabled) {
+        DEVELOPER_UI.enabled = Boolean(enabled);
+        if (!enabled) {
+            closeDeveloperMenu();
+            DEVELOPER_UI.launcher?.remove();
+            DEVELOPER_UI.launcher = null;
+            document.documentElement.removeAttribute('data-developer-mode');
+            $('developerDialog')?.remove();
+            DEVELOPER_UI.firing = null;
+            window.WardogsDeveloperMenu = null;
+            return;
+        }
+        document.documentElement.dataset.developerMode = 'true';
+        if (!DEVELOPER_UI.launcher) {
+            const launcher = document.createElement('button');
+            launcher.id = 'developerLauncher';
+            launcher.className = 'developer-launcher';
+            launcher.type = 'button';
+            launcher.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 16"/></svg>';
+            launcher.setAttribute('aria-haspopup', 'dialog');
+            launcher.setAttribute('aria-controls', 'developerDialog');
+            launcher.setAttribute('aria-expanded', 'false');
+            launcher.addEventListener('click', openDeveloperMenu);
+            const parent = document.querySelector('header .header-controls') || document.body;
+            parent.prepend(launcher);
+            DEVELOPER_UI.launcher = launcher;
+        }
+        syncDeveloperLocalization();
+    }
+
+    function developerInput(label, id, { max, step = 'any', placeholder = '' } = {}) {
+        return `<label><span data-developer-text="${label}"></span><input id="${id}" type="number" min="0" max="${max}" step="${step}" placeholder="${placeholder}"></label>`;
+    }
+
+    function ensureDeveloperDialog() {
+        if ($('developerDialog')) return $('developerDialog');
+        const dialog = document.createElement('dialog');
+        dialog.id = 'developerDialog';
+        dialog.className = 'developer-dialog';
+        dialog.setAttribute('aria-labelledby', 'developerTitle');
+        // Static markup only; diagnostic and operator data use textContent/value.
+        dialog.innerHTML = `
+            <div class="developer-heading">
+                <h2 id="developerTitle" data-developer-text="developerMode"></h2>
+                <button type="button" id="developerClose" data-developer-text="developerClose"></button>
+            </div>
+            <div class="developer-body">
+                <section aria-labelledby="developerSystemsTitle">
+                    <div class="developer-section-heading">
+                        <h3 id="developerSystemsTitle" data-developer-text="developerSystems"></h3>
+                        <button type="button" id="developerRefresh" data-developer-text="developerRefresh"></button>
+                    </div>
+                    <div id="developerSystemRows" class="developer-system-rows"></div>
+                    <details><summary data-developer-text="developerDetails"></summary><pre id="developerSystemDetails"></pre></details>
+                    <button type="button" id="developerCopyDiagnostics" data-developer-text="developerCopyDiagnostics"></button>
+                    <p class="developer-hint" data-developer-text="developerPrivacy"></p>
+                </section>
+                <section aria-labelledby="developerFiringTitle">
+                    <h3 id="developerFiringTitle" data-developer-text="developerFiring"></h3>
+                    <p class="developer-hint" data-developer-text="developerCaptureHint"></p>
+                    <div class="developer-series-actions">
+                        <button type="button" id="developerCapture" data-developer-text="developerCapture"></button>
+                        <button type="button" id="developerClear" data-developer-text="developerClear"></button>
+                    </div>
+                    <pre id="developerFiringSummary"></pre>
+                    <p id="developerSeriesChanged" class="developer-warning" data-developer-text="developerSeriesChanged" hidden></p>
+                    <p class="developer-hint" data-developer-text="developerActualHint"></p>
+                    <div class="developer-field-grid">
+                        ${developerInput('developerActualMil', 'developerActualMil', { max: 6400 })}
+                        ${developerInput('developerActualAzimuth', 'developerActualAzimuth', { max: 359.999999 })}
+                        ${developerInput('developerActualHull', 'developerActualHull', { max: 359.999999 })}
+                        ${developerInput('developerShots', 'developerShots', { max: 100, step: '1', placeholder: '5' })}
+                        ${developerInput('developerMilUncertainty', 'developerMilUncertainty', { max: 100, placeholder: '2' })}
+                        ${developerInput('developerAzimuthUncertainty', 'developerAzimuthUncertainty', { max: 10, placeholder: '0.2' })}
+                    </div>
+                    <label class="developer-impacts"><span data-developer-text="developerImpacts"></span>
+                        <textarea id="developerImpacts" rows="5" maxlength="10000" placeholder="88.80, 99.81&#10;88.64, 99.81" spellcheck="false"></textarea>
+                    </label>
+                    <button type="button" id="developerCopyFiring" data-developer-text="developerCopyFiring" disabled></button>
+                </section>
+                <p id="developerStatus" role="status" aria-live="polite"></p>
+                <label id="developerOutputWrap" class="developer-output" hidden>
+                    <span data-developer-text="developerOutput"></span>
+                    <textarea id="developerOutput" rows="8" readonly spellcheck="false"></textarea>
+                </label>
+            </div>
+            <div class="developer-actions"><button type="button" id="developerDisable" data-developer-text="developerDisable"></button></div>`;
+        document.body.append(dialog);
+        $('developerClose').addEventListener('click', closeDeveloperMenu);
+        $('developerDisable').addEventListener('click', () => window.WardogsDeveloperAccess.disable());
+        $('developerRefresh').addEventListener('click', refreshDeveloperMenu);
+        $('developerCapture').addEventListener('click', captureDeveloperSeries);
+        $('developerClear').addEventListener('click', () => {
+            DEVELOPER_UI.firing = null;
+            for (const id of ['developerActualMil', 'developerActualAzimuth', 'developerActualHull', 'developerShots', 'developerMilUncertainty', 'developerAzimuthUncertainty', 'developerImpacts']) {
+                $(id).value = '';
+            }
+            developerSetStatus('developerCaptureFirst');
+            refreshDeveloperMenu();
+        });
+        $('developerCopyDiagnostics').addEventListener('click', () => {
+            const diagnostics = getDeveloperDiagnostics();
+            diagnostics.firing = developerReadState(captureDeveloperFiringDiagnostics);
+            copyDeveloperData(JSON.stringify(diagnostics, null, 2));
+        });
+        $('developerCopyFiring').addEventListener('click', () => {
+            try {
+                const report = createDeveloperFiringReport(DEVELOPER_UI.firing, {
+                    mil: $('developerActualMil').value,
+                    azimuth: $('developerActualAzimuth').value,
+                    hull: $('developerActualHull').value,
+                    shots: $('developerShots').value,
+                    milUncertainty: $('developerMilUncertainty').value,
+                    azimuthUncertainty: $('developerAzimuthUncertainty').value,
+                    impacts: $('developerImpacts').value
+                });
+                copyDeveloperData(developerReportText(report));
+            } catch (error) { developerSetStatus(error.message); }
+        });
+        dialog.addEventListener('close', () => {
+            stopDeveloperRefresh();
+            DEVELOPER_UI.launcher?.setAttribute('aria-expanded', 'false');
+        });
+        dialog.addEventListener('keydown', event => event.stopPropagation());
+        dialog.addEventListener('keyup', event => event.stopPropagation());
+        syncDeveloperLocalization();
+        return dialog;
+    }
+
+    function developerSystemState(id, value) {
+        if (!value) return 'developerIdle';
+        if (value.diagnosticError) return 'developerError';
+        if (id === 'application') return value.state === 'ready' ? 'developerReady' : value.state === 'failed' ? 'developerError' : 'developerLoading';
+        if (id === 'assets') return !value.enabled ? 'developerOff' : value.paused ? 'developerPaused' : value.pending ? 'developerLoading' : value.sessionValid ? 'developerReady' : 'developerIdle';
+        if (id === 'tiles') return !value.tilesVisible ? 'developerOff' : value.failed ? 'developerError' : value.activeRequests || value.queued || value.retrying ? 'developerLoading' : value.loaded ? 'developerReady' : 'developerIdle';
+        if (id === 'hull') return !value.configured ? 'developerOff' : value.active ? 'developerReady' : 'developerIdle';
+        if (id === 'lobby') return !value.enabled ? 'developerOff' : value.state === 'connected' ? 'developerReady' : value.state === 'paused' || value.state === 'offline' ? 'developerPaused' : 'developerIdle';
+        if (id === 'terrain') return !value.enabled ? 'developerOff' : value.currentPointsReady ? 'developerReady' : value.pendingMaps || value.pendingChunks ? 'developerLoading' : value.failedChunks ? 'developerError' : 'developerIdle';
+        return value.lastError ? 'developerError' : !value.enabled ? 'developerOff' : value.ready ? 'developerReady' : value.loading ? 'developerLoading' : 'developerIdle';
+    }
+
+    function developerSeriesMatchesCurrent(snapshot) {
+        if (!snapshot) return true;
+        const hull = typeof sphPlatformHullHeadingDeg === 'number' ? sphPlatformHullHeadingDeg : null;
+        const arc = S.weapon === 'spg' && typeof sphPlatformSelectedArc === 'string' ? sphPlatformSelectedArc : 'single';
+        return snapshot.mapId === S.map && snapshot.weaponId === S.weapon &&
+            snapshot.origin.x === S.origin.x && snapshot.origin.y === S.origin.y &&
+            snapshot.target.x === S.target.x && snapshot.target.y === S.target.y &&
+            snapshot.hullHeadingDeg === (S.weapon === 'spg' ? hull : null) && snapshot.selectedArc === arc;
+    }
+
+    function refreshDeveloperMenu() {
+        const diagnostics = getDeveloperDiagnostics();
+        const rows = $('developerSystemRows');
+        if (!rows) return;
+        rows.replaceChildren();
+        for (const id of ['application', 'assets', 'tiles', 'terrain', 'correction', 'hull', 'lobby']) {
+            const value = diagnostics.systems[id];
+            const state = developerSystemState(id, value);
+            const row = document.createElement('div');
+            row.className = 'developer-system-row';
+            const label = document.createElement('span');
+            label.textContent = developerText(`developer${id[0].toUpperCase()}${id.slice(1)}`);
+            const badge = document.createElement('strong');
+            badge.dataset.state = state;
+            badge.textContent = developerText(state);
+            row.append(label, badge);
+            rows.append(row);
+        }
+        $('developerSystemDetails').textContent = JSON.stringify(diagnostics, null, 2);
+        $('developerCapture').disabled = !WEAPONS[S.weapon] || diagnostics.systems.application.state !== 'ready';
+        $('developerCopyFiring').disabled = !DEVELOPER_UI.firing;
+        $('developerSeriesChanged').hidden = developerSeriesMatchesCurrent(DEVELOPER_UI.firing);
+        if (!DEVELOPER_UI.firing) $('developerFiringSummary').textContent = developerText('developerCaptureFirst');
+    }
+
+    function captureDeveloperSeries() {
+        if (DEVELOPER_UI.firing && [$('developerImpacts'), $('developerActualMil'), $('developerActualAzimuth'), $('developerActualHull'), $('developerShots'), $('developerMilUncertainty'), $('developerAzimuthUncertainty')].some(field => field.value.trim())) {
+            // Keep recorded shots until explicitly exported or cleared by the operator.
+            $('developerImpacts').focus();
+            developerSetStatus('developerClearSeries');
+            return;
+        }
+        try {
+            const snapshot = captureDeveloperFiringDiagnostics();
+            DEVELOPER_UI.firing = snapshot;
+            const summary = [
+                `${developerText('developerSnapshot')}: ${snapshot.capturedAt}`,
+                `${snapshot.mapId} · ${snapshot.weaponId === 'spg' ? 'SPH-2' : snapshot.weaponId} · ${String(snapshot.selectedArc).toUpperCase()}`,
+                `Origin: ${snapshot.origin.x}, ${snapshot.origin.y} → Target: ${snapshot.target.x}, ${snapshot.target.y}`,
+                `${snapshot.distanceMeters.toFixed(1)} m · MIL ${snapshot.displayedMil || '—'} · ${snapshot.azimuthDeg.toFixed(3)}° · Hull ${snapshot.hullHeadingDeg ?? '—'}`
+            ];
+            $('developerFiringSummary').textContent = summary.join('\n');
+            $('developerActualMil').placeholder = snapshot.displayedMil || '';
+            $('developerActualAzimuth').placeholder = snapshot.azimuthDeg.toFixed(1);
+            $('developerActualHull').placeholder = snapshot.hullHeadingDeg === null ? '' : String(snapshot.hullHeadingDeg);
+            developerSetStatus('developerSnapshot');
+            refreshDeveloperMenu();
+        } catch (error) { developerSetStatus(error.message); }
+    }
+
+    async function copyDeveloperData(text) {
+        $('developerOutput').value = text;
+        $('developerOutputWrap').hidden = false;
+        try {
+            await navigator.clipboard.writeText(text);
+            developerSetStatus('developerCopied');
+        } catch (_) {
+            $('developerOutput').focus();
+            $('developerOutput').select();
+            developerSetStatus('developerCopyManual');
+        }
+    }
+
+    async function openDeveloperMenu() {
+        if (!DEVELOPER_UI.enabled || !await window.WardogsDeveloperAccess.verify()) return;
+        const dialog = ensureDeveloperDialog();
+        syncDeveloperLocalization();
+        refreshDeveloperMenu();
+        if (!dialog.open) dialog.showModal();
+        DEVELOPER_UI.launcher?.setAttribute('aria-expanded', 'true');
+        stopDeveloperRefresh();
+        DEVELOPER_UI.timer = window.setInterval(() => {
+            if (!dialog.open || document.hidden) return;
+            refreshDeveloperMenu();
+        }, 2000);
+        $('developerClose').focus();
+    }
+
+    window.WardogsDeveloperMenu = Object.freeze({
+        localize: syncDeveloperLocalization,
+        disable: () => setDeveloperModeEnabled(false)
+    });
+    setDeveloperModeEnabled(true);
+})();

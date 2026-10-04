@@ -401,6 +401,8 @@ test('Terrain3D caches chunk failures and restores failed manifests after cooldo
         mapId: 'bakurani', origin: { x: 94.45, y: 108.74 },
         target: { x: 94.6, y: 108.8 }, solutions: { inRange: true }
     };
+    r.context.S.origin = input.origin;
+    r.context.S.target = input.target;
     r.context.result = () => r.context.getTerrainBallisticSolutions(input);
     await r.context.initTerrainBallistics();
     for (let i = 0; i < 20; i++) r.context.result();
@@ -411,6 +413,7 @@ test('Terrain3D caches chunk failures and restores failed manifests after cooldo
     await r.advance(10000);
     assert.equal(manifestRequests, 2);
     assert.equal(r.context.getTerrainBallisticsState().ready, true);
+    assert.equal(r.context.getTerrainBallisticsState().currentPointsReady, false);
     assert.equal(chunkRequests, 1);
     for (let i = 0; i < 100; i++) r.context.result();
     await r.advance(19000);
@@ -420,6 +423,12 @@ test('Terrain3D caches chunk failures and restores failed manifests after cooldo
     assert.equal(chunkRequests, 2);
     assert.equal(r.context.getTerrainBallisticsState().cachedChunks, 1);
     assert.equal(r.context.getTerrainBallisticSolutions(input).meta.pendingTerrain, false);
+    for (let i = 0; i < 20; i++) {
+        const status = r.context.getTerrainBallisticsState();
+        assert.equal(status.currentPointsReady, true);
+        assert.ok(Number.isFinite(status.currentHeights.deltaZ));
+    }
+    assert.equal(chunkRequests, 2, 'status refresh must only inspect cached chunks');
 });
 
 test('failed Turnstile script loads can be attempted again', async () => {

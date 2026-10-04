@@ -27,6 +27,35 @@ const ASSET_ACCESS_STATE = {
 const ASSET_RETRY_DELAY_MS = 10000;
 const ASSET_AUTOMATIC_RETRIES = 2;
 
+/* Explicit allowlist: never expose cookies, tokens or the response body. */
+function getAssetAccessDiagnostics() {
+    const state = ASSET_ACCESS_STATE;
+    const error = state.lastError;
+    const response = error?.response;
+    return {
+        enabled: isAssetGatewayEnabled(),
+        configuredMode: getAssetGatewayMode(),
+        sessionMode: state.mode || null,
+        deliveryOrigin: shouldUseDirectAssetOrigin()
+            ? getAssetDirectOrigin() : getAssetGatewayOrigin(),
+        sessionValid: hasValidAssetAccess(),
+        expiresAt: state.expiresAt || null,
+        pending: Boolean(state.pending),
+        regionalFallback: state.regionalFallback,
+        paused: isAssetAccessPaused(),
+        awaitingManualRetry: state.awaitingRetry,
+        retryAt: state.retryAt || null,
+        automaticRetries: state.automaticRetries,
+        lastFailure: error ? {
+            status: error.status || response?.status || null,
+            name: error.name || 'Error',
+            cfRay: response?.headers?.get('CF-Ray') || null,
+            mitigation: response?.headers?.get('CF-Mitigated') || null,
+            retryAfter: response?.headers?.get('Retry-After') || null
+        } : null
+    };
+}
+
 function assetRetryAfter(response, fallbackMs = ASSET_RETRY_DELAY_MS) {
     const value = response?.headers?.get('Retry-After')?.trim();
     const seconds = value && /^\d+(?:\.\d+)?$/.test(value)

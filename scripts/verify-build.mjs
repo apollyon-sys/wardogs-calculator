@@ -45,6 +45,13 @@ for (const path of htmlFiles) {
 }
 
 assert.equal(artifactFiles.some(path => path.endsWith('.bin')), false, 'terrain binaries entered the Pages artifact');
+for (const path of ['js/ui/developer.js', 'js/core/diagnostics.js', 'assets-gateway/private/developer-menu.txt']) {
+    assert.equal(artifactFiles.includes(join(dist, path)), false, `${path}: private developer module entered the Pages artifact`);
+}
+for (const name of ['app', 'mobile']) {
+    const source = await readFile(join(dist, 'js', `${name}.bundle.js`), 'utf8');
+    assert.doesNotMatch(source, /function (?:installDeveloperMenu|captureDeveloperFiringDiagnostics|getDeveloperDiagnostics)\(/, `${name}: developer menu entered public bundle`);
+}
 assert.equal(artifactFiles.some(path => path.includes(`${join('maps', 'tiles')}`)), false, 'map tiles entered the Pages artifact');
 
 for (const mapId of ['bakurani', 'ozeti', 'zestafona']) {

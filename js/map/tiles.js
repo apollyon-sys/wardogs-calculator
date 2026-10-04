@@ -214,6 +214,25 @@ const TILE_VIEWPORT_MARGIN = 0;
 
 const TILE_LOAD_QUEUE = [];
 
+function getMapTileDiagnostics() {
+    const counts = { cached: TILE_CACHE.size, loaded: 0, failed: 0, queued: 0, retrying: 0 };
+    for (const tile of TILE_CACHE.values()) {
+        if (tile.loaded) counts.loaded++;
+        if (tile.failed) counts.failed++;
+        if (tile.queued) counts.queued++;
+        if (tile.retryPending) counts.retrying++;
+    }
+    return {
+        ...counts,
+        activeRequests: TILE_ACTIVE_REQUESTS,
+        concurrency: TILE_REQUEST_CONCURRENCY,
+        tilesVisible: MAP_TOOL_STATE.layers.tiles,
+        mapId: S.map,
+        style: S.mapStyle,
+        zoom: S.zoom
+    };
+}
+
 let TILE_ACTIVE_REQUESTS = 0;
 let TILE_QUEUE_EPOCH = 0;
 
