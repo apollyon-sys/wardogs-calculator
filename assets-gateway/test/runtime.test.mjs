@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
     handleRequest
 } from '../src/index.mjs';
+import { mintSession, sessionSubject } from '../src/tokens.mjs';
 
 const origin =
     'https://wardogs-artillery.com';
@@ -296,6 +297,54 @@ test('configured countries receive a restricted session without Turnstile', asyn
         (await admitted.json()).mode,
         'restricted'
     );
+});
+
+test('regional routing is determined by server geography even when a token is supplied', async () => {
+    for (const country of ['CN', 'RU']) {
+        const value = request('/__session', { method: 'POST',
+            headers: { 'Content-Type': 'application/json' }, body: '{"token":"old-standard-token"}' });
+        Object.defineProperty(value, 'cf', { value: { country } });
+        const response = await handleRequest(value, {
+            ...env(), ASSETS_DEV: 'false', FALLBACK_COUNTRIES: 'CN,RU',
+            SESSION_RATE: { async limit() { return { success: true }; } }
+        });
+        assert.equal(response.status, 201);
+        assert.equal((await response.json()).mode, 'restricted');
+    }
+});
+
+test('a signed cookie from the other delivery region cannot reuse a mismatched session', async () => {
+    const environment = { ...env(), ASSETS_DEV: 'false', FALLBACK_COUNTRIES: 'CN,RU',
+        SESSION_RATE: { async limit() { return { success: true }; } } };
+    for (const [country, mode] of [['CN', 'standard'], ['US', 'restricted']]) {
+        const token = await mintSession(environment.SESSION_SECRET, Date.now() + 60000,
+            mode, sessionSubject(request('/__session')));
+        const value = request('/__session', { headers: { Cookie: `__Host-wardogs_asset_session=${token}` } });
+        Object.defineProperty(value, 'cf', { value: { country } });
+        const response = await handleRequest(value, environment);
+        assert.equal(response.status, 401);
+        assert.equal(response.headers.get('X-Wardogs-Asset-Fallback'), country === 'CN' ? 'restricted' : null);
+    }
+});
+
+test('a client-provided country header cannot grant regional admission', async () => {
+    const value = request('/__session', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'CF-IPCountry': 'CN' }, body: '{}' });
+    Object.defineProperty(value, 'cf', { value: { country: 'US' } });
+    const response = await handleRequest(value, {
+        ...env(), ASSETS_DEV: 'false', FALLBACK_COUNTRIES: 'CN,RU',
+        SESSION_RATE: { async limit() { return { success: true }; } }
+    });
+    assert.equal(response.status, 503, 'standard admission still requires a configured challenge');
+    assert.equal(response.headers.get('Set-Cookie'), null);
+});
+
+test('gateway CORS exposes diagnostic headers while retaining credentialed origin checks', async () => {
+    const response = await handleRequest(request('/__session'), env());
+    assert.equal(response.headers.get('Access-Control-Allow-Origin'), origin);
+    assert.equal(response.headers.get('Access-Control-Allow-Credentials'), 'true');
+    assert.match(response.headers.get('Access-Control-Expose-Headers'), /CF-Ray/);
+    assert.match(response.headers.get('Access-Control-Expose-Headers'), /CF-Mitigated/);
 });
 
 test('request policy holds the session and its IP before reading R2', async () => {

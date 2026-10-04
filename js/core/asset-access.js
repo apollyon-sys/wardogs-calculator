@@ -14,6 +14,7 @@ const ASSET_ACCESS_STATE = {
     challengeTimer: null,
     lastFailureRefresh: 0,
     regionalFallback: false,
+    stage: 'idle',
     retryAt: 0,
     retryTimer: null,
     noticeTimer: null,
@@ -26,6 +27,37 @@ const ASSET_ACCESS_STATE = {
 
 const ASSET_RETRY_DELAY_MS = 10000;
 const ASSET_AUTOMATIC_RETRIES = 2;
+const ASSET_SESSION_TIMEOUT_MS = 30000;
+const ASSET_TURNSTILE_SCRIPT_TIMEOUT_MS = 30000;
+const ASSET_CHALLENGE_TIMEOUT_MS = 60000;
+
+function assetAccessText(key, fallback) {
+    const translated = typeof tr === 'function' ? tr(key) : '';
+    return translated && translated !== key ? translated : fallback;
+}
+
+function assetFailureCode(error) {
+    const message = String(error?.message || '');
+    if (/^(turnstile-(?:unavailable|not-configured|expired|timeout|unsupported|\d{3,8})|asset-session-(?:invalid|http-\d{3})|asset-http-\d{3}|session-cookie-unavailable|session-required|gateway-not-configured|challenge-(?:required|unavailable|failed)|rate-limited|forbidden-origin|unavailable)$/.test(message)) {
+        return message;
+    }
+    if (error?.name === 'TimeoutError') return 'timeout';
+    if (error?.name === 'TypeError') return 'network-or-cors';
+    return 'unavailable';
+}
+
+function assetFailureContext(error, stage, url = '') {
+    error.stage = stage;
+    if (url) {
+        try { error.requestHost = new URL(url).hostname; } catch { /* No URL data in diagnostics. */ }
+    }
+    return error;
+}
+
+function invalidateAssetSession() {
+    ASSET_ACCESS_STATE.expiresAt = 0;
+    clearAssetRefreshTimer();
+}
 
 /* Explicit allowlist: never expose cookies, tokens or the response body. */
 function getAssetAccessDiagnostics() {
@@ -35,6 +67,7 @@ function getAssetAccessDiagnostics() {
     return {
         enabled: isAssetGatewayEnabled(),
         configuredMode: getAssetGatewayMode(),
+        stage: state.stage,
         sessionMode: state.mode || null,
         deliveryOrigin: shouldUseDirectAssetOrigin()
             ? getAssetDirectOrigin() : getAssetGatewayOrigin(),
@@ -47,6 +80,9 @@ function getAssetAccessDiagnostics() {
         retryAt: state.retryAt || null,
         automaticRetries: state.automaticRetries,
         lastFailure: error ? {
+            stage: error.stage || state.stage,
+            code: assetFailureCode(error),
+            requestHost: error.requestHost || null,
             status: error.status || response?.status || null,
             name: error.name || 'Error',
             cfRay: response?.headers?.get('CF-Ray') || null,
@@ -112,6 +148,7 @@ function assetResponseError(response, message = `asset-http-${response.status}`)
 }
 
 function pauseAssetAccess(error, response = null) {
+    if (!error.stage) error.stage = ASSET_ACCESS_STATE.stage;
     const delay = Math.min(
         60000,
         ASSET_RETRY_DELAY_MS * 2 ** ASSET_ACCESS_STATE.automaticRetries
@@ -184,7 +221,8 @@ function updateAssetAccessNotice() {
     ASSET_ACCESS_STATE.noticeTimer = null;
     let notice = document.getElementById('assetAccessNotice');
 
-    if (!ASSET_ACCESS_STATE.lastError) {
+    const pending = Boolean(ASSET_ACCESS_STATE.pending);
+    if (!ASSET_ACCESS_STATE.lastError && !pending) {
         if (notice) notice.hidden = true;
         return;
     }
@@ -212,22 +250,24 @@ function updateAssetAccessNotice() {
         map.append(notice);
     }
 
-    const text = (key, fallback) => {
-        const translated = typeof tr === 'function' ? tr(key) : '';
-        return translated && translated !== key ? translated : fallback;
-    };
+    const text = assetAccessText;
     const seconds = Math.max(0, Math.ceil(
         (ASSET_ACCESS_STATE.retryAt - Date.now()) / 1000
     ));
     notice.hidden = false;
     const title = notice.querySelector('strong');
-    const titleText = text('assetAccessUnavailable', 'Map loading is temporarily unavailable');
+    const titleText = pending
+        ? text('assetAccessLoading', 'Loading the map…')
+        : text('assetAccessUnavailable', 'Map loading is temporarily unavailable');
     // Keep the live-region text stable while the silent countdown updates.
     if (title.textContent !== titleText) title.textContent = titleText;
-    notice.querySelector('p').textContent = seconds
-        ? text('assetAccessWaiting', 'Try again in {seconds} s.').replace('{seconds}', seconds)
-        : text('assetAccessRetryHint', 'Retry loading the map and terrain data.');
+    notice.querySelector('p').textContent = pending
+        ? text('assetAccessLoadingHint', 'Please wait. You can continue using the calculator.')
+        : seconds
+            ? text('assetAccessWaiting', 'Try again in {seconds} s.').replace('{seconds}', seconds)
+            : text('assetAccessRetryHint', 'Retry loading the map and terrain data.');
     const retry = notice.querySelector('button');
+    retry.hidden = pending;
     retry.disabled = seconds > 0 || Boolean(ASSET_ACCESS_STATE.pending);
     retry.textContent = text('assetAccessRetry', 'Retry loading');
     if (seconds > 0 || ASSET_ACCESS_STATE.pending) {
@@ -705,7 +745,7 @@ function loadAssetTurnstile() {
                             'turnstile-unavailable'
                         )
                     ),
-                    8000
+                    ASSET_TURNSTILE_SCRIPT_TIMEOUT_MS
                 );
 
             const existing =
@@ -791,7 +831,42 @@ function settleAssetChallenge(
     ASSET_ACCESS_STATE.challengeReject = null;
     ASSET_ACCESS_STATE.challengeTimer = null;
 
+    const panel = document.getElementById('assetAccessChallenge');
+    if (panel) panel.hidden = true;
+
     callback(value);
+}
+
+function assetChallengePanel() {
+    let panel = document.getElementById('assetAccessChallenge');
+    if (!panel) {
+        panel = document.createElement('aside');
+        panel.id = 'assetAccessChallenge';
+        panel.className = 'asset-access-challenge';
+        const title = document.createElement('strong');
+        title.setAttribute('role', 'status');
+        title.setAttribute('aria-live', 'polite');
+        const hint = document.createElement('p');
+        const holder = document.createElement('div');
+        holder.id = 'assetAccessTurnstile';
+        panel.append(title, hint, holder);
+        (document.querySelector('.map') || document.body).appendChild(panel);
+    }
+    panel.querySelector('strong').textContent = assetAccessText(
+        'assetAccessVerificationTitle', 'Verify to load the map'
+    );
+    panel.querySelector('p').textContent = assetAccessText(
+        'assetAccessVerificationHint', 'Complete the check below to continue loading.'
+    );
+    return panel;
+}
+
+function setAssetChallengeInteractive(interactive) {
+    const panel = document.getElementById('assetAccessChallenge');
+    if (!panel) return;
+    panel.classList.toggle('is-interactive', interactive);
+    panel.querySelector('strong').hidden = !interactive;
+    panel.querySelector('p').hidden = !interactive;
 }
 
 async function requestAssetChallenge() {
@@ -808,6 +883,7 @@ async function requestAssetChallenge() {
         );
     }
 
+    ASSET_ACCESS_STATE.stage = 'turnstile-script';
     await loadAssetTurnstile();
 
     if (
@@ -820,83 +896,72 @@ async function requestAssetChallenge() {
         );
     }
 
-    if (!document.getElementById(
-        'assetAccessTurnstile'
-    )) {
-        const holder =
-            document.createElement('div');
-
-        holder.id =
-            'assetAccessTurnstile';
-        holder.setAttribute(
-            'aria-hidden',
-            'true'
-        );
-        document.body.appendChild(holder);
-    }
-
-    if (
-        ASSET_ACCESS_STATE.turnstileWidget === null
-    ) {
-        ASSET_ACCESS_STATE.turnstileWidget =
-            window.turnstile.render(
-                '#assetAccessTurnstile',
-                {
-                    sitekey:
-                        challenge.siteKey,
-                    action:
-                        challenge.action ||
-                        'asset-session',
-                    execution: 'execute',
-                    retry: 'never',
-                    'refresh-expired': 'manual',
-                    callback: token =>
-                        settleAssetChallenge(
-                            'resolve',
-                            token
-                        ),
-                    'error-callback': () =>
-                        settleAssetChallenge(
-                            'reject',
-                            new Error(
-                                'turnstile-unavailable'
-                            )
-                        ),
-                    'expired-callback': () =>
-                        settleAssetChallenge(
-                            'reject',
-                            new Error(
-                                'turnstile-expired'
-                            )
-                        )
-                }
-            );
-    } else if (window.turnstile.reset) {
-        window.turnstile.reset(
-            ASSET_ACCESS_STATE.turnstileWidget
-        );
-    }
+    ASSET_ACCESS_STATE.stage = 'turnstile-challenge';
+    const panel = assetChallengePanel();
+    setAssetChallengeInteractive(false);
+    // Let Turnstile control its own visibility while running automatically.
+    // The panel is styled and announced only if interaction is required.
+    panel.hidden = false;
 
     return new Promise((resolve, reject) => {
-        ASSET_ACCESS_STATE.challengeResolve =
-            resolve;
-        ASSET_ACCESS_STATE.challengeReject =
-            reject;
-        ASSET_ACCESS_STATE.challengeTimer =
-            window.setTimeout(
-                () =>
-                    settleAssetChallenge(
-                        'reject',
-                        new Error(
-                            'turnstile-timeout'
-                        )
-                    ),
-                12000
-            );
-
-        window.turnstile.execute(
-            ASSET_ACCESS_STATE.turnstileWidget
+        ASSET_ACCESS_STATE.challengeResolve = resolve;
+        ASSET_ACCESS_STATE.challengeReject = reject;
+        ASSET_ACCESS_STATE.challengeTimer = window.setTimeout(
+            () => settleAssetChallenge('reject', new Error('turnstile-timeout')),
+            ASSET_CHALLENGE_TIMEOUT_MS
         );
+        try {
+            if (ASSET_ACCESS_STATE.turnstileWidget === null) {
+                ASSET_ACCESS_STATE.turnstileWidget = window.turnstile.render(
+                    '#assetAccessTurnstile',
+                    {
+                        sitekey:
+                            challenge.siteKey,
+                        action:
+                            challenge.action ||
+                            'asset-session',
+                        execution: 'execute',
+                        appearance: 'interaction-only',
+                        size: 'compact',
+                        'response-field': false,
+                        retry: 'never',
+                        'refresh-expired': 'manual',
+                        'refresh-timeout': 'manual',
+                        callback: token =>
+                            settleAssetChallenge(
+                                'resolve',
+                                token
+                            ),
+                        'error-callback': code =>
+                            settleAssetChallenge(
+                                'reject',
+                                new Error(
+                                    /^\d{3,8}$/.test(String(code))
+                                        ? `turnstile-${code}` : 'turnstile-unavailable'
+                                )
+                            ),
+                        'expired-callback': () =>
+                            settleAssetChallenge(
+                                'reject',
+                                new Error(
+                                    'turnstile-expired'
+                                )
+                            ),
+                        'before-interactive-callback': () => {
+                            if (ASSET_ACCESS_STATE.challengeResolve) setAssetChallengeInteractive(true);
+                        },
+                        'after-interactive-callback': () => setAssetChallengeInteractive(false),
+                        'timeout-callback': () => settleAssetChallenge('reject', new Error('turnstile-timeout')),
+                        'unsupported-callback': () => settleAssetChallenge('reject', new Error('turnstile-unsupported'))
+                    }
+                );
+            } else if (window.turnstile.reset) {
+                window.turnstile.reset(ASSET_ACCESS_STATE.turnstileWidget);
+            }
+            window.turnstile.execute(ASSET_ACCESS_STATE.turnstileWidget);
+        } catch (error) {
+            settleAssetChallenge('reject', error);
+        }
     });
 }
 
@@ -921,7 +986,8 @@ async function parseAssetSessionResponse(response) {
     return true;
 }
 
-async function probeAssetSession() {
+async function probeAssetSession(stage = 'session-probe') {
+    ASSET_ACCESS_STATE.stage = stage;
     const response =
         await fetch(
             assetSessionURL(),
@@ -931,7 +997,7 @@ async function probeAssetSession() {
                 cache: 'no-store',
                 referrerPolicy: 'no-referrer',
                 signal:
-                    AbortSignal.timeout(8000)
+                    AbortSignal.timeout(ASSET_SESSION_TIMEOUT_MS)
             }
         );
 
@@ -957,6 +1023,7 @@ async function createAssetSession() {
             await requestAssetChallenge();
     }
 
+    ASSET_ACCESS_STATE.stage = 'session-create';
     const response =
         await fetch(
             assetSessionURL(),
@@ -973,13 +1040,18 @@ async function createAssetSession() {
                 cache: 'no-store',
                 referrerPolicy: 'no-referrer',
                 signal:
-                    AbortSignal.timeout(10000)
+                    AbortSignal.timeout(ASSET_SESSION_TIMEOUT_MS)
             }
         );
 
-    return parseAssetSessionResponse(
-        response
-    );
+    await parseAssetSessionResponse(response);
+    if (ASSET_ACCESS_STATE.mode === 'restricted' &&
+        !await probeAssetSession('session-confirm')) {
+        const error = new Error('session-cookie-unavailable');
+        error.status = 401;
+        throw error;
+    }
+    return true;
 }
 
 async function ensureAssetAccess({
@@ -1003,25 +1075,28 @@ async function ensureAssetAccess({
 
     ASSET_ACCESS_STATE.pending =
         (async () => {
-            if (!force) {
-                const reused = await probeAssetSession();
+            // Re-probe even on a forced refresh: the connection/region may
+            // have changed, and the server decides the permitted delivery path.
+            const reused = await probeAssetSession();
 
-                if (
-                    reused &&
-                    (!usesPreclearanceAssetDelivery() ||
-                        ASSET_ACCESS_STATE.mode === 'restricted')
-                ) {
-                    return true;
-                }
+            if (
+                reused &&
+                (!usesPreclearanceAssetDelivery() ||
+                    ASSET_ACCESS_STATE.mode === 'restricted')
+            ) {
+                ASSET_ACCESS_STATE.stage = 'ready';
+                return true;
             }
 
-            return createAssetSession();
+            const created = await createAssetSession();
+            ASSET_ACCESS_STATE.stage = 'ready';
+            return created;
         })()
             .catch(error => {
                 ASSET_ACCESS_STATE.expiresAt = 0;
                 ASSET_ACCESS_STATE.mode = '';
                 clearAssetRefreshTimer();
-                pauseAssetAccess(error, error.response);
+                pauseAssetAccess(assetFailureContext(error, ASSET_ACCESS_STATE.stage, assetSessionURL()), error.response);
 
                 console.warn(
                     '[asset-access] Protected map assets are unavailable.',
@@ -1032,8 +1107,10 @@ async function ensureAssetAccess({
             })
             .finally(() => {
                 ASSET_ACCESS_STATE.pending = null;
+                updateAssetAccessNotice();
             });
 
+    updateAssetAccessNotice();
     return ASSET_ACCESS_STATE.pending;
 }
 
@@ -1118,7 +1195,10 @@ async function fetchAssetResource(
         }
         // A WAF response without CORS headers also appears as a network
         // error. Do not launch new challenges or immediate request loops.
-        throw pauseAssetAccess(error);
+        // Re-check admission after the shared cooldown. A CORS-blocked WAF
+        // response cannot be distinguished from a transport failure here.
+        invalidateAssetSession();
+        throw pauseAssetAccess(assetFailureContext(error, 'asset-fetch', requestUrl));
     }
 
     if (
@@ -1140,8 +1220,11 @@ async function fetchAssetResource(
                 if (error.name === 'AbortError' || options.signal?.aborted) {
                     throw error;
                 }
-                throw pauseAssetAccess(error);
+                invalidateAssetSession();
+                throw pauseAssetAccess(assetFailureContext(error, 'asset-fetch', requestUrl));
             }
+        } else if (isAssetAccessPaused()) {
+            throw assetAccessBlockedError();
         }
     }
 
@@ -1150,7 +1233,7 @@ async function fetchAssetResource(
         response.status === 408 || response.status === 425 ||
         response.status === 429 || response.status >= 500
     ) {
-        throw pauseAssetAccess(assetResponseError(response), response);
+        throw pauseAssetAccess(assetFailureContext(assetResponseError(response), 'asset-fetch', requestUrl), response);
     }
 
     if (response.ok && generation === ASSET_ACCESS_STATE.failureGeneration) {

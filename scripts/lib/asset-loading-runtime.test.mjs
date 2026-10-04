@@ -7,7 +7,7 @@ const root = new URL('../../', import.meta.url);
 const sources = new Map(await Promise.all([
     'js/core/asset-access.js', 'js/map/tiles.js',
     'js/features/terrain-ballistics.js', 'config/app.json',
-    'data/ballistics/terrain-context.json', 'data/terrain/bakurani/manifest.json'
+    'data/ballistics/terrain-context.json', 'data/terrain/bakurani/manifest.json', 'js/ui/feedback.js'
 ].map(async path => [path, await readFile(new URL(path, root), 'utf8')])));
 const gateway = 'https://assets.wardogs-artillery.com';
 const direct = 'https://assets-v2.wardogs-artillery.com';
@@ -21,7 +21,11 @@ class Element {
         this.attributes = {};
         this.events = {};
         this.dataset = {};
-        this.classList = { contains: () => false };
+        const classes = new Set();
+        this.classList = {
+            contains: name => classes.has(name),
+            toggle: (name, enabled) => enabled ? classes.add(name) : classes.delete(name)
+        };
     }
     append(...children) {
         for (const child of children) {
@@ -44,11 +48,14 @@ class Element {
     querySelector(selector) { return this.find(node => node.tag === selector); }
 }
 
-function runtime(handler, { restricted = false, challengeGate } = {}) {
+function runtime(handler, { restricted = false, challengeGate, sessionHandler } = {}) {
     let now = Date.parse('2026-10-03T12:00:00Z');
     let timerId = 0;
     let challenges = 0;
     let challengeCallback;
+    let challengeOptions;
+    let sessionCreated = false;
+    const timeouts = [];
     const timers = new Map();
     const requests = [];
     const revoked = [];
@@ -81,7 +88,8 @@ function runtime(handler, { restricted = false, challengeGate } = {}) {
         }
     }
     const context = vm.createContext({
-        Date: ClockDate, URL: BlobURL, Image: TestImage, AbortSignal,
+        Date: ClockDate, URL: BlobURL, Image: TestImage,
+        AbortSignal: { timeout: delay => { timeouts.push(delay); return AbortSignal.timeout(delay); } },
         console: { info() {}, warn() {} }, document,
         location: { hostname: 'wardogs-artillery.com' },
         sessionStorage: { getItem: () => null },
@@ -98,21 +106,23 @@ function runtime(handler, { restricted = false, challengeGate } = {}) {
         fetch: async (url, options = {}) => {
             requests.push({ url, options, time: now });
             if (url === `${gateway}/__session`) {
-                if (options.method === 'GET') {
+                if (sessionHandler) return sessionHandler(options, now);
+                if (options.method === 'GET' && !sessionCreated) {
                     return new Response('{}', {
                         status: 401,
                         headers: restricted ? { 'X-Wardogs-Asset-Fallback': 'restricted' } : {}
                     });
                 }
+                sessionCreated = true;
                 return Response.json({
                     expiresAt: now + 3600000,
                     mode: restricted ? 'restricted' : 'standard'
-                }, { status: 201 });
+                }, { status: options.method === 'POST' ? 201 : 200 });
             }
             return handler(url, options);
         },
         turnstile: {
-            render(_selector, options) { challengeCallback = options.callback; return 'widget'; },
+            render(_selector, options) { challengeOptions = options; challengeCallback = options.callback; return 'widget'; },
             reset() {},
             async execute() {
                 challenges++;
@@ -133,6 +143,8 @@ function runtime(handler, { restricted = false, challengeGate } = {}) {
     return {
         context, requests, images, revoked,
         challenges: () => challenges,
+        challengeOptions: () => challengeOptions,
+        timeouts,
         now: () => now,
         assetRequests: () => requests.filter(request => !request.url.endsWith('/__session')),
         load(path) { vm.runInContext(sources.get(path), context, { filename: path }); },
@@ -336,7 +348,7 @@ test('CORS/network failures have bounded automatic retries and a usable manual r
     assert.equal(notice.querySelector('button').disabled, true);
     await r.advance(120000);
     assert.equal(r.assetRequests().length, 3);
-    assert.equal(r.challenges(), 1);
+    assert.equal(r.challenges(), 3, 'each bounded recovery rechecks admission after a network failure');
     assert.equal(r.context.getAssetAccessRetryAt(), Infinity);
     assert.equal(notice.querySelector('button').disabled, false);
     const count = r.requests.length;
@@ -443,4 +455,163 @@ test('failed Turnstile script loads can be attempted again', async () => {
     assert.ok(script);
     script.events.load();
     await retry;
+});
+
+test('a slow challenge can complete after 20 seconds with longer session timeouts', async () => {
+    let release;
+    const gate = new Promise(resolve => { release = resolve; });
+    const r = runtime(() => new Response('tile'), { challengeGate: gate });
+    const pending = r.context.fetchAssetResource(asset);
+    await flush();
+    await r.advance(20000);
+    assert.equal(r.context.getAssetAccessDiagnostics().pending, true);
+    const notice = r.context.document.getElementById('assetAccessNotice');
+    assert.equal(notice.hidden, false);
+    assert.equal(notice.querySelector('strong').textContent, 'Loading the map…');
+    assert.equal(notice.querySelector('button').hidden, true);
+    assert.equal(r.requests.filter(request => request.options.method === 'POST').length, 0);
+    release();
+    assert.ok((await pending).ok);
+    assert.equal(notice.hidden, true);
+    assert.ok(r.timeouts.every(delay => delay === 30000));
+    assert.equal(r.context.getAssetAccessDiagnostics().stage, 'ready');
+});
+
+test('the Turnstile script can load after the old eight-second deadline', async () => {
+    const r = runtime(() => new Response('tile'));
+    delete r.context.turnstile;
+    let settled = false;
+    const pending = r.context.loadAssetTurnstile().finally(() => { settled = true; });
+    await r.advance(9000);
+    assert.equal(settled, false);
+    r.context.document.head.children[0].events.load();
+    await pending;
+});
+
+test('interactive verification is visible, accessible and hidden after success', async () => {
+    let release;
+    const gate = new Promise(resolve => { release = resolve; });
+    const r = runtime(() => new Response('tile'), { challengeGate: gate });
+    const pending = r.context.ensureAssetAccess();
+    await flush();
+    const panel = r.context.document.getElementById('assetAccessChallenge');
+    const holder = r.context.document.getElementById('assetAccessTurnstile');
+    assert.equal(holder.attributes['aria-hidden'], undefined);
+    assert.equal(r.challengeOptions().appearance, 'interaction-only');
+    assert.equal(panel.querySelector('strong').hidden, true);
+    r.challengeOptions()['before-interactive-callback']();
+    assert.equal(panel.hidden, false);
+    assert.equal(panel.classList.contains('is-interactive'), true);
+    assert.equal(panel.querySelector('strong').hidden, false);
+    assert.equal(panel.querySelector('strong').attributes['aria-live'], 'polite');
+    release();
+    assert.equal(await pending, true);
+    assert.equal(panel.hidden, true);
+});
+
+test('an unsolved challenge stops after one minute and records only a safe error code', async () => {
+    const r = runtime(() => new Response('tile'), { challengeGate: new Promise(() => {}) });
+    const pending = r.context.ensureAssetAccess();
+    await flush();
+    await r.advance(60000);
+    assert.equal(await pending, false);
+    assert.equal(r.context.document.getElementById('assetAccessChallenge').hidden, true);
+    const diagnostics = r.context.getAssetAccessDiagnostics();
+    assert.equal(diagnostics.lastFailure.stage, 'turnstile-challenge');
+    assert.equal(diagnostics.lastFailure.code, 'turnstile-timeout');
+    assert.equal(r.assetRequests().length, 0);
+});
+
+test('network recovery obtains fresh clearance once before resuming tiles', async () => {
+    const r = runtime(() => {
+        if (r.challenges() < 2) throw new TypeError('Failed to fetch');
+        return new Response('tile');
+    });
+    r.context.onAssetAccessRetry(() => { void r.context.fetchAssetResource(asset).catch(() => {}); });
+    await assert.rejects(r.context.fetchAssetResource(asset));
+    assert.equal(r.context.getAssetAccessDiagnostics().sessionValid, false);
+    assert.equal(r.context.getAssetAccessDiagnostics().lastFailure.code, 'network-or-cors');
+    await r.advance(10000);
+    assert.equal(r.assetRequests().length, 2);
+    assert.equal(r.challenges(), 2);
+    assert.equal(r.context.getAssetAccessDiagnostics().lastFailure, null);
+    for (let i = 0; i < 8; i++) assert.ok((await r.context.fetchAssetResource(asset)).ok);
+    assert.equal(r.challenges(), 2, 'successful tiles do not reauthorize');
+});
+
+test('forced recovery re-probes the region before choosing the asset host', async () => {
+    let regional = false;
+    let createdMode = '';
+    const r = runtime(url => {
+        if (!regional) {
+            regional = true;
+            return new Response('', { status: 403 });
+        }
+        assert.equal(new URL(url).origin, gateway);
+        return new Response('tile');
+    }, { sessionHandler(options, now) {
+        const mode = regional ? 'restricted' : 'standard';
+        if (options.method === 'GET' && createdMode !== mode) {
+            return new Response('{}', { status: 401,
+                headers: regional ? { 'X-Wardogs-Asset-Fallback': 'restricted' } : {} });
+        }
+        if (options.method === 'POST') {
+            createdMode = mode;
+            if (regional) assert.equal(JSON.parse(options.body).token, '');
+        }
+        return Response.json({ mode, expiresAt: now + 3600000 },
+            { status: options.method === 'POST' ? 201 : 200 });
+    } });
+    assert.ok((await r.context.fetchAssetResource(asset)).ok);
+    assert.equal(r.challenges(), 1, 'regional refresh does not execute Turnstile');
+    assert.equal(r.context.getAssetAccessDiagnostics().sessionMode, 'restricted');
+    assert.equal(r.assetRequests().length, 2);
+});
+
+test('a regional browser that cannot retain its cookie sends no tile requests', async () => {
+    const r = runtime(() => { throw new Error('must not fetch tiles'); }, {
+        sessionHandler(options, now) {
+            return options.method === 'POST'
+                ? Response.json({ mode: 'restricted', expiresAt: now + 3600000 }, { status: 201 })
+                : new Response('{}', { status: 401, headers: { 'X-Wardogs-Asset-Fallback': 'restricted' } });
+        }
+    });
+    await assert.rejects(r.context.fetchAssetResource(asset));
+    assert.equal(r.assetRequests().length, 0);
+    assert.equal(r.challenges(), 0);
+    const failure = r.context.getAssetAccessDiagnostics().lastFailure;
+    assert.equal(failure.code, 'session-cookie-unavailable');
+    assert.equal(failure.stage, 'session-confirm');
+});
+
+test('caller cancellation does not pause asset delivery or invalidate admission', async () => {
+    const controller = new AbortController();
+    const r = runtime(() => {
+        controller.abort();
+        throw new DOMException('cancelled', 'AbortError');
+    });
+    await assert.rejects(r.context.fetchAssetResource(asset, { signal: controller.signal }));
+    assert.equal(r.context.getAssetAccessDiagnostics().sessionValid, true);
+    assert.equal(r.context.getAssetAccessDiagnostics().paused, false);
+    assert.equal(r.challenges(), 1);
+});
+
+test('feedback adds allowlisted load status without coordinates, tokens or raw errors', () => {
+    const r = runtime(() => new Response('tile'));
+    r.context.getAssetAccessDiagnostics = () => ({
+        enabled: true, stage: 'asset-fetch', sessionMode: 'standard', configuredMode: 'preclearance',
+        deliveryOrigin: direct, sessionValid: false, regionalFallback: false, paused: true,
+        pending: false, automaticRetries: 2, awaitingManualRetry: true,
+        cookie: 'PRIVATE_COOKIE', token: 'PRIVATE_TOKEN', origin: { x: 1, y: 2 },
+        lastFailure: { stage: 'asset-fetch', code: 'network-or-cors', status: null,
+            requestHost: 'assets-v2.wardogs-artillery.com', cfRay: null,
+            body: 'PRIVATE_BODY', message: 'PRIVATE_ERROR' }
+    });
+    r.context.getMapTileDiagnostics = () => ({ cached: 25, loaded: 5, failed: 4, queued: 16,
+        retrying: 0, activeRequests: 0, origin: { x: 3, y: 4 } });
+    r.load('js/ui/feedback.js');
+    const context = r.context.feedbackLoadingContext();
+    assert.equal(context.assetDiagnostics.lastFailure.code, 'network-or-cors');
+    assert.equal(context.tileDiagnostics.loaded, 5);
+    assert.doesNotMatch(JSON.stringify(context), /PRIVATE_|\"origin\"|\"token\"|\"cookie\"/);
 });

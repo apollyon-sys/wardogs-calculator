@@ -7,7 +7,7 @@ const FEEDBACK_COPY = {
         title: 'Feedback', type: 'Type', bug: 'Bug report', feature: 'Feature request',
         description: 'Description', placeholder: 'What happened, or what would you like to see?',
         contact: 'Contact (optional)', contactPlaceholder: 'Discord or email',
-        diagnostics: 'Page, language, map, weapon, browser and viewport are included automatically. No saved targets or coordinates are sent.',
+        diagnostics: "Page, language, map, weapon, browser, viewport and map loading status are included automatically. No saved targets, coordinates, cookies or access tokens are sent.",
         anonymous: 'No account or registration required.', send: 'Send', cancel: 'Cancel', sending: 'Sending…',
         sent: 'Thanks! Report sent.', unavailable: 'Feedback is temporarily unavailable.',
         limited: 'Too many reports. Please try again in a moment.', required: 'Please describe the bug or feature request.'
@@ -16,7 +16,7 @@ const FEEDBACK_COPY = {
         title: 'Обратная связь', type: 'Тип', bug: 'Сообщить об ошибке', feature: 'Предложить функцию',
         description: 'Описание', placeholder: 'Что произошло или какую функцию вы хотели бы увидеть?',
         contact: 'Контакт (необязательно)', contactPlaceholder: 'Discord или email',
-        diagnostics: 'Страница, язык, карта, оружие, браузер и размер окна добавляются автоматически. Сохранённые цели и координаты не отправляются.',
+        diagnostics: "Страница, язык, карта, оружие, браузер, размер окна и состояние загрузки карты добавляются автоматически. Сохранённые цели, координаты, cookies и токены доступа не отправляются.",
         anonymous: 'Аккаунт и регистрация не нужны.', send: 'Отправить', cancel: 'Отмена', sending: 'Отправка…',
         sent: 'Спасибо! Сообщение отправлено.', unavailable: 'Форма временно недоступна.',
         limited: 'Слишком много сообщений. Попробуйте ещё раз чуть позже.', required: 'Опишите ошибку или желаемую функцию.'
@@ -25,7 +25,7 @@ const FEEDBACK_COPY = {
         title: 'Зворотний зв’язок', type: 'Тип', bug: 'Повідомити про помилку', feature: 'Запропонувати функцію',
         description: 'Опис', placeholder: 'Що сталося або яку функцію ви хотіли б бачити?',
         contact: 'Контакт (необов’язково)', contactPlaceholder: 'Discord або email',
-        diagnostics: 'Сторінка, мова, мапа, зброя, браузер і розмір вікна додаються автоматично. Збережені цілі й координати не надсилаються.',
+        diagnostics: "Сторінка, мова, карта, зброя, браузер, розмір вікна та стан завантаження карти додаються автоматично. Збережені цілі, координати, cookies і токени доступу не надсилаються.",
         anonymous: 'Обліковий запис і реєстрація не потрібні.', send: 'Надіслати', cancel: 'Скасувати', sending: 'Надсилання…',
         sent: 'Дякую! Повідомлення надіслано.', unavailable: 'Форма тимчасово недоступна.',
         limited: 'Забагато повідомлень. Спробуйте трохи пізніше.', required: 'Опишіть помилку або бажану функцію.'
@@ -34,7 +34,7 @@ const FEEDBACK_COPY = {
         title: 'Feedback', type: 'Typ', bug: 'Fehler melden', feature: 'Funktion vorschlagen',
         description: 'Beschreibung', placeholder: 'Was ist passiert oder welche Funktion wünschst du dir?',
         contact: 'Kontakt (optional)', contactPlaceholder: 'Discord oder E-Mail',
-        diagnostics: 'Seite, Sprache, Karte, Waffe, Browser und Fenstergröße werden automatisch mitgesendet. Gespeicherte Ziele und Koordinaten werden nicht gesendet.',
+        diagnostics: "Seite, Sprache, Karte, Waffe, Browser, Fenstergröße und Kartenladestatus werden automatisch mitgesendet. Gespeicherte Ziele, Koordinaten, Cookies und Zugriffstoken werden nicht gesendet.",
         anonymous: 'Kein Konto und keine Registrierung erforderlich.', send: 'Senden', cancel: 'Abbrechen', sending: 'Wird gesendet…',
         sent: 'Danke! Meldung gesendet.', unavailable: 'Feedback ist vorübergehend nicht verfügbar.',
         limited: 'Zu viele Meldungen. Bitte versuche es gleich noch einmal.', required: 'Bitte beschreibe den Fehler oder Funktionswunsch.'
@@ -43,7 +43,7 @@ const FEEDBACK_COPY = {
         title: 'Feedback', type: 'Type', bug: 'Signaler un bug', feature: 'Suggérer une fonctionnalité',
         description: 'Description', placeholder: 'Que s’est-il passé ou quelle fonctionnalité aimeriez-vous voir ?',
         contact: 'Contact (facultatif)', contactPlaceholder: 'Discord ou e-mail',
-        diagnostics: 'La page, la langue, la carte, l’arme, le navigateur et la taille de la fenêtre sont ajoutés automatiquement. Les cibles et coordonnées enregistrées ne sont pas envoyées.',
+        diagnostics: "La page, la langue, la carte, l’arme, le navigateur, la taille de la fenêtre et l’état du chargement sont ajoutés automatiquement. Aucune cible enregistrée, coordonnée, cookie ou jeton d’accès n’est envoyé.",
         anonymous: 'Aucun compte ni inscription requis.', send: 'Envoyer', cancel: 'Annuler', sending: 'Envoi…',
         sent: 'Merci ! Message envoyé.', unavailable: 'Le feedback est temporairement indisponible.',
         limited: 'Trop de messages. Réessayez dans un instant.', required: 'Décrivez le bug ou la fonctionnalité souhaitée.'
@@ -52,7 +52,7 @@ const FEEDBACK_COPY = {
         title: 'Comentarios', type: 'Tipo', bug: 'Informar de un error', feature: 'Sugerir una función',
         description: 'Descripción', placeholder: '¿Qué ocurrió o qué función te gustaría ver?',
         contact: 'Contacto (opcional)', contactPlaceholder: 'Discord o correo',
-        diagnostics: 'La página, idioma, mapa, arma, navegador y tamaño de ventana se incluyen automáticamente. No se envían objetivos guardados ni coordenadas.',
+        diagnostics: "La página, idioma, mapa, arma, navegador, tamaño de ventana y estado de carga se incluyen automáticamente. No se envían objetivos guardados, coordenadas, cookies ni tokens de acceso.",
         anonymous: 'No hace falta cuenta ni registro.', send: 'Enviar', cancel: 'Cancelar', sending: 'Enviando…',
         sent: '¡Gracias! Mensaje enviado.', unavailable: 'Los comentarios no están disponibles temporalmente.',
         limited: 'Demasiados mensajes. Inténtalo de nuevo en un momento.', required: 'Describe el error o la función solicitada.'
@@ -61,7 +61,7 @@ const FEEDBACK_COPY = {
         title: 'Opinie', type: 'Typ', bug: 'Zgłoś błąd', feature: 'Zaproponuj funkcję',
         description: 'Opis', placeholder: 'Co się stało lub jaką funkcję chcesz zobaczyć?',
         contact: 'Kontakt (opcjonalnie)', contactPlaceholder: 'Discord lub e-mail',
-        diagnostics: 'Strona, język, mapa, broń, przeglądarka i rozmiar okna są dołączane automatycznie. Zapisane cele i współrzędne nie są wysyłane.',
+        diagnostics: "Strona, język, mapa, broń, przeglądarka, rozmiar okna i stan wczytywania mapy są dołączane automatycznie. Zapisane cele, współrzędne, pliki cookie i tokeny dostępu nie są wysyłane.",
         anonymous: 'Konto ani rejestracja nie są wymagane.', send: 'Wyślij', cancel: 'Anuluj', sending: 'Wysyłanie…',
         sent: 'Dzięki! Zgłoszenie wysłane.', unavailable: 'Formularz jest chwilowo niedostępny.',
         limited: 'Za dużo zgłoszeń. Spróbuj ponownie za chwilę.', required: 'Opisz błąd lub proponowaną funkcję.'
@@ -70,7 +70,7 @@ const FEEDBACK_COPY = {
         title: 'Feedback', type: 'Tipo', bug: 'Reportar erro', feature: 'Sugerir funcionalidade',
         description: 'Descrição', placeholder: 'O que aconteceu ou que funcionalidade gostaria de ver?',
         contact: 'Contacto (opcional)', contactPlaceholder: 'Discord ou e-mail',
-        diagnostics: 'Página, idioma, mapa, arma, navegador e tamanho da janela são incluídos automaticamente. Alvos guardados e coordenadas não são enviados.',
+        diagnostics: "Página, idioma, mapa, arma, navegador, tamanho da janela e estado do carregamento são incluídos automaticamente. Alvos guardados, coordenadas, cookies e tokens de acesso não são enviados.",
         anonymous: 'Não é necessária conta nem registo.', send: 'Enviar', cancel: 'Cancelar', sending: 'A enviar…',
         sent: 'Obrigado! Mensagem enviada.', unavailable: 'O feedback está temporariamente indisponível.',
         limited: 'Demasiadas mensagens. Tente novamente daqui a pouco.', required: 'Descreva o erro ou a funcionalidade pretendida.'
@@ -79,7 +79,7 @@ const FEEDBACK_COPY = {
         title: '反馈', type: '类型', bug: '报告问题', feature: '功能建议',
         description: '描述', placeholder: '发生了什么，或者你希望增加什么功能？',
         contact: '联系方式（可选）', contactPlaceholder: 'Discord 或邮箱',
-        diagnostics: '页面、语言、地图、武器、浏览器和窗口大小会自动附加。不会发送已保存目标或坐标。',
+        diagnostics: "页面、语言、地图、武器、浏览器、窗口大小和地图加载状态会自动附加。不会发送已保存目标、坐标、Cookie 或访问令牌。",
         anonymous: '无需账号或注册。', send: '发送', cancel: '取消', sending: '发送中…',
         sent: '谢谢！反馈已发送。', unavailable: '反馈功能暂时不可用。',
         limited: '提交过于频繁，请稍后再试。', required: '请描述问题或功能建议。'
@@ -88,7 +88,7 @@ const FEEDBACK_COPY = {
         title: '피드백', type: '유형', bug: '버그 신고', feature: '기능 제안',
         description: '설명', placeholder: '무슨 문제가 있었거나 어떤 기능을 원하시나요?',
         contact: '연락처 (선택)', contactPlaceholder: 'Discord 또는 이메일',
-        diagnostics: '페이지, 언어, 지도, 무기, 브라우저, 창 크기가 자동으로 포함됩니다. 저장된 목표와 좌표는 전송되지 않습니다.',
+        diagnostics: "페이지, 언어, 지도, 무기, 브라우저, 창 크기와 지도 로딩 상태가 자동으로 포함됩니다. 저장된 목표, 좌표, 쿠키 또는 접근 토큰은 전송되지 않습니다.",
         anonymous: '계정이나 가입이 필요하지 않습니다.', send: '보내기', cancel: '취소', sending: '보내는 중…',
         sent: '감사합니다! 피드백을 보냈습니다.', unavailable: '피드백을 일시적으로 사용할 수 없습니다.',
         limited: '요청이 너무 많습니다. 잠시 후 다시 시도하세요.', required: '버그 또는 원하는 기능을 설명해 주세요.'
@@ -97,7 +97,7 @@ const FEEDBACK_COPY = {
         title: 'フィードバック', type: '種類', bug: '不具合を報告', feature: '機能を提案',
         description: '説明', placeholder: '何が起きたか、またはどんな機能が欲しいか教えてください。',
         contact: '連絡先（任意）', contactPlaceholder: 'Discord またはメール',
-        diagnostics: 'ページ、言語、マップ、武器、ブラウザ、画面サイズは自動で送信されます。保存済みターゲットや座標は送信されません。',
+        diagnostics: "ページ、言語、マップ、武器、ブラウザ、画面サイズ、マップの読み込み状況が自動で送信されます。保存済みターゲット、座標、Cookie、アクセストークンは送信されません。",
         anonymous: 'アカウント登録は不要です。', send: '送信', cancel: 'キャンセル', sending: '送信中…',
         sent: 'ありがとうございます。送信しました。', unavailable: 'フィードバックは一時的に利用できません。',
         limited: '送信回数が多すぎます。少し待ってから再試行してください。', required: '不具合または機能の内容を入力してください。'
@@ -106,7 +106,7 @@ const FEEDBACK_COPY = {
         title: 'Zpětná vazba', type: 'Typ', bug: 'Nahlásit chybu', feature: 'Návrh funkce',
         description: 'Popis', placeholder: 'Co se stalo nebo jakou funkci byste chtěli?',
         contact: 'Kontakt (nepovinné)', contactPlaceholder: 'Discord nebo e-mail',
-        diagnostics: 'Stránka, jazyk, mapa, zbraň, prohlížeč a velikost okna se přidávají automaticky. Uložené cíle ani souřadnice se neodesílají.',
+        diagnostics: "Stránka, jazyk, mapa, zbraň, prohlížeč, velikost okna a stav načítání mapy se přidávají automaticky. Uložené cíle, souřadnice, cookies ani přístupové tokeny se neodesílají.",
         anonymous: 'Účet ani registrace nejsou potřeba.', send: 'Odeslat', cancel: 'Zrušit', sending: 'Odesílání…',
         sent: 'Děkuji! Zpráva byla odeslána.', unavailable: 'Zpětná vazba je dočasně nedostupná.',
         limited: 'Příliš mnoho zpráv. Zkuste to prosím za chvíli.', required: 'Popište prosím chybu nebo návrh funkce.'
@@ -114,7 +114,7 @@ const FEEDBACK_COPY = {
     cat: {
         title: 'Meowback', type: 'Type', bug: 'Report a bug 🐾', feature: 'Suggest a feature 😺',
         description: 'Meow', placeholder: 'What went wrong, hooman?', contact: 'Contact (optional)', contactPlaceholder: 'Discord or email',
-        diagnostics: 'Only safe technical context is attached, including browser and viewport. No saved targets or coordinates.', anonymous: 'No account needed. Meow.',
+        diagnostics: "La pàgina, l’idioma, el mapa, l’arma, el navegador, la mida de la finestra i l’estat de càrrega s’adjunten automàticament. No s’envien objectius desats, coordenades, galetes ni tokens d’accés.", anonymous: 'No account needed. Meow.',
         send: 'Send', cancel: 'Cancel', sending: 'Sending…', sent: 'Purrfect! Sent.',
         unavailable: 'Feedback is napping right now.', limited: 'Too many meows. Try again soon.', required: 'Please add a meowssage.'
     }
@@ -270,8 +270,54 @@ function feedbackTechnicalContext() {
         textSize: String(accessibility.textSize || '').slice(0, 16),
         largerControls: accessibility.largerControls === true ? 'true' : 'false',
         highContrast: accessibility.highContrast === true ? 'true' : 'false',
-        version: String(footerConfig.version || '').slice(0, 32)
+        version: String(footerConfig.version || '').slice(0, 32),
+        ...feedbackLoadingContext()
     };
+}
+
+function feedbackLoadingContext() {
+    const context = {};
+    // Select fields explicitly; never attach the full developer report,
+    // coordinates, request bodies, raw error messages or browser cookies.
+    try {
+        if (typeof getAssetAccessDiagnostics === 'function') {
+            const access = getAssetAccessDiagnostics();
+            const failure = access.lastFailure;
+            context.assetDiagnostics = {
+                enabled: access.enabled,
+                configuredMode: access.configuredMode,
+                stage: access.stage,
+                sessionMode: access.sessionMode,
+                deliveryHost: new URL(access.deliveryOrigin).hostname,
+                sessionValid: access.sessionValid,
+                regionalFallback: access.regionalFallback,
+                paused: access.paused,
+                pending: access.pending,
+                awaitingManualRetry: access.awaitingManualRetry,
+                automaticRetries: access.automaticRetries,
+                lastFailure: failure ? {
+                    stage: failure.stage,
+                    code: failure.code,
+                    status: failure.status,
+                    requestHost: failure.requestHost,
+                    cfRay: failure.cfRay,
+                    mitigation: failure.mitigation
+                } : null
+            };
+        }
+        if (typeof getMapTileDiagnostics === 'function') {
+            const tiles = getMapTileDiagnostics();
+            context.tileDiagnostics = {
+                cached: tiles.cached,
+                loaded: tiles.loaded,
+                failed: tiles.failed,
+                queued: tiles.queued,
+                retrying: tiles.retrying,
+                activeRequests: tiles.activeRequests
+            };
+        }
+    } catch { /* Sending feedback must work before the application is ready. */ }
+    return context;
 }
 
 function makeFeedbackDialog() {

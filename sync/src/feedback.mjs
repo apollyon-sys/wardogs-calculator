@@ -64,6 +64,78 @@ function cleanMessage(value) {
         .slice(0, TEXT_LIMIT + 1);
 }
 
+const ASSET_STAGES = new Set([
+    'idle', 'session-probe', 'session-create', 'session-confirm',
+    'turnstile-script', 'turnstile-challenge', 'ready', 'asset-fetch'
+]);
+const ASSET_HOSTS = new Set([
+    'assets.wardogs-artillery.com', 'assets-v2.wardogs-artillery.com'
+]);
+
+function diagnosticCount(value) {
+    return Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000
+        ? value : null;
+}
+
+function normalizeAssetDiagnostics(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    const failure = raw.lastFailure;
+    const validFailure = failure && typeof failure === 'object' && !Array.isArray(failure);
+    const code = validFailure ? clean(failure.code, 64) : '';
+    const ray = validFailure ? clean(failure.cfRay, 64) : '';
+    return {
+        enabled: raw.enabled === true,
+        configuredMode: ['preclearance', 'session-cookie'].includes(raw.configuredMode) ? raw.configuredMode : '',
+        stage: ASSET_STAGES.has(raw.stage) ? raw.stage : '',
+        sessionMode: ['standard', 'restricted'].includes(raw.sessionMode) ? raw.sessionMode : '',
+        deliveryHost: ASSET_HOSTS.has(raw.deliveryHost) ? raw.deliveryHost : '',
+        sessionValid: raw.sessionValid === true,
+        regionalFallback: raw.regionalFallback === true,
+        paused: raw.paused === true,
+        pending: raw.pending === true,
+        awaitingManualRetry: raw.awaitingManualRetry === true,
+        automaticRetries: diagnosticCount(raw.automaticRetries),
+        lastFailure: validFailure ? {
+            stage: ASSET_STAGES.has(failure.stage) ? failure.stage : '',
+            code: /^(turnstile-(?:unavailable|not-configured|expired|timeout|unsupported|\d{3,8})|asset-session-(?:invalid|http-\d{3})|asset-http-\d{3}|session-cookie-unavailable|session-required|gateway-not-configured|challenge-(?:required|unavailable|failed)|rate-limited|forbidden-origin|unavailable|timeout|network-or-cors)$/.test(code) ? code : '',
+            status: Number.isInteger(failure.status) && failure.status >= 100 && failure.status <= 599 ? failure.status : null,
+            requestHost: ASSET_HOSTS.has(failure.requestHost) ? failure.requestHost : '',
+            cfRay: /^[a-f0-9]{16,32}(?:-[a-z]{3})?$/i.test(ray) ? ray : '',
+            mitigation: failure.mitigation === 'challenge' ? 'challenge' : ''
+        } : null
+    };
+}
+
+function normalizeTileDiagnostics(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    return Object.fromEntries([
+        'cached', 'loaded', 'failed', 'queued', 'retrying', 'activeRequests'
+    ].map(key => [key, diagnosticCount(raw[key])]));
+}
+
+function assetDiagnosticField(access) {
+    if (!access) return '';
+    const lines = [
+        `Stage: ${access.stage || 'unknown'}; mode: ${access.sessionMode || access.configuredMode || 'unknown'}`,
+        `Host: ${access.deliveryHost || 'unknown'}`,
+        `Session: ${access.sessionValid ? 'valid' : 'required'}; regional: ${access.regionalFallback}; pending: ${access.pending}`,
+        `Paused: ${access.paused}; retries: ${access.automaticRetries ?? '?'}; manual retry: ${access.awaitingManualRetry}`
+    ];
+    const failure = access.lastFailure;
+    if (failure) {
+        lines.push(`Failure: ${failure.stage || 'unknown'}; ${failure.code || 'unknown'}; HTTP ${failure.status ?? '?'}`);
+        if (failure.requestHost) lines.push(`Failed host: ${failure.requestHost}`);
+        if (failure.cfRay) lines.push(`CF-Ray: ${failure.cfRay}`);
+        if (failure.mitigation) lines.push(`Mitigation: ${failure.mitigation}`);
+    }
+    return lines.join('\n');
+}
+
+function tileDiagnosticField(tiles) {
+    if (!tiles) return '';
+    return Object.entries(tiles).map(([key, value]) => `${key}: ${value ?? '?'}`).join('; ');
+}
+
 export function normalizeFeedback(raw) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('bad-feedback');
     if (clean(raw.website, 64)) throw new Error('spam');
@@ -99,7 +171,9 @@ export function normalizeFeedback(raw) {
         textSize: clean(raw.textSize, 16),
         largerControls: clean(raw.largerControls, 8),
         highContrast: clean(raw.highContrast, 8),
-        version: clean(raw.version, 32)
+        version: clean(raw.version, 32),
+        assetDiagnostics: normalizeAssetDiagnostics(raw.assetDiagnostics),
+        tileDiagnostics: normalizeTileDiagnostics(raw.tileDiagnostics)
     };
 }
 
@@ -138,6 +212,13 @@ export function discordFeedbackPayload(feedback, senderId = '') {
     ]
         .filter(([, value]) => value)
         .map(([name, value]) => ({ name, value, inline: true }));
+
+    for (const [name, value] of [
+        ['Asset access', assetDiagnosticField(feedback.assetDiagnostics)],
+        ['Map loading', tileDiagnosticField(feedback.tileDiagnostics)]
+    ]) {
+        if (value) fields.push({ name, value, inline: false });
+    }
 
     const titles = {
         bug: '🐛 Bug report',

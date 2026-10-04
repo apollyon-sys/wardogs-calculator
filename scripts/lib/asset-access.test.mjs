@@ -115,7 +115,11 @@ test('every locale explains unavailable protected assets to local copies', async
             'assetAccessUnavailable',
             'assetAccessWaiting',
             'assetAccessRetryHint',
-            'assetAccessRetry'
+            'assetAccessRetry',
+            'assetAccessVerificationTitle',
+            'assetAccessVerificationHint',
+            'assetAccessLoading',
+            'assetAccessLoadingHint'
         ]) {
             assert.equal(
                 typeof locale[key],

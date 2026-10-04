@@ -53,7 +53,7 @@ function corsHeaders(origin) {
         'Access-Control-Allow-Headers':
             'Content-Type',
         'Access-Control-Expose-Headers':
-            'Content-Length, Content-Type, ETag, Retry-After, X-Wardogs-Asset-Access, X-Wardogs-Asset-Fallback',
+            'Content-Length, Content-Type, ETag, Retry-After, CF-Ray, CF-Mitigated, X-Wardogs-Asset-Access, X-Wardogs-Asset-Fallback',
         'Access-Control-Max-Age': '86400',
         Vary: 'Origin'
     };
@@ -247,6 +247,9 @@ async function handleSession(
             ''
         ).toUpperCase();
 
+    const regionalAccess = config.localDevelopmentAccess ||
+        (!config.development && config.fallbackCountries.has(country));
+
     if (
         !config.localDevelopmentAccess &&
         await isAddressHeldAtAdmission(
@@ -308,7 +311,7 @@ async function handleSession(
 
         if (
             !session ||
-            (config.localDevelopmentAccess && session.mode !== 'restricted')
+            (session.mode !== (regionalAccess ? 'restricted' : 'standard'))
         ) {
             return json(
                 {
@@ -316,8 +319,7 @@ async function handleSession(
                 },
                 401,
                 origin,
-                (config.localDevelopmentAccess ||
-                    config.fallbackCountries.has(country))
+                regionalAccess
                     ? {
                         'X-Wardogs-Asset-Fallback':
                             'restricted'
@@ -340,13 +342,9 @@ async function handleSession(
     const body =
         await limitedJson(request);
 
-    const fallback =
-        config.localDevelopmentAccess ||
-        (
-            !config.development &&
-            config.fallbackCountries.has(country) &&
-            !body.token
-        );
+    // Geography is server metadata, never a client language or route hint.
+    // A submitted token must not send a regional visitor to the other host.
+    const fallback = regionalAccess;
 
     if (!fallback) {
         const challenge =

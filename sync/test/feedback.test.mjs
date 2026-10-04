@@ -88,3 +88,62 @@ test('development sink does not require a real Discord webhook', async () => {
         true
     );
 });
+
+test('loading diagnostics are allowlisted, bounded and excluded from legacy reports', () => {
+    const result = normalizeFeedback({ type: 'bug', message: 'The map will not load.',
+        assetDiagnostics: { stage: 'asset-fetch', enabled: true, configuredMode: 'preclearance',
+            sessionMode: 'standard', deliveryHost: 'assets-v2.wardogs-artillery.com', paused: true,
+            automaticRetries: 2, token: 'PRIVATE_TOKEN', cookie: 'PRIVATE_COOKIE', ip: 'PRIVATE_IP',
+            lastFailure: { stage: 'asset-fetch', code: 'network-or-cors', status: 403,
+                cfRay: 'a456457d3a8f5535-LAX', mitigation: 'challenge',
+                requestHost: 'assets-v2.wardogs-artillery.com', body: 'PRIVATE_BODY' } },
+        tileDiagnostics: { cached: 20, loaded: 5, failed: 0, queued: 15, retrying: -5,
+            activeRequests: 1e20, target: 'PRIVATE_COORDINATES' }
+    });
+    assert.equal(result.assetDiagnostics.lastFailure.cfRay, 'a456457d3a8f5535-LAX');
+    assert.equal(result.tileDiagnostics.loaded, 5);
+    assert.equal(result.tileDiagnostics.retrying, null);
+    assert.equal(result.tileDiagnostics.activeRequests, null);
+    assert.doesNotMatch(JSON.stringify(result), /PRIVATE_/);
+    const payload = discordFeedbackPayload(result);
+    assert.match(payload.embeds[0].fields.find(field => field.name === 'Asset access').value, /network-or-cors/);
+    assert.match(payload.embeds[0].fields.find(field => field.name === 'Map loading').value, /loaded: 5/);
+    const legacy = discordFeedbackPayload(normalizeFeedback({ type: 'bug', message: 'Legacy browser report' }));
+    assert.ok(legacy.embeds[0].fields.every(field => !['Asset access', 'Map loading'].includes(field.name)));
+});
+
+test('invalid diagnostics cannot inject arbitrary hosts, codes, headers or Discord fields', () => {
+    const result = normalizeFeedback({ type: 'bug', message: 'The map will not load.',
+        assetDiagnostics: { stage: 'arbitrary-stage', deliveryHost: 'https://evil.test/?token=PRIVATE',
+            automaticRetries: '9', lastFailure: { code: 'PRIVATE', cfRay: 'PRIVATE',
+                status: 999, requestHost: 'PRIVATE', mitigation: 'PRIVATE' } },
+        tileDiagnostics: ['PRIVATE']
+    });
+    assert.equal(result.assetDiagnostics.stage, '');
+    assert.equal(result.assetDiagnostics.deliveryHost, '');
+    assert.equal(result.assetDiagnostics.lastFailure.code, '');
+    assert.equal(result.assetDiagnostics.lastFailure.cfRay, '');
+    assert.equal(result.assetDiagnostics.lastFailure.status, null);
+    assert.equal(result.tileDiagnostics, null);
+    assert.doesNotMatch(JSON.stringify(discordFeedbackPayload(result)), /PRIVATE|evil\.test/);
+});
+
+test('a maximum length report with loading diagnostics fits Discord embed limits', () => {
+    const raw = { type: 'general', rating: 5, message: 'x'.repeat(3800),
+        assetDiagnostics: { stage: 'turnstile-challenge', configuredMode: 'preclearance',
+            sessionMode: 'standard', deliveryHost: 'assets-v2.wardogs-artillery.com',
+            automaticRetries: 1000000, lastFailure: { stage: 'turnstile-challenge',
+                code: 'session-cookie-unavailable', status: 503,
+                requestHost: 'assets-v2.wardogs-artillery.com', cfRay: 'a'.repeat(32) + '-LAX', mitigation: 'challenge' } },
+        tileDiagnostics: Object.fromEntries(['cached', 'loaded', 'failed', 'queued', 'retrying', 'activeRequests']
+            .map(key => [key, 1000000])) };
+    for (const key of ['contact', 'language', 'device', 'viewport', 'browser', 'os', 'map',
+        'mapStyle', 'weapon', 'textSize', 'largerControls', 'highContrast', 'version']) raw[key] = 'x'.repeat(200);
+    raw.page = '/' + 'x'.repeat(200);
+    const embed = discordFeedbackPayload(normalizeFeedback(raw), 'a'.repeat(12)).embeds[0];
+    assert.ok(embed.fields.length <= 25);
+    assert.ok(embed.fields.every(field => field.value.length <= 1024));
+    const length = embed.title.length + embed.description.length + embed.footer.text.length +
+        embed.fields.reduce((total, field) => total + field.name.length + field.value.length, 0);
+    assert.ok(length <= 6000, `embed length ${length}`);
+});

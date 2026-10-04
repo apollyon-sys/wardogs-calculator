@@ -443,6 +443,13 @@ async function init() {
          */
         loadAppSelections();
 
+        // Map admission can take time on a slow route or require interaction.
+        // Keep menus and the base calculator usable while protected tiles wait.
+        const assetAccessPromise = initializeAssetAccess().catch(error => {
+            console.warn('[startup] Map access could not initialize.', error);
+            return false;
+        });
+
         /*
          * These registries are independent. Loading them in parallel removes
          * two avoidable request waterfalls on high-latency connections.
@@ -450,8 +457,7 @@ async function init() {
         await Promise.all([
             loadWeapons(),
             loadMapAssets(),
-            loadMaps(),
-            initializeAssetAccess()
+            loadMaps()
         ]);
 
         const sphPlatformRuntimeLoaded =
@@ -535,7 +541,11 @@ async function init() {
          * sessions never pay for the runtime, config or terrain manifests.
          */
         scheduleAfterFirstPaint(
-            initMotd,
+            async () => {
+                // A modal must not cover an interactive map verification.
+                await assetAccessPromise;
+                initMotd();
+            },
             {
                 delay: 150,
                 timeout: 1500,
