@@ -229,7 +229,7 @@
   "supportStatementPayments": "Zahlungen werden von externen Zahlungsdienstleistern verarbeitet. Falls eine Zahlung nicht möglich ist oder du andere Fragen hast, schreibe mir bitte an:",
   "experimentalTerrainCorrectionTitle": "Experimentelle Terrain3D-Korrektur",
   "experimentalTerrainCorrectionToggle": "Experimentelle Terrain3D-Korrektur verwenden",
-  "experimentalTerrainCorrectionNote": "Die Terrain3D-Korrektur wird automatisch angewendet. Plattform-/Fahrzeugneigung wird nicht korrigiert. Ist ein Kandidat nicht SAFE, wird der Tabellenwert verwendet.",
+  "experimentalTerrainCorrectionNote": "Die Terrain3D-Korrektur erfolgt automatisch. Außerhalb des geprüften Höhenbereichs werden Modellschätzungen verwendet. Die Fahrzeugneigung wird nicht aus dem Gelände abgeleitet.",
   "experimentalTerrainCorrectionTable": "Tabelle",
   "experimentalTerrainCorrectionTerrain": "Terrain3D",
   "experimentalTerrainCorrectionLow": "LOW",
@@ -247,7 +247,7 @@
   "experimentalTerrainCorrectionStatusOn": "Experimentelles Terrain3D AN",
   "experimentalTerrainCorrectionStatusOff": "Experimentelles Terrain3D AUS",
   "experimentalTerrainCorrectionStatusFallback": "Tabellen-Fallback",
-  "experimentalTerrainCorrectionCandidateLoading": "Kandidat wird geladen",
+  "experimentalTerrainCorrectionCandidateLoading": "Terrain3D wird berechnet…",
   "terrainLoading": "Höhendaten werden geladen",
   "terrainStatus": "ΔZ {dz} m · Terrain3D bereit",
   "sphLevelWarningTitle": "SPH-2 VOR DEM SCHUSS NIVELLIEREN",
@@ -310,5 +310,9 @@
   "developerSignIn": "Anmelden",
   "developerSigningIn": "Anmeldung…",
   "developerAccessDenied": "Zugriff verweigert. Prüfe den Schlüssel und die zugelassenen IP-Adressen.",
-  "developerAccessUnavailable": "Entwicklerzugriff nicht verfügbar. Prüfe das Gateway und die Sicherheitsregeln."
+  "developerAccessUnavailable": "Entwicklerzugriff nicht verfügbar. Prüfe das Gateway und die Sicherheitsregeln.",
+  "experimentalTerrainCorrectionEstimate": "SCHÄTZUNG",
+  "experimentalTerrainCorrectionStatusEstimate": "Terrain3D-Schätzung",
+  "experimentalTerrainCorrectionModelUnreachable": "Das Terrain3D-Modell findet keine Flugbahn",
+  "experimentalTerrainCorrectionSelectTarget": "Ziel für die Terrain3D-Berechnung auswählen"
 }

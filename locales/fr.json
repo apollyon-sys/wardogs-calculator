@@ -229,7 +229,7 @@
   "supportStatementPayments": "Les paiements sont traités par des prestataires de paiement tiers. Si vous ne parvenez pas à effectuer un paiement ou si vous avez d’autres questions, contactez-moi à l’adresse suivante :",
   "experimentalTerrainCorrectionTitle": "Correction Terrain3D expérimentale",
   "experimentalTerrainCorrectionToggle": "Utiliser la correction Terrain3D expérimentale",
-  "experimentalTerrainCorrectionNote": "La correction Terrain3D est automatique. L’inclinaison de la plateforme/du châssis n’est pas corrigée. Si un candidat n’est pas SAFE, la table est utilisée.",
+  "experimentalTerrainCorrectionNote": "La correction Terrain3D est automatique. Au-delà des dénivelés vérifiés, les résultats sont des estimations du modèle. L’inclinaison du châssis n’est pas déduite du terrain.",
   "experimentalTerrainCorrectionTable": "Table",
   "experimentalTerrainCorrectionTerrain": "Terrain3D",
   "experimentalTerrainCorrectionLow": "LOW",
@@ -247,7 +247,7 @@
   "experimentalTerrainCorrectionStatusOn": "Terrain3D expérimental ACTIVÉ",
   "experimentalTerrainCorrectionStatusOff": "Terrain3D expérimental DÉSACTIVÉ",
   "experimentalTerrainCorrectionStatusFallback": "Repli sur la table",
-  "experimentalTerrainCorrectionCandidateLoading": "chargement du candidat",
+  "experimentalTerrainCorrectionCandidateLoading": "Calcul Terrain3D…",
   "terrainLoading": "chargement des altitudes",
   "terrainStatus": "ΔZ {dz} m · Terrain3D prêt",
   "sphLevelWarningTitle": "METTEZ LE SPH-2 À NIVEAU AVANT DE TIRER",
@@ -310,5 +310,9 @@
   "developerSignIn": "Se connecter",
   "developerSigningIn": "Connexion…",
   "developerAccessDenied": "Accès refusé. Vérifiez la clé et les adresses IP autorisées.",
-  "developerAccessUnavailable": "Accès développeur indisponible. Vérifiez la passerelle et les règles de sécurité."
+  "developerAccessUnavailable": "Accès développeur indisponible. Vérifiez la passerelle et les règles de sécurité.",
+  "experimentalTerrainCorrectionEstimate": "ESTIMATION",
+  "experimentalTerrainCorrectionStatusEstimate": "Estimation Terrain3D",
+  "experimentalTerrainCorrectionModelUnreachable": "Le modèle Terrain3D ne trouve aucune trajectoire",
+  "experimentalTerrainCorrectionSelectTarget": "Sélectionnez une cible pour calculer Terrain3D"
 }

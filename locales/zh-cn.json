@@ -241,7 +241,7 @@
   "supportStatementPayments": "付款由第三方支付服务商处理。如果你无法完成付款，或有其他问题，请通过以下邮箱联系我：",
   "experimentalTerrainCorrectionTitle": "实验性 Terrain3D 修正",
   "experimentalTerrainCorrectionToggle": "使用实验性 Terrain3D 修正",
-  "experimentalTerrainCorrectionNote": "Terrain3D 修正会自动应用。不修正平台/车体倾斜。候选不是 SAFE 时会回退到表格值。",
+  "experimentalTerrainCorrectionNote": "Terrain3D 会自动修正。超出已验证的高差范围时，结果为模型估算。系统不会根据地形推断车体倾斜。",
   "experimentalTerrainCorrectionTable": "表格",
   "experimentalTerrainCorrectionTerrain": "Terrain3D",
   "experimentalTerrainCorrectionLow": "LOW",
@@ -259,7 +259,7 @@
   "experimentalTerrainCorrectionStatusOn": "实验性 Terrain3D 已开启",
   "experimentalTerrainCorrectionStatusOff": "实验性 Terrain3D 已关闭",
   "experimentalTerrainCorrectionStatusFallback": "表格回退",
-  "experimentalTerrainCorrectionCandidateLoading": "正在加载候选",
+  "experimentalTerrainCorrectionCandidateLoading": "正在计算 Terrain3D…",
   "sidebarSetup": "设置",
   "sidebarCoordinates": "坐标",
   "firingSolution": "射击诸元",
@@ -318,5 +318,9 @@
   "developerSignIn": "登录",
   "developerSigningIn": "正在登录…",
   "developerAccessDenied": "访问被拒绝。请检查密钥和允许的 IP 地址。",
-  "developerAccessUnavailable": "开发者访问不可用。请检查网关和安全规则。"
+  "developerAccessUnavailable": "开发者访问不可用。请检查网关和安全规则。",
+  "experimentalTerrainCorrectionEstimate": "估算",
+  "experimentalTerrainCorrectionStatusEstimate": "Terrain3D 估算修正",
+  "experimentalTerrainCorrectionModelUnreachable": "Terrain3D 模型未找到可行弹道",
+  "experimentalTerrainCorrectionSelectTarget": "选择目标以计算 Terrain3D"
 }

@@ -225,7 +225,7 @@
   "supportStatementPayments": "Платежи обрабатываются сторонними платёжными сервисами. Если у вас не получается совершить платёж или появились другие вопросы, напишите мне:",
   "experimentalTerrainCorrectionTitle": "Экспериментальная Terrain3D-коррекция",
   "experimentalTerrainCorrectionToggle": "Использовать экспериментальную Terrain3D-коррекцию",
-  "experimentalTerrainCorrectionNote": "Коррекция Terrain3D применяется автоматически. Наклон платформы/корпуса не корректируется. Если кандидат не SAFE, используется табличное значение.",
+  "experimentalTerrainCorrectionNote": "Поправка Terrain3D рассчитывается автоматически. За пределами проверенного диапазона высот используется оценка модели. Наклон корпуса по рельефу не определяется.",
   "experimentalTerrainCorrectionTable": "Таблица",
   "experimentalTerrainCorrectionTerrain": "Terrain3D",
   "experimentalTerrainCorrectionLow": "LOW",
@@ -243,7 +243,7 @@
   "experimentalTerrainCorrectionStatusOn": "Экспериментальная Terrain3D ВКЛ",
   "experimentalTerrainCorrectionStatusOff": "Экспериментальная Terrain3D ВЫКЛ",
   "experimentalTerrainCorrectionStatusFallback": "Табличный fallback",
-  "experimentalTerrainCorrectionCandidateLoading": "загрузка кандидата",
+  "experimentalTerrainCorrectionCandidateLoading": "Расчёт Terrain3D…",
   "terrainLoading": "загрузка высот",
   "terrainStatus": "ΔZ {dz} м · Terrain3D готова",
   "sphLevelWarningTitle": "ВЫРОВНЯЙТЕ SPH-2 ПЕРЕД СТРЕЛЬБОЙ",
@@ -306,5 +306,9 @@
   "developerSignIn": "Войти",
   "developerSigningIn": "Вход…",
   "developerAccessDenied": "Доступ запрещён. Проверьте ключ и разрешённые IP-адреса.",
-  "developerAccessUnavailable": "Девмод недоступен. Проверьте шлюз и правила защиты."
+  "developerAccessUnavailable": "Девмод недоступен. Проверьте шлюз и правила защиты.",
+  "experimentalTerrainCorrectionEstimate": "ОЦЕНКА",
+  "experimentalTerrainCorrectionStatusEstimate": "Расчётная поправка Terrain3D",
+  "experimentalTerrainCorrectionModelUnreachable": "Модель Terrain3D не нашла траекторию",
+  "experimentalTerrainCorrectionSelectTarget": "Выбери цель для расчёта Terrain3D"
 }

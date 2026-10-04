@@ -229,7 +229,7 @@
   "supportStatementPayments": "Платежі обробляються сторонніми платіжними сервісами. Якщо вам не вдається здійснити платіж або у вас є інші запитання, напишіть мені:",
   "experimentalTerrainCorrectionTitle": "Експериментальна Terrain3D-корекція",
   "experimentalTerrainCorrectionToggle": "Використовувати експериментальну Terrain3D-корекцію",
-  "experimentalTerrainCorrectionNote": "Корекція Terrain3D застосовується автоматично. Нахил платформи/корпусу не коригується. Якщо кандидат не SAFE, використовується табличне значення.",
+  "experimentalTerrainCorrectionNote": "Поправка Terrain3D розраховується автоматично. За межами перевіреного діапазону висот використовується оцінка моделі. Нахил корпусу за рельєфом не визначається.",
   "experimentalTerrainCorrectionTable": "Таблиця",
   "experimentalTerrainCorrectionTerrain": "Terrain3D",
   "experimentalTerrainCorrectionLow": "LOW",
@@ -247,7 +247,7 @@
   "experimentalTerrainCorrectionStatusOn": "Експериментальна Terrain3D УВІМК",
   "experimentalTerrainCorrectionStatusOff": "Експериментальна Terrain3D ВИМК",
   "experimentalTerrainCorrectionStatusFallback": "Табличний fallback",
-  "experimentalTerrainCorrectionCandidateLoading": "завантаження кандидата",
+  "experimentalTerrainCorrectionCandidateLoading": "Розрахунок Terrain3D…",
   "terrainLoading": "завантаження висот",
   "terrainStatus": "ΔZ {dz} м · Terrain3D готова",
   "sphLevelWarningTitle": "ВИРІВНЯЙТЕ SPH-2 ПЕРЕД ПОСТРІЛОМ",
@@ -310,5 +310,9 @@
   "developerSignIn": "Увійти",
   "developerSigningIn": "Вхід…",
   "developerAccessDenied": "Доступ заборонено. Перевірте ключ і дозволені IP-адреси.",
-  "developerAccessUnavailable": "Режим розробника недоступний. Перевірте шлюз і правила захисту."
+  "developerAccessUnavailable": "Режим розробника недоступний. Перевірте шлюз і правила захисту.",
+  "experimentalTerrainCorrectionEstimate": "ОЦІНКА",
+  "experimentalTerrainCorrectionStatusEstimate": "Розрахункова поправка Terrain3D",
+  "experimentalTerrainCorrectionModelUnreachable": "Модель Terrain3D не знайшла траєкторію",
+  "experimentalTerrainCorrectionSelectTarget": "Вибери ціль для розрахунку Terrain3D"
 }

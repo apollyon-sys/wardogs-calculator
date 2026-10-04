@@ -31,6 +31,173 @@
         rerenderQueued: false
     };
 
+    // Numerical extensions run off the UI thread, only for the selected target.
+    // Cached estimates may be reused by saved targets. No per-tile computation.
+    const heightSolver = {
+        worker: null, active: null, nextId: 0, timer: null,
+        queue: new Map(), cache: new Map(), failure: null, focus: null
+    };
+
+    function heightEstimatesEnabled() {
+        return state.config?.extendedHeightCorrection?.enabled === true;
+    }
+
+    function rememberHeightEstimate(key, value) {
+        if (heightSolver.cache.size >= 96) {
+            heightSolver.cache.delete(heightSolver.cache.keys().next().value);
+        }
+        heightSolver.cache.set(key, value);
+    }
+
+    function stopHeightSolver() {
+        if (heightSolver.timer !== null) clearTimeout(heightSolver.timer);
+        if (heightSolver.active) clearTimeout(heightSolver.active.timeout);
+        heightSolver.worker?.terminate();
+        heightSolver.worker = null;
+        heightSolver.active = null;
+        heightSolver.timer = null;
+        heightSolver.queue.clear();
+        heightSolver.focus = null;
+    }
+
+    function failHeightSolver(reason) {
+        stopHeightSolver();
+        heightSolver.failure = reason;
+        queueRerender();
+    }
+
+    function heightWorker() {
+        if (heightSolver.worker) return heightSolver.worker;
+        if (heightSolver.failure || typeof Worker !== 'function') return null;
+        try {
+            const path = resourceURL('js/workers/terrain-height-solver.js');
+            const url = typeof versionStaticResource === 'function'
+                ? versionStaticResource(path).url : path;
+            const worker = new Worker(url, { name: 'wardogs-terrain-height' });
+            heightSolver.worker = worker;
+            worker.onmessage = event => {
+                const job = heightSolver.active;
+                // A terminated worker or stale response must never update a newer job.
+                if (worker !== heightSolver.worker || !job || event.data?.id !== job.id) return;
+                clearTimeout(job.timeout);
+                heightSolver.active = null;
+                const result = event.data?.result;
+                const valid = result && [
+                    'MODEL_ESTIMATE', 'MODEL_DISAGREEMENT', 'MODEL_UNAVAILABLE',
+                    'TERRAIN_ADJUSTED_UNREACHABLE'
+                ].includes(result.status) && (result.status !== 'MODEL_ESTIMATE' ||
+                    (Number.isFinite(result.commandMrad) &&
+                     result.commandMrad >= (job.input.arc === 'low' ? 20 : 610) &&
+                     result.commandMrad <= (job.input.arc === 'low' ? 600 : 1390)));
+                rememberHeightEstimate(job.key, valid ? result : {
+                    status: 'MODEL_UNAVAILABLE', reason: 'invalid-worker-result', commandMrad: null
+                });
+                queueRerender();
+                scheduleHeightJob();
+            };
+            worker.onerror = () => failHeightSolver('worker-failed');
+            worker.onmessageerror = () => failHeightSolver('worker-message-failed');
+            return worker;
+        } catch {
+            heightSolver.failure = 'worker-unavailable';
+            return null;
+        }
+    }
+
+    function scheduleHeightJob() {
+        if (!heightSolver.timer && !heightSolver.active && heightSolver.queue.size) {
+            // Coalesce coordinate edits while dragging; one trajectory family at a time.
+            heightSolver.timer = setTimeout(() => {
+                heightSolver.timer = null;
+                if (!state.enabled || heightSolver.active) return;
+                const worker = heightWorker();
+                if (!worker) {
+                    failHeightSolver(heightSolver.failure || 'worker-unavailable');
+                    return;
+                }
+                const job = heightSolver.queue.values().next().value;
+                if (!job) return;
+                heightSolver.queue.delete(job.key);
+                job.id = ++heightSolver.nextId;
+                job.timeout = setTimeout(() => failHeightSolver('worker-timeout'), 8000);
+                heightSolver.active = job;
+                try { worker.postMessage({ id: job.id, input: job.input }); }
+                catch { failHeightSolver('worker-post-failed'); }
+            }, 90);
+        }
+    }
+
+    function extendHeightCandidates(arcs, context, deltaZ) {
+        if (!arcs || !state.enabled || !heightEstimatesEnabled() ||
+            !Number.isFinite(deltaZ) || !Number.isFinite(Number(context.distanceMeters))) return arcs;
+        const focus = `${context.distanceMeters}|${deltaZ}`;
+        if (context.display !== false && heightSolver.focus !== focus) {
+            // Discard queued obsolete targets. An active result is cached only by its exact inputs.
+            heightSolver.queue.clear();
+            heightSolver.focus = focus;
+        }
+        const selected = typeof sphPlatformSelectedArc === 'string' ? sphPlatformSelectedArc : 'high';
+        for (const arc of selected === 'low' ? ['low', 'high'] : ['high', 'low']) {
+            const candidate = arcs[arc];
+            if (candidate?.status !== 'OUTSIDE_CERTIFIED_DOMAIN' ||
+                !['outside-supported-domain', 'height-clip-guard'].includes(candidate.reason) ||
+                !Number.isFinite(candidate.tableMrad)) continue;
+            const payload = arc === 'high' ? state.payloads.highV2 :
+                Number(context.distanceMeters) <= 2439 ? state.payloads.lowMain : state.payloads.lowExtension;
+            const domain = payload?.domain;
+            if (candidate.reason !== 'height-clip-guard' && domain &&
+                deltaZ >= domain.deltaZMinMeters && deltaZ <= domain.deltaZMaxMeters) {
+                // A distance-only fallback is outside this height extension.
+                // In particular, retain the already tested Bakurani 2600m fallback.
+                continue;
+            }
+            const input = { arc, distanceMeters: Number(context.distanceMeters),
+                flatMrad: candidate.tableMrad, deltaZMeters: deltaZ };
+            const key = `${arc}|${input.distanceMeters}|${input.flatMrad}|${deltaZ}`;
+            let estimate = heightSolver.cache.get(key);
+            if (!estimate) {
+                if (heightSolver.failure || typeof Worker !== 'function') {
+                    // Preserve the explicit table fallback on browsers without worker support.
+                    candidate.heightEstimate = { status: 'MODEL_UNAVAILABLE',
+                        reason: heightSolver.failure || 'worker-unavailable' };
+                    continue;
+                }
+                if (context.display === false || arc !== selected) {
+                    estimate = { status: 'MODEL_DEFERRED', reason: 'select-target-for-estimate' };
+                } else {
+                    if (heightSolver.active?.key !== key && !heightSolver.queue.has(key)) {
+                        heightSolver.queue.set(key, { key, input });
+                        scheduleHeightJob();
+                    }
+                    estimate = { status: 'MODEL_PENDING', reason: 'model-calculating' };
+                }
+            }
+            arcs[arc] = { ...candidate, ...estimate, extendedHeight: true,
+                certified: false, commandMrad: estimate.commandMrad ?? null,
+                deltaMrad: Number.isFinite(estimate.commandMrad)
+                    ? estimate.commandMrad - candidate.tableMrad : null,
+                applied: false };
+        }
+        return arcs;
+    }
+
+    function selectedTerrainCandidate(experimental) {
+        const selected = typeof sphPlatformSelectedArc === 'string' ? sphPlatformSelectedArc : 'high';
+        return experimental?.arcs?.[selected];
+    }
+
+    function terrainCorrectionStatus(experimental, copy) {
+        if (!state.enabled) return copy.statusOff;
+        const candidate = selectedTerrainCandidate(experimental);
+        if (experimental?.loading || candidate?.status === 'MODEL_PENDING') return copy.candidateLoading;
+        if (candidate?.status === 'MODEL_DEFERRED') return copy.selectTarget;
+        if (candidate?.extendedHeight && candidate.status === 'TERRAIN_ADJUSTED_UNREACHABLE') return copy.modelUnreachable;
+        if (candidate?.extendedHeight && ['MODEL_UNAVAILABLE', 'MODEL_DISAGREEMENT'].includes(candidate.status)) return copy.unavailable;
+        if (candidate?.status === 'MODEL_ESTIMATE' && candidate.applied) return copy.statusEstimate;
+        if (candidate?.status === 'SAFE_CONSENSUS' && candidate.applied) return copy.statusOn;
+        return copy.statusFallback;
+    }
+
     const TERRAIN_TEXT_KEYS = Object.freeze({
         title: 'experimentalTerrainCorrectionTitle',
         toggle: 'experimentalTerrainCorrectionToggle',
@@ -52,13 +219,17 @@
         statusOn: 'experimentalTerrainCorrectionStatusOn',
         statusOff: 'experimentalTerrainCorrectionStatusOff',
         statusFallback: 'experimentalTerrainCorrectionStatusFallback',
-        candidateLoading: 'experimentalTerrainCorrectionCandidateLoading'
+        candidateLoading: 'experimentalTerrainCorrectionCandidateLoading',
+        estimate: 'experimentalTerrainCorrectionEstimate',
+        statusEstimate: 'experimentalTerrainCorrectionStatusEstimate',
+        modelUnreachable: 'experimentalTerrainCorrectionModelUnreachable',
+        selectTarget: 'experimentalTerrainCorrectionSelectTarget'
     });
 
     const TERRAIN_TEXT_FALLBACK = Object.freeze({
         title: 'Experimental Terrain3D correction',
         toggle: 'Use experimental Terrain3D correction',
-        note: 'Terrain3D correction is automatic. Platform/chassis tilt is not corrected. The flat table is used whenever a candidate is not SAFE.',
+        note: 'Terrain3D correction is automatic. Beyond the verified height range, results are model estimates. Platform/chassis tilt is not inferred from the terrain.',
         table: 'Table',
         terrain: 'Terrain3D',
         low: 'LOW',
@@ -76,7 +247,11 @@
         statusOn: 'Experimental Terrain3D ON',
         statusOff: 'Experimental Terrain3D OFF',
         statusFallback: 'Table fallback',
-        candidateLoading: 'candidate loading'
+        candidateLoading: 'Calculating Terrain3D…',
+        estimate: 'ESTIMATE',
+        statusEstimate: 'Terrain3D estimate',
+        modelUnreachable: 'No trajectory found by the Terrain3D model',
+        selectTarget: 'Select target to calculate Terrain3D'
     });
 
     let cachedTextLanguage = null;
@@ -333,6 +508,11 @@
         return lo;
     }
 
+    function isHeightClipEnvelope(envelope, clip) {
+        return envelope?.minDeltaZM === envelope?.maxDeltaZM &&
+            Number.isFinite(clip) && Math.abs(envelope.minDeltaZM) === clip;
+    }
+
     function lowMainEnvelope(
         payload,
         boundaryIndex,
@@ -577,7 +757,8 @@
             return {
                 status: 'fallback',
                 reason:
-                    'below-minimum-selectable-command'
+                    isHeightClipEnvelope(first, Math.max(Math.abs(domain.deltaZMinMeters), Math.abs(domain.deltaZMaxMeters)))
+                        ? 'height-clip-guard' : 'below-minimum-selectable-command'
             };
         }
 
@@ -618,7 +799,8 @@
                 return {
                     status: 'fallback',
                     reason:
-                        'family-boundary-envelope',
+                        (envelope.clipped || isHeightClipEnvelope(envelope, Math.max(Math.abs(domain.deltaZMinMeters), Math.abs(domain.deltaZMaxMeters))))
+                        ? 'height-clip-guard' : 'family-boundary-envelope',
                     boundaryMrad:
                         boundaries[i]
                 };
@@ -1224,7 +1406,8 @@
                 return {
                     status: 'fallback',
                     reason:
-                        'family-boundary-envelope',
+                        (envelope.clipped || isHeightClipEnvelope(envelope, Number(region.clipMeters)))
+                        ? 'height-clip-guard' : 'family-boundary-envelope',
                     boundaryMrad:
                         boundary
                             .boundaryMrad
@@ -1332,7 +1515,8 @@
                 minDeltaZM:
                     clip,
                 maxDeltaZM:
-                    clip
+                    clip,
+                clipped: true
             };
         }
 
@@ -1344,7 +1528,8 @@
                 minDeltaZM:
                     -clip,
                 maxDeltaZM:
-                    -clip
+                    -clip,
+                clipped: true
             };
         }
 
@@ -1509,7 +1694,8 @@
                 return {
                     status: 'fallback',
                     reason:
-                        'family-boundary-envelope',
+                        (envelope.clipped || isHeightClipEnvelope(envelope, Number(representation.clipMeters)))
+                        ? 'height-clip-guard' : 'family-boundary-envelope',
                     boundaryMrad:
                         boundary
                             .boundaryMrad
@@ -1881,72 +2067,28 @@
         };
     }
 
-    function applySafeCandidates(
-        solutions,
-        arcs
-    ) {
-        if (
-            !state.enabled ||
-            !solutions ||
-            !arcs
-        ) {
-            return {
-                solutions,
-                applied: false
-            };
+    function applySafeCandidates(solutions, arcs) {
+        if (!state.enabled || !solutions || !arcs) return { solutions, applied: false };
+        const next = cloneSolutions(solutions);
+        let applied = false;
+        for (const arc of ['low', 'high']) {
+            const candidate = arcs[arc];
+            if (!next[arc] || !candidate) continue;
+            if (candidate.extendedHeight && candidate.status !== 'MODEL_ESTIMATE') {
+                // Never show a flat-table MIL as a completed height estimate.
+                next[arc] = null;
+                continue;
+            }
+            if ((candidate.status === 'SAFE_CONSENSUS' ||
+                (heightEstimatesEnabled() && candidate.status === 'MODEL_ESTIMATE')) &&
+                Number.isFinite(candidate.commandMrad)) {
+                next[arc] = { ...next[arc], mil: candidate.commandMrad,
+                    minMil: candidate.commandMrad, maxMil: candidate.commandMrad };
+                candidate.applied = true;
+                applied = true;
+            }
         }
-
-        const safeArcs =
-            ['low', 'high']
-                .filter(
-                    arc =>
-                        solutions?.[arc] &&
-                        arcs?.[arc]
-                            ?.status ===
-                            'SAFE_CONSENSUS' &&
-                        finite(
-                            arcs[arc]
-                                .commandMrad
-                        )
-                );
-
-        if (!safeArcs.length) {
-            return {
-                solutions,
-                applied: false
-            };
-        }
-
-        const next =
-            cloneSolutions(
-                solutions
-            );
-
-        for (
-            const arc of
-            safeArcs
-        ) {
-            const command =
-                Number(
-                    arcs[arc]
-                        .commandMrad
-                );
-
-            next[arc] = {
-                ...next[arc],
-                mil: command,
-                minMil: command,
-                maxMil: command
-            };
-
-            arcs[arc].applied =
-                true;
-        }
-
-        return {
-            solutions: next,
-            applied: true
-        };
+        return { solutions: next, applied };
     }
 
     function queueRerender() {
@@ -2178,6 +2320,8 @@
                         resolved
                     );
 
+                extendHeightCandidates(arcs, context, Number(baseMeta.deltaZ));
+
                 const applied =
                     applySafeCandidates(
                         resolved?.solutions,
@@ -2228,12 +2372,13 @@
         window
             .formatTerrainBallisticsStatus =
             function experimentalTerrainStatus(
-                meta
+                meta,
+                options = {}
             ) {
-                state.lastDisplayMeta =
-                    meta || null;
-
-                syncPanel();
+                if (options.display !== false) {
+                    state.lastDisplayMeta = meta || null;
+                    syncPanel();
+                }
 
                 const experimental =
                     meta
@@ -2268,29 +2413,7 @@
                         )
                         : null;
 
-                let status =
-                    text().statusOff;
-
-                if (
-                    experimental.loading
-                ) {
-                    status =
-                        text()
-                            .candidateLoading;
-                } else if (
-                    state.enabled &&
-                    experimental.applied
-                ) {
-                    status =
-                        text()
-                            .statusOn;
-                } else if (
-                    state.enabled
-                ) {
-                    status =
-                        text()
-                            .statusFallback;
-                }
+                const status = terrainCorrectionStatus(experimental, text());
 
                 return deltaZ === null
                     ? status
@@ -2565,8 +2688,7 @@
         }
 
         if (
-            arc.status ===
-            'SAFE_CONSENSUS' &&
+            ['SAFE_CONSENSUS', 'MODEL_ESTIMATE'].includes(arc.status) &&
             finite(
                 arc.commandMrad
             )
@@ -2589,14 +2711,14 @@
                     `${Math.round(arc.commandMrad)}`,
                 detail:
                     `${signedDelta ? `${signedDelta} · ` : ''}` +
-                    `${copy.safe} · ` +
+                    `${arc.status === 'MODEL_ESTIMATE' ? copy.estimate : copy.safe} · ` +
                     `${
                         arc.applied
                             ? copy.applied
                             : copy.preview
                     }`,
                 className:
-                    'is-safe'
+                    arc.status === 'MODEL_ESTIMATE' ? 'is-fallback' : 'is-safe'
             };
         }
 
@@ -2608,7 +2730,7 @@
                 value:
                     copy.unreachable,
                 detail:
-                    copy.fallback,
+                    arc.extendedHeight ? copy.modelUnreachable : copy.fallback,
                 className:
                     'is-unreachable'
             };
@@ -2617,6 +2739,8 @@
         return {
             value: '—',
             detail:
+                arc.status === 'MODEL_PENDING' ? copy.candidateLoading :
+                arc.status === 'MODEL_DEFERRED' ? copy.selectTarget :
                 `${copy.fallback} · ${arc.status || 'OUTSIDE_CERTIFIED_DOMAIN'}`,
             className:
                 'is-fallback'
@@ -2851,14 +2975,7 @@
         }
 
         if (status) {
-            status.textContent =
-                state.enabled
-                    ? (
-                        experimental.applied
-                            ? `${copy.enabled} · ${copy.safe}`
-                            : `${copy.enabled} · ${copy.statusFallback}`
-                    )
-                    : `${copy.disabled} · ${copy.preview}`;
+            status.textContent = terrainCorrectionStatus(experimental, copy);
         }
     }
 
@@ -2867,6 +2984,9 @@
     ) {
         state.enabled =
             Boolean(enabled);
+
+        if (!state.enabled) stopHeightSolver();
+        else heightSolver.failure = null;
 
         writeStoredEnabled(
             state.enabled
@@ -2967,7 +3087,15 @@
                     state.enabled &&
                     state.ready
                 ),
-            safeOnly: true,
+            safeOnly: !heightEstimatesEnabled(),
+            heightSolver: {
+                enabled: heightEstimatesEnabled(),
+                available: typeof Worker === 'function' && !heightSolver.failure,
+                busy: Boolean(heightSolver.active),
+                queued: heightSolver.queue.size,
+                cached: heightSolver.cache.size,
+                lastFailure: heightSolver.failure
+            },
             platformCorrection:
                 false,
             payloads: {

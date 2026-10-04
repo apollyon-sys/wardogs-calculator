@@ -39,13 +39,10 @@ Terrain3D correction is enabled automatically for SPH-2.
 ```text
 Distance -> normal coordinate calculation
 Azimuth  -> normal coordinate calculation
-MIL      -> SAFE Terrain3D candidate or firing-table fallback
+MIL      -> certified Terrain3D command or labelled estimate/fallback
 ΔZ       -> Terrain3D elevation context
 ```
 
-Only a candidate classified as `SAFE_CONSENSUS` can replace the firing-table
-MIL. Missing, uncertain, unsupported or unreachable terrain results keep the
-normal table value. Terrain3D still does not infer the actual vehicle attitude.
 
 ### The elevation datum is offset
 

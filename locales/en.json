@@ -225,7 +225,7 @@
   "supportStatementPayments": "Payments are handled by third-party payment providers. If you are unable to make a payment or have any other questions, please contact me at:",
   "experimentalTerrainCorrectionTitle": "Experimental Terrain3D correction",
   "experimentalTerrainCorrectionToggle": "Use experimental Terrain3D correction",
-  "experimentalTerrainCorrectionNote": "Terrain3D correction is automatic. Platform/chassis tilt is not corrected. The flat table is used whenever a candidate is not SAFE.",
+  "experimentalTerrainCorrectionNote": "Terrain3D correction is automatic. Beyond the verified height range, results are model estimates. Platform/chassis tilt is not inferred from the terrain.",
   "experimentalTerrainCorrectionTable": "Table",
   "experimentalTerrainCorrectionTerrain": "Terrain3D",
   "experimentalTerrainCorrectionLow": "LOW",
@@ -243,7 +243,7 @@
   "experimentalTerrainCorrectionStatusOn": "Experimental Terrain3D ON",
   "experimentalTerrainCorrectionStatusOff": "Experimental Terrain3D OFF",
   "experimentalTerrainCorrectionStatusFallback": "Table fallback",
-  "experimentalTerrainCorrectionCandidateLoading": "candidate loading",
+  "experimentalTerrainCorrectionCandidateLoading": "Calculating Terrain3D…",
   "terrainLoading": "terrain loading",
   "terrainStatus": "ΔZ {dz} m · Terrain3D ready",
   "sphLevelWarningTitle": "LEVEL THE SPH-2 BEFORE FIRING",
@@ -306,5 +306,9 @@
   "developerSignIn": "Sign in",
   "developerSigningIn": "Signing in…",
   "developerAccessDenied": "Access denied. Check your key and allowed IP addresses.",
-  "developerAccessUnavailable": "Developer access is unavailable. Check the gateway and security rules."
+  "developerAccessUnavailable": "Developer access is unavailable. Check the gateway and security rules.",
+  "experimentalTerrainCorrectionEstimate": "ESTIMATE",
+  "experimentalTerrainCorrectionStatusEstimate": "Terrain3D estimate",
+  "experimentalTerrainCorrectionModelUnreachable": "No trajectory found by the Terrain3D model",
+  "experimentalTerrainCorrectionSelectTarget": "Select target to calculate Terrain3D"
 }

@@ -229,7 +229,7 @@
   "supportStatementPayments": "Płatności są obsługiwane przez zewnętrznych operatorów płatności. Jeśli nie możesz dokonać płatności lub masz inne pytania, napisz do mnie na:",
   "experimentalTerrainCorrectionTitle": "Eksperymentalna korekta Terrain3D",
   "experimentalTerrainCorrectionToggle": "Użyj eksperymentalnej korekty Terrain3D",
-  "experimentalTerrainCorrectionNote": "Korekta Terrain3D jest stosowana automatycznie. Nachylenie platformy/podwozia nie jest korygowane. Gdy kandydat nie jest SAFE, używana jest tabela.",
+  "experimentalTerrainCorrectionNote": "Korekta Terrain3D jest automatyczna. Poza sprawdzonym zakresem wysokości wyniki są szacunkami modelu. Nachylenie kadłuba nie jest wyznaczane na podstawie terenu.",
   "experimentalTerrainCorrectionTable": "Tabela",
   "experimentalTerrainCorrectionTerrain": "Terrain3D",
   "experimentalTerrainCorrectionLow": "LOW",
@@ -247,7 +247,7 @@
   "experimentalTerrainCorrectionStatusOn": "Eksperymentalne Terrain3D WŁ.",
   "experimentalTerrainCorrectionStatusOff": "Eksperymentalne Terrain3D WYŁ.",
   "experimentalTerrainCorrectionStatusFallback": "Fallback tabeli",
-  "experimentalTerrainCorrectionCandidateLoading": "ładowanie kandydata",
+  "experimentalTerrainCorrectionCandidateLoading": "Obliczanie Terrain3D…",
   "terrainLoading": "ładowanie wysokości",
   "terrainStatus": "ΔZ {dz} m · Terrain3D gotowe",
   "sphLevelWarningTitle": "WYPOZIOMUJ SPH-2 PRZED STRZAŁEM",
@@ -310,5 +310,9 @@
   "developerSignIn": "Zaloguj się",
   "developerSigningIn": "Logowanie…",
   "developerAccessDenied": "Odmowa dostępu. Sprawdź klucz i dozwolone adresy IP.",
-  "developerAccessUnavailable": "Dostęp programisty jest niedostępny. Sprawdź bramę i reguły bezpieczeństwa."
+  "developerAccessUnavailable": "Dostęp programisty jest niedostępny. Sprawdź bramę i reguły bezpieczeństwa.",
+  "experimentalTerrainCorrectionEstimate": "SZACUNEK",
+  "experimentalTerrainCorrectionStatusEstimate": "Szacunkowa korekta Terrain3D",
+  "experimentalTerrainCorrectionModelUnreachable": "Model Terrain3D nie znalazł trajektorii",
+  "experimentalTerrainCorrectionSelectTarget": "Wybierz cel, aby obliczyć Terrain3D"
 }

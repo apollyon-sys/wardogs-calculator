@@ -204,8 +204,11 @@ For map landing pages, `npm run test:build` checks every language/map combinatio
 Terrain3D remains a release resource and should be verified independently of localization work. The public safety contract is:
 
 ```text
-SAFE candidate        -> apply the Terrain3D MIL command
-Any other state       -> keep the normal firing-table solution
+SAFE candidate        -> preserve/apply the certified Terrain3D command
+Extended estimate     -> apply and label as a model estimate
+Extended pending      -> withhold MIL until computation completes
+Extended indeterminate/unreachable -> withhold the affected arc
+Worker unavailable    -> explicitly labelled firing-table fallback
 Terrain unavailable   -> keep the calculator operational
 ```
 

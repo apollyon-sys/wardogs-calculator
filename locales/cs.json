@@ -225,7 +225,7 @@
   "supportStatementPayments": "Platby zpracovávají externí poskytovatelé platebních služeb. Pokud se vám nedaří platbu provést nebo máte jiné dotazy, napište mi na:",
   "experimentalTerrainCorrectionTitle": "Experimentální korekce Terrain3D",
   "experimentalTerrainCorrectionToggle": "Použít experimentální korekci Terrain3D",
-  "experimentalTerrainCorrectionNote": "Korekce Terrain3D se používá automaticky. Náklon plošiny ani podvozku se nekoriguje. Pokud kandidát není SAFE, použije se běžná tabulka.",
+  "experimentalTerrainCorrectionNote": "Korekce Terrain3D je automatická. Mimo ověřený rozsah výšek jsou výsledky odhady modelu. Náklon podvozku se neodvozuje z terénu.",
   "experimentalTerrainCorrectionTable": "Tabulka",
   "experimentalTerrainCorrectionTerrain": "Terrain3D",
   "experimentalTerrainCorrectionLow": "PLOCHÁ",
@@ -243,7 +243,7 @@
   "experimentalTerrainCorrectionStatusOn": "Experimentální Terrain3D ZAP",
   "experimentalTerrainCorrectionStatusOff": "Experimentální Terrain3D VYP",
   "experimentalTerrainCorrectionStatusFallback": "Návrat k tabulce",
-  "experimentalTerrainCorrectionCandidateLoading": "načítání kandidáta",
+  "experimentalTerrainCorrectionCandidateLoading": "Výpočet Terrain3D…",
   "terrainLoading": "načítání výšek",
   "terrainStatus": "ΔZ {dz} m · Terrain3D připraveno",
   "sphLevelWarningTitle": "PŘED VÝSTŘELEM SPH-2 VYROVNEJTE",
@@ -306,5 +306,9 @@
   "developerSignIn": "Přihlásit se",
   "developerSigningIn": "Přihlašování…",
   "developerAccessDenied": "Přístup zamítnut. Zkontrolujte klíč a povolené IP adresy.",
-  "developerAccessUnavailable": "Vývojářský přístup není dostupný. Zkontrolujte bránu a bezpečnostní pravidla."
+  "developerAccessUnavailable": "Vývojářský přístup není dostupný. Zkontrolujte bránu a bezpečnostní pravidla.",
+  "experimentalTerrainCorrectionEstimate": "ODHAD",
+  "experimentalTerrainCorrectionStatusEstimate": "Odhad korekce Terrain3D",
+  "experimentalTerrainCorrectionModelUnreachable": "Model Terrain3D nenašel trajektorii",
+  "experimentalTerrainCorrectionSelectTarget": "Vyber cíl pro výpočet Terrain3D"
 }

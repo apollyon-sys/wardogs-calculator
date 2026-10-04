@@ -225,7 +225,7 @@
   "supportStatementPayments": "결제는 외부 결제 서비스 제공업체에서 처리합니다. 결제가 되지 않거나 다른 문의 사항이 있다면 다음 이메일로 연락해 주세요:",
   "experimentalTerrainCorrectionTitle": "실험적 Terrain3D 보정",
   "experimentalTerrainCorrectionToggle": "실험적 Terrain3D 보정 사용",
-  "experimentalTerrainCorrectionNote": "Terrain3D 보정은 자동으로 적용됩니다. 플랫폼/차체 기울기는 보정하지 않습니다. 후보가 SAFE가 아니면 표 값을 사용합니다.",
+  "experimentalTerrainCorrectionNote": "Terrain3D 보정은 자동입니다. 검증된 고도 차 범위를 벗어나면 모델 추정값을 사용합니다. 지형으로 차체 기울기를 추정하지 않습니다.",
   "experimentalTerrainCorrectionTable": "표",
   "experimentalTerrainCorrectionTerrain": "Terrain3D",
   "experimentalTerrainCorrectionLow": "LOW",
@@ -243,7 +243,7 @@
   "experimentalTerrainCorrectionStatusOn": "실험적 Terrain3D 켜짐",
   "experimentalTerrainCorrectionStatusOff": "실험적 Terrain3D 꺼짐",
   "experimentalTerrainCorrectionStatusFallback": "표 fallback",
-  "experimentalTerrainCorrectionCandidateLoading": "후보 로딩 중",
+  "experimentalTerrainCorrectionCandidateLoading": "Terrain3D 계산 중…",
   "terrainLoading": "terrain loading",
   "terrainStatus": "ΔZ {dz} m · Terrain3D 준비됨",
   "sphLevelWarningTitle": "LEVEL THE SPH-2 BEFORE FIRING",
@@ -306,5 +306,9 @@
   "developerSignIn": "로그인",
   "developerSigningIn": "로그인 중…",
   "developerAccessDenied": "접근이 거부되었습니다. 키와 허용된 IP 주소를 확인하세요.",
-  "developerAccessUnavailable": "개발자 접근을 사용할 수 없습니다. 게이트웨이와 보안 규칙을 확인하세요."
+  "developerAccessUnavailable": "개발자 접근을 사용할 수 없습니다. 게이트웨이와 보안 규칙을 확인하세요.",
+  "experimentalTerrainCorrectionEstimate": "추정값",
+  "experimentalTerrainCorrectionStatusEstimate": "Terrain3D 추정 보정",
+  "experimentalTerrainCorrectionModelUnreachable": "Terrain3D 모델에서 가능한 탄도를 찾지 못했습니다",
+  "experimentalTerrainCorrectionSelectTarget": "Terrain3D 계산을 위해 목표를 선택하세요"
 }

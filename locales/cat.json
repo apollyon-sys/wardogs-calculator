@@ -237,7 +237,7 @@
   "supportStatementPayments": "PAYMENTS ARE HANDLED BY THIRD-PAWTY PAYMENT PROVIDERS. IF A PAYMENT WILL NOT GO THROUGH OR YOU HAVE OTHER QUESTIONS, MEOW AT ME HERE:",
   "experimentalTerrainCorrectionTitle": "EXPERIMENTAL TERRAIN3D MEOWGIC",
   "experimentalTerrainCorrectionToggle": "USE EXPERIMENTAL TERRAIN3D MEOWGIC",
-  "experimentalTerrainCorrectionNote": "TERRAIN3D MEOWGIC IS AUTOMATIC. CAT TANK TILT IS NOT CORRECTED. UNSAFE MEOWGIC FALLS BACK TO THE TABLE.",
+  "experimentalTerrainCorrectionNote": "Terrain3D correction is automatic. Beyond the verified height range, results are model estimates. Platform/chassis tilt is not inferred from the terrain.",
   "experimentalTerrainCorrectionTable": "TABLE",
   "experimentalTerrainCorrectionTerrain": "MEOW3D",
   "experimentalTerrainCorrectionLow": "LOW",
@@ -255,7 +255,7 @@
   "experimentalTerrainCorrectionStatusOn": "EXPERIMENTAL MEOWGIC ON",
   "experimentalTerrainCorrectionStatusOff": "EXPERIMENTAL MEOWGIC OFF",
   "experimentalTerrainCorrectionStatusFallback": "TABLE PAWS",
-  "experimentalTerrainCorrectionCandidateLoading": "LOADING MEOWGIC",
+  "experimentalTerrainCorrectionCandidateLoading": "Calculating Terrain3D…",
   "terrainLoading": "LOADING HEIGHT MEOWGIC",
   "terrainStatus": "ΔZ {dz} m · TERRAIN3D READY",
   "sphLevelWarningTitle": "LEVEL THE MEOWTILLERY BEFORE FIRING",
@@ -318,5 +318,9 @@
   "developerSignIn": "Sign in",
   "developerSigningIn": "Signing in…",
   "developerAccessDenied": "Access denied. Check your key and allowed IP addresses.",
-  "developerAccessUnavailable": "Developer access is unavailable. Check the gateway and security rules."
+  "developerAccessUnavailable": "Developer access is unavailable. Check the gateway and security rules.",
+  "experimentalTerrainCorrectionEstimate": "ESTIMATE",
+  "experimentalTerrainCorrectionStatusEstimate": "Terrain3D estimate",
+  "experimentalTerrainCorrectionModelUnreachable": "The Terrain3D model found no trajectory",
+  "experimentalTerrainCorrectionSelectTarget": "Select target to calculate Terrain3D"
 }

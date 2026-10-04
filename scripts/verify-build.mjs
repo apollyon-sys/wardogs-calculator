@@ -44,6 +44,16 @@ for (const path of htmlFiles) {
     assert.doesNotMatch(html, /Content-Security-Policy[^>]+localhost/i, `${page}: development origin leaked into CSP`);
 }
 
+const heightWorkerPath = join(dist, 'js', 'workers', 'terrain-height-solver.js');
+assert.ok(artifactFiles.includes(heightWorkerPath), 'Terrain3D height worker is missing');
+assert.equal(await readFile(heightWorkerPath, 'utf8'),
+    await readFile(join(root, 'js', 'workers', 'terrain-height-solver.js'), 'utf8'),
+    'Terrain3D height worker differs from source');
+for (const path of [join(dist, 'index.html'), join(dist, 'mobile', 'index.html')]) {
+    assert.match(await readFile(path, 'utf8'), /worker-src 'self'/,
+        'Terrain3D worker is not allowed by desktop/mobile CSP');
+}
+
 assert.equal(artifactFiles.some(path => path.endsWith('.bin')), false, 'terrain binaries entered the Pages artifact');
 for (const path of ['js/ui/developer.js', 'js/core/diagnostics.js', 'assets-gateway/private/developer-menu.txt']) {
     assert.equal(artifactFiles.includes(join(dist, path)), false, `${path}: private developer module entered the Pages artifact`);

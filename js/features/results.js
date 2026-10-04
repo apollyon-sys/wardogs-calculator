@@ -648,6 +648,13 @@ function getSavedTargetElevationSummary(
             tr('outRange');
     }
 
+    const terrainArcs = resolved.terrainMeta?.experimentalTerrainCorrection?.arcs;
+    if (typeof formatTerrainBallisticsStatus === 'function' &&
+        Object.values(terrainArcs || {}).some(arc => arc?.extendedHeight)) {
+        const status = formatTerrainBallisticsStatus(resolved.terrainMeta, { display: false });
+        if (status) secondary = secondary ? `${secondary} \u00b7 ${status}` : status;
+    }
+
     return {
         primary,
         secondary,

@@ -19,7 +19,7 @@ const terrainBallisticsKeys = [
 ];
 
 test('Terrain3D correction copy lives in every registered locale', async () => {
-    assert.equal(keys.length, 21);
+    assert.equal(keys.length, 25);
 
     for (const language of registry.languages) {
         const locale = JSON.parse(

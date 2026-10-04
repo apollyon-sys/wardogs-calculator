@@ -225,7 +225,7 @@
   "supportStatementPayments": "決済処理は外部の決済サービスによって行われます。支払いができない場合や、その他の質問がある場合は、以下のメールアドレスまでご連絡ください：",
   "experimentalTerrainCorrectionTitle": "Experimental Terrain3D correction",
   "experimentalTerrainCorrectionToggle": "Use experimental Terrain3D correction",
-  "experimentalTerrainCorrectionNote": "Terrain3D 補正は自動的に適用されます。プラットフォームや車体の傾きは補正しません。候補が SAFE でない場合は射表値を使用します。",
+  "experimentalTerrainCorrectionNote": "Terrain3D 補正は自動です。検証済みの高低差範囲外ではモデルによる推定値を使用します。地形から車体の傾きを推測することはありません。",
   "experimentalTerrainCorrectionTable": "Table",
   "experimentalTerrainCorrectionTerrain": "Terrain3D",
   "experimentalTerrainCorrectionLow": "LOW",
@@ -243,7 +243,7 @@
   "experimentalTerrainCorrectionStatusOn": "Experimental Terrain3D ON",
   "experimentalTerrainCorrectionStatusOff": "Experimental Terrain3D OFF",
   "experimentalTerrainCorrectionStatusFallback": "Table fallback",
-  "experimentalTerrainCorrectionCandidateLoading": "candidate loading",
+  "experimentalTerrainCorrectionCandidateLoading": "Terrain3D 計算中…",
   "terrainLoading": "terrain loading",
   "terrainStatus": "ΔZ {dz} m · Terrain3D 準備完了",
   "sphLevelWarningTitle": "LEVEL THE SPH-2 BEFORE FIRING",
@@ -306,5 +306,9 @@
   "developerSignIn": "ログイン",
   "developerSigningIn": "ログイン中…",
   "developerAccessDenied": "アクセスが拒否されました。キーと許可されたIPアドレスを確認してください。",
-  "developerAccessUnavailable": "開発者アクセスを利用できません。ゲートウェイとセキュリティルールを確認してください。"
+  "developerAccessUnavailable": "開発者アクセスを利用できません。ゲートウェイとセキュリティルールを確認してください。",
+  "experimentalTerrainCorrectionEstimate": "推定値",
+  "experimentalTerrainCorrectionStatusEstimate": "Terrain3D 推定補正",
+  "experimentalTerrainCorrectionModelUnreachable": "Terrain3D モデルで有効な弾道が見つかりません",
+  "experimentalTerrainCorrectionSelectTarget": "目標を選択して Terrain3D を計算"
 }
