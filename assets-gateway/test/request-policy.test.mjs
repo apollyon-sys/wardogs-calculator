@@ -6,6 +6,7 @@ import test from 'node:test';
 
 import {
     assetBudgetDescriptor,
+    hasBrowserRequestContext,
     isCoverageBoundaryPath,
     sequenceRateKeys
 } from '../src/request-policy.mjs';
@@ -18,6 +19,15 @@ const maps = [
     'ozeti',
     'zestafona'
 ];
+
+test('older browsers may omit Fetch Metadata, while explicit contradictory values remain reduced-context', () => {
+    const request = headers => new Request('https://assets.wardogs-artillery.com/', { headers });
+    assert.equal(hasBrowserRequestContext(request({ Origin: 'https://wardogs-artillery.com' })), true);
+    assert.equal(hasBrowserRequestContext(request({ 'Sec-Fetch-Site': 'same-site' })), true);
+    assert.equal(hasBrowserRequestContext(request({ 'Sec-Fetch-Mode': 'cors' })), true);
+    assert.equal(hasBrowserRequestContext(request({ 'Sec-Fetch-Site': 'cross-site' })), false);
+    assert.equal(hasBrowserRequestContext(request({ 'Sec-Fetch-Mode': 'navigate' })), false);
+});
 
 function officialTileRange(map, zoom) {
     const count = 2 ** zoom;

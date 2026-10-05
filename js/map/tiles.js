@@ -213,6 +213,24 @@ const TILE_RETRY_DELAY_MS = 450;
 const TILE_VIEWPORT_MARGIN = 0;
 
 const TILE_LOAD_QUEUE = [];
+let TILE_FIRST_REQUEST_AT = null;
+let TILE_FIRST_READY_REPORTED = false;
+
+function reportFirstVisibleTile(tile) {
+    if (TILE_FIRST_READY_REPORTED || !isTileRequestRelevant(tile)) return;
+    TILE_FIRST_READY_REPORTED = true;
+    if (typeof trackAnalytics === 'function') {
+        try {
+            trackAnalytics('map-first-tiles-ready', {
+                map: tile.request.map.id,
+                style: tile.request.styleId,
+                latencyMs: Math.max(0, Date.now() - (TILE_FIRST_REQUEST_AT ?? Date.now()))
+            });
+        } catch {
+            // A blocked analytics script must never occupy a tile request slot.
+        }
+    }
+}
 
 function getMapTileDiagnostics() {
     const counts = { cached: TILE_CACHE.size, loaded: 0, failed: 0, queued: 0, retrying: 0 };
@@ -410,6 +428,7 @@ async function startTileRequest(tile) {
         image.onload = () => {
             cleanup();
             tile.deferred = false;
+            reportFirstVisibleTile(tile);
             finishTileRequest(tile, false);
         };
         image.onerror = () => fail(new Error('tile-image-decode-failed'));
@@ -492,6 +511,8 @@ function loadTile(
     y,
     priority = 0
 ) {
+
+    if (TILE_FIRST_REQUEST_AT === null) TILE_FIRST_REQUEST_AT = Date.now();
 
     const styleId =
         getMapTileStyleId(

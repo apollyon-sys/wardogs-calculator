@@ -73,6 +73,7 @@ test('all asset classes share a session budget', () => {
         'session-assets'
     );
     assert.equal(result.decision.holdSeconds, 600);
+    assert.equal(result.decision.scope, 'session');
     assert.equal(result.decision.strikeLevel, 1);
 });
 
@@ -130,12 +131,13 @@ test('IP budget aggregates unique assets across replacement sessions', () => {
 
 test('repeat violations escalate without extending an active hold', () => {
     let state = null;
+    const sessionLimits = { ...limits, ipPoints: 100 };
 
     for (let number = 1; number <= 4; number++) {
         state = evaluateAssetBudget(
             state,
             request('session-a', number),
-            limits,
+            sessionLimits,
             number * 1000
         ).state;
     }
@@ -143,7 +145,7 @@ test('repeat violations escalate without extending an active hold', () => {
     const held = evaluateAssetBudget(
         state,
         request('session-a', 5),
-        limits,
+        sessionLimits,
         5000
     );
 
@@ -157,7 +159,7 @@ test('repeat violations escalate without extending an active hold', () => {
         afterExpiry = evaluateAssetBudget(
             state,
             request('session-a', number),
-            limits,
+            sessionLimits,
             605000 + number
         );
         state = afterExpiry.state;
@@ -166,4 +168,45 @@ test('repeat violations escalate without extending an active hold', () => {
     assert.equal(afterExpiry.decision.allowed, false);
     assert.equal(afterExpiry.decision.holdSeconds, 21600);
     assert.equal(afterExpiry.decision.strikeLevel, 2);
+});
+
+test('one excessive session does not hold a neighbour sharing the address', () => {
+    let state = null;
+    for (let number = 1; number <= 4; number++) {
+        state = evaluateAssetBudget(state, request('session-a', number), limits, 1000 + number).state;
+    }
+    const neighbour = evaluateAssetBudget(state, request('session-b', 1), limits, 2000);
+    assert.equal(neighbour.decision.allowed, true);
+    const held = evaluateAssetBudget(state, request('session-a', 1), limits, 2000);
+    assert.equal(held.decision.allowed, false);
+    assert.equal(held.decision.scope, 'session');
+    assert.equal(state.ipPoints, 4, 'session penalties do not erase the address budget');
+});
+
+test('address exhaustion waits for the window without escalating day or week bans', () => {
+    let state = null;
+    let result;
+    for (let number = 1; number <= 7; number++) {
+        result = evaluateAssetBudget(state, request(`session-${number}`, number), limits, 1000 + number);
+        state = result.state;
+    }
+    assert.equal(result.decision.scope, 'address');
+    assert.equal(result.decision.strikeLevel, 0);
+    const held = evaluateAssetBudget(state, request('neighbour', 1), limits, 2000);
+    assert.equal(held.decision.allowed, false);
+    assert.equal(held.decision.strikeLevel, 0);
+    const resumed = evaluateAssetBudget(state, request('neighbour', 1), limits, 3601001);
+    assert.equal(resumed.decision.allowed, true);
+});
+
+test('policy migration retains usage and retires the old address-wide escalating hold', () => {
+    const initial = evaluateAssetBudget(null, request('session-a', 1), limits, 1000).state;
+    delete initial.policyVersion;
+    initial.blockedUntil = 604800000;
+    initial.strikeLevel = 3;
+    const migrated = evaluateAssetBudget(initial, request('session-a', 2), limits, 2000);
+    assert.equal(migrated.decision.allowed, true);
+    assert.equal(migrated.state.ipPoints, 2);
+    assert.equal(migrated.state.sessions['session-a'].points, 2);
+    assert.equal(migrated.state.policyVersion, 2);
 });

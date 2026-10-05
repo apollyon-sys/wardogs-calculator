@@ -5,6 +5,7 @@ import {
     handleRequest
 } from '../src/index.mjs';
 import { mintSession, sessionSubject } from '../src/tokens.mjs';
+import { evaluateAssetBudget } from '../src/asset-request-guard.mjs';
 
 const origin =
     'https://wardogs-artillery.com';
@@ -426,7 +427,7 @@ test('request policy holds the session and its IP before reading R2', async () =
     assert.equal(replacementSession.status, 429);
 });
 
-test('cumulative asset guard blocks before reading R2 and holds admission', async () => {
+test('a cumulative session penalty blocks before R2 and holds renewal without penalizing neighbours', async () => {
     let reads = 0;
     let checkedActor = '';
     let checkedBody;
@@ -458,6 +459,7 @@ test('cumulative asset guard blocks before reading R2 and holds admission', asyn
                             allowed: false,
                             holdSeconds: 21600,
                             reason: 'session-assets',
+                            scope: 'session',
                             strikeLevel: 2
                         });
                     }
@@ -510,6 +512,7 @@ test('cumulative asset guard blocks before reading R2 and holds admission', asyn
                 {
                     method: 'POST',
                     headers: {
+                        Cookie: cookie,
                         'Content-Type':
                             'application/json'
                     },
@@ -520,9 +523,13 @@ test('cumulative asset guard blocks before reading R2 and holds admission', asyn
         );
 
     assert.equal(replacementSession.status, 429);
+    const neighbour = await handleRequest(request('/__session', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
+    }), environment);
+    assert.equal(neighbour.status, 201);
 });
 
-test('reduced-context and sequence limits produce ten-minute holds', async () => {
+test('explicit context and sequence limits throttle briefly without holding a session or its IP', async () => {
     const makeLimiter = success => ({
         async limit() {
             return {
@@ -570,6 +577,8 @@ test('reduced-context and sequence limits produce ten-minute holds', async () =>
                 'same-site';
             headers['Sec-Fetch-Mode'] =
                 'cors';
+        } else {
+            headers['Sec-Fetch-Site'] = 'cross-site';
         }
 
         const response =
@@ -592,7 +601,151 @@ test('reduced-context and sequence limits produce ten-minute holds', async () =>
             response.headers.get(
                 'Retry-After'
             ),
-            '600'
+            binding === 'ASSET_CONTEXT_RATE' ? '60' : '10'
         );
+
+        const ordinary = await handleRequest(request('/releases/assets-v1/maps/test.webp', {
+            headers: { Cookie: cookie, 'Sec-Fetch-Site': 'same-site', 'Sec-Fetch-Mode': 'cors' }
+        }), environment);
+        assert.equal(ordinary.status, 200);
     }
+});
+
+function productionEnvironment() {
+    const limiter = { async limit() { return { success: true }; } };
+    const environment = { ...env(), ASSETS_DEV: 'false', FALLBACK_COUNTRIES: 'CN,RU',
+        REQUEST_STATE: memoryKv(), SESSION_RATE: limiter, ASSET_RESTRICTED_RATE: limiter,
+        ASSET_SESSION_RATE: limiter, ASSET_IP_RATE: limiter, ASSET_WINDOW_RATE: limiter,
+        ASSET_CONTEXT_RATE: limiter, ASSET_SEQUENCE_RATE: limiter };
+    const states = new Map();
+    const checks = [];
+    environment.ASSET_REQUEST_GUARD = {
+        idFromName: actor => actor,
+        get: actor => ({ async fetch(_url, init) {
+            const input = JSON.parse(init.body);
+            checks.push({ actor, ...input });
+            const evaluated = evaluateAssetBudget(states.get(actor), input, input.limits);
+            states.set(actor, evaluated.state);
+            return Response.json(evaluated.decision);
+        } })
+    };
+    return { environment, checks };
+}
+
+function regional(path, options = {}, address = ip) {
+    const value = request(path, { ...options,
+        headers: { ...options.headers, 'CF-Connecting-IP': address } });
+    Object.defineProperty(value, 'cf', { value: { country: 'CN' } });
+    return value;
+}
+
+async function regionalCookie(environment, headers = {}, address = ip) {
+    const response = await handleRequest(regional('/__session', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: '{}'
+    }, address), environment);
+    assert.equal(response.status, 201);
+    return response.headers.get('Set-Cookie').split(';', 1)[0];
+}
+
+test('regional session recovery rebinds an address without resetting the guard or admitting unbound asset requests', async () => {
+    const { environment, checks } = productionEnvironment();
+    const cookie = await regionalCookie(environment);
+    const path = '/releases/assets-v1/maps/test.webp';
+    assert.equal((await handleRequest(regional(path, { headers: { Cookie: cookie } }), environment)).status, 200);
+    const moved = '198.51.100.20';
+    assert.equal((await handleRequest(regional(path, { headers: { Cookie: cookie } }, moved), environment)).status, 401);
+    assert.equal(checks.length, 1, 'the old address-bound cookie must not reach the guard or R2');
+
+    const recovered = await handleRequest(regional('/__session', { headers: { Cookie: cookie } }, moved), environment);
+    assert.equal(recovered.status, 200);
+    const rebound = recovered.headers.get('Set-Cookie').split(';', 1)[0];
+    assert.notEqual(rebound, cookie);
+    assert.equal((await handleRequest(regional(path, { headers: { Cookie: rebound } }, moved), environment)).status, 200);
+    assert.equal(checks[1].actor, checks[0].actor);
+    assert.equal(checks[1].sessionId, checks[0].sessionId);
+
+    // Repeated POST renewal also retains the same ledger and session id.
+    const renewed = await handleRequest(regional('/__session', { method: 'POST',
+        headers: { Cookie: rebound, 'Content-Type': 'application/json' }, body: '{}' }, moved), environment);
+    const renewedCookie = renewed.headers.get('Set-Cookie').split(';', 1)[0];
+    assert.equal((await handleRequest(regional(path, { headers: { Cookie: renewedCookie } }, moved), environment)).status, 200);
+    assert.equal(checks[2].actor, checks[0].actor);
+    assert.equal(checks[2].sessionId, checks[0].sessionId);
+});
+
+test('missing Fetch Metadata does not invoke the restrictive context limiter', async () => {
+    const { environment } = productionEnvironment();
+    environment.ASSET_CONTEXT_RATE = { async limit() { throw new Error('ordinary legacy browser was penalized'); } };
+    const cookie = await regionalCookie(environment);
+    for (let i = 0; i < 30; i++) {
+        const response = await handleRequest(regional('/releases/assets-v1/maps/test.webp',
+            { headers: { Cookie: cookie } }), environment);
+        assert.equal(response.status, 200);
+    }
+});
+
+test('address recovery and POST renewal cannot replenish a spent download budget', async () => {
+    const { environment, checks } = productionEnvironment();
+    environment.ASSET_BUDGET_SESSION_POINTS = '100';
+    let reads = 0;
+    const get = environment.ASSETS.get;
+    environment.ASSETS.get = async () => {
+        reads++;
+        return get('releases/assets-v1/maps/test.webp');
+    };
+    let cookie = await regionalCookie(environment);
+    const load = (index, address = ip) => handleRequest(regional(
+        `/releases/assets-v1/maps/budget-${index}.webp`,
+        { headers: { Cookie: cookie } }, address
+    ), environment);
+    for (let index = 0; index < 10; index++) {
+        assert.equal((await load(index)).status, 200);
+    }
+
+    const moved = '198.51.100.20';
+    const rebound = await handleRequest(regional('/__session',
+        { headers: { Cookie: cookie } }, moved), environment);
+    assert.equal(rebound.status, 200);
+    cookie = rebound.headers.get('Set-Cookie').split(';', 1)[0];
+    cookie = await regionalCookie(environment, { Cookie: cookie }, moved);
+    for (let index = 10; index < 25; index++) {
+        assert.equal((await load(index, moved)).status, 200);
+    }
+    assert.equal((await load(25, moved)).status, 429);
+    assert.equal(reads, 25, 'the crossing asset is rejected before R2');
+    assert.equal(new Set(checks.map(check => check.actor)).size, 1);
+    assert.equal(new Set(checks.map(check => check.sessionId)).size, 1);
+    assert.equal((await handleRequest(regional('/__session',
+        { headers: { Cookie: cookie } }, '203.0.113.30'), environment)).status, 429);
+
+    cookie = await regionalCookie(environment);
+    assert.equal((await load('neighbour')).status, 200,
+        'an individual session penalty must not block its neighbours');
+});
+
+test('a held recoverable session cannot evade admission by changing its address', async () => {
+    const { environment } = productionEnvironment();
+    const cookie = await regionalCookie(environment);
+    const rejected = await handleRequest(regional('/releases/assets-v1/maps/tiles/bakurani/zoom_5/31_31.webp',
+        { headers: { Cookie: cookie } }), environment);
+    assert.equal(rejected.status, 429);
+    const moved = await handleRequest(regional('/__session', { headers: { Cookie: cookie } }, '198.51.100.20'), environment);
+    assert.equal(moved.status, 429);
+    assert.equal(moved.headers.get('Set-Cookie'), null);
+});
+
+test('legacy cookies are upgraded and sessions nearing expiry renew without a new budget', async () => {
+    const { environment, checks } = productionEnvironment();
+    const legacy = await mintSession(environment.SESSION_SECRET, Date.now() + 30000,
+        'restricted', sessionSubject(regional('/__session')));
+    const response = await handleRequest(regional('/__session', {
+        headers: { Cookie: `__Host-wardogs_asset_session=${legacy}` }
+    }), environment);
+    assert.equal(response.status, 200);
+    assert.ok((await response.json()).expiresAt > Date.now() + 1100000);
+    const cookie = response.headers.get('Set-Cookie').split(';', 1)[0];
+    assert.match(cookie, /^__Host-wardogs_asset_session=v2\./);
+    assert.equal((await handleRequest(regional('/releases/assets-v1/maps/test.webp',
+        { headers: { Cookie: cookie } }), environment)).status, 200);
+    assert.equal(checks[0].sessionId, legacy.split('.')[0]);
 });

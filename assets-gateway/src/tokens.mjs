@@ -2,6 +2,8 @@ const encoder = new TextEncoder();
 
 const TOKEN =
     /^([A-Za-z0-9_-]{22})\.([a-z0-9]{8,12})\.([sr])\.([A-Za-z0-9_-]{43})$/;
+const RECOVERABLE_TOKEN =
+    /^v2\.([A-Za-z0-9_-]{22})\.([a-z0-9]{8,12})\.([sr])\.([a-f0-9]{16})\.([a-f0-9]{16})\.([A-Za-z0-9_-]{43})$/;
 
 function base64url(bytes) {
     return btoa(
@@ -54,6 +56,20 @@ function signedMessage(payload, subject) {
     return `wardogs-assets:${payload}:${subject}`;
 }
 
+function browserSubject(subject) {
+    return subject.slice(subject.indexOf('\n') + 1);
+}
+
+async function addressTag(subject) {
+    const address = subject.split('\n', 1)[0];
+    const bytes = await crypto.subtle.digest(
+        'SHA-256', encoder.encode(`wardogs-assets-log:${address}`)
+    );
+    return Array.from(new Uint8Array(bytes), byte =>
+        byte.toString(16).padStart(2, '0')
+    ).join('').slice(0, 16);
+}
+
 export function sessionSubject(request) {
     const ip =
         request.headers.get('CF-Connecting-IP') ||
@@ -70,15 +86,21 @@ export async function mintSession(
     secret,
     expiresAt,
     mode,
-    subject
+    subject,
+    { id = randomId(), budgetActor = '' } = {}
 ) {
+    if (!/^[A-Za-z0-9_-]{22}$/.test(id) ||
+        (budgetActor && !/^[a-f0-9]{16}$/.test(budgetActor))) {
+        throw new Error('invalid-session-identity');
+    }
     const marker =
         mode === 'restricted'
             ? 'r'
             : 's';
 
-    const payload =
-        `${randomId()}.${expiresAt.toString(36)}.${marker}`;
+    const payload = budgetActor
+        ? `v2.${id}.${expiresAt.toString(36)}.${marker}.${budgetActor}.${await addressTag(subject)}`
+        : `${id}.${expiresAt.toString(36)}.${marker}`;
 
     const signature =
         await crypto.subtle.sign(
@@ -87,7 +109,7 @@ export async function mintSession(
             encoder.encode(
                 signedMessage(
                     payload,
-                    subject
+                    budgetActor ? browserSubject(subject) : subject
                 )
             )
         );
@@ -101,12 +123,15 @@ export async function verifySession(
     secret,
     token,
     subject,
-    now = Date.now()
+    now = Date.now(),
+    { allowAddressChange = false, assetSession = false } = {}
 ) {
+    const recoverable = assetSession && typeof token === 'string'
+        ? RECOVERABLE_TOKEN.exec(token) : null;
     const match =
-        typeof token === 'string'
+        recoverable || (typeof token === 'string'
             ? TOKEN.exec(token)
-            : null;
+            : null);
 
     if (!match) {
         return null;
@@ -122,23 +147,28 @@ export async function verifySession(
         return null;
     }
 
-    const payload =
-        `${match[1]}.${match[2]}.${match[3]}`;
+    const payload = token.slice(0, token.lastIndexOf('.'));
+    const signature = match[recoverable ? 6 : 4];
 
     const valid =
         await crypto.subtle.verify(
             'HMAC',
             await signingKey(secret),
-            decodeBase64url(match[4]),
+            decodeBase64url(signature),
             encoder.encode(
                 signedMessage(
                     payload,
-                    subject
+                    recoverable ? browserSubject(subject) : subject
                 )
             )
         );
 
     if (!valid) {
+        return null;
+    }
+
+    const addressMatches = !recoverable || match[5] === await addressTag(subject);
+    if (!addressMatches && !allowAddressChange) {
         return null;
     }
 
@@ -148,6 +178,11 @@ export async function verifySession(
         mode:
             match[3] === 'r'
                 ? 'restricted'
-                : 'standard'
+                : 'standard',
+        ...(recoverable ? {
+            budgetActor: match[4],
+            addressActor: match[5],
+            addressMatches
+        } : {})
     };
 }

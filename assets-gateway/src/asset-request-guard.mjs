@@ -13,6 +13,7 @@ const HOLD_SECONDS = [
 
 function emptyState(now) {
     return {
+        policyVersion: 2,
         windowStartedAt: now,
         ipAssets: [],
         ipPoints: 0,
@@ -72,7 +73,10 @@ function sessionState(state, sessionId) {
         state.sessions[sessionId] = {
             assets: [],
             points: 0,
-            terrain: 0
+            terrain: 0,
+            strikeLevel: -1,
+            lastStrikeAt: 0,
+            blockedUntil: 0
         };
     }
 
@@ -84,7 +88,11 @@ function resetBudgetWindow(state, now) {
     state.ipAssets = [];
     state.ipPoints = 0;
     state.ipTerrain = 0;
-    state.sessions = {};
+    for (const session of Object.values(state.sessions)) {
+        session.assets = [];
+        session.points = 0;
+        session.terrain = 0;
+    }
 }
 
 function violationReason(
@@ -163,6 +171,16 @@ export function evaluateAssetBudget(
     const state = previous || emptyState(now);
     let changed = !previous;
 
+    // Preserve usage during the policy upgrade, but retire the former
+    // address-wide escalating penalties. New penalties have explicit scopes.
+    if (state.policyVersion !== 2) {
+        state.policyVersion = 2;
+        state.blockedUntil = 0;
+        state.strikeLevel = -1;
+        state.lastStrikeAt = 0;
+        changed = true;
+    }
+
     if (state.blockedUntil > now) {
         return {
             state,
@@ -179,6 +197,7 @@ export function evaluateAssetBudget(
                     )
                 ),
                 reason: 'held',
+                scope: 'address',
                 strikeLevel:
                     state.strikeLevel + 1
             }
@@ -204,6 +223,20 @@ export function evaluateAssetBudget(
             state,
             input.sessionId
         );
+
+    if (session.blockedUntil > now) {
+        return {
+            state,
+            changed,
+            decision: {
+                allowed: false,
+                holdSeconds: Math.max(1, Math.ceil((session.blockedUntil - now) / 1000)),
+                reason: 'held',
+                scope: 'session',
+                strikeLevel: session.strikeLevel + 1
+            }
+        };
+    }
 
     if (!session.assets.includes(input.assetKey)) {
         session.assets.push(input.assetKey);
@@ -244,21 +277,26 @@ export function evaluateAssetBudget(
                 reason: '',
                 strikeLevel: Math.max(
                     0,
-                    state.strikeLevel + 1
+                    (session.strikeLevel ?? -1) + 1
                 )
             }
         };
     }
 
-    const holdSeconds =
-        strike(state, now, limits);
+    const addressViolation = reason.startsWith('ip-');
+    const holdSeconds = addressViolation
+        ? Math.max(1, Math.ceil((state.windowStartedAt + windowMilliseconds - now) / 1000))
+        : strike(session, now, limits);
 
-    /*
-     * The asset that crossed the limit is rejected before R2 is read. Start a
-     * fresh budget after the hold so one violation does not immediately cause
-     * another strike when the client is allowed back.
-     */
-    resetBudgetWindow(state, now);
+    if (addressViolation) {
+        // A shared address waits for its usage window; it is never assigned
+        // escalating day/week bans for the combined activity of its users.
+        state.blockedUntil = state.windowStartedAt + windowMilliseconds;
+    } else {
+        session.assets = [];
+        session.points = 0;
+        session.terrain = 0;
+    }
 
     return {
         state,
@@ -267,8 +305,9 @@ export function evaluateAssetBudget(
             allowed: false,
             holdSeconds,
             reason,
+            scope: addressViolation ? 'address' : 'session',
             strikeLevel:
-                state.strikeLevel + 1
+                addressViolation ? 0 : session.strikeLevel + 1
         }
     };
 }

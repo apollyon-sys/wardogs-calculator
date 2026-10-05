@@ -15,7 +15,7 @@ import {
     assetBudgetDescriptor,
     hasBrowserRequestContext,
     holdClient,
-    isAddressHeldAtAdmission,
+    isClientHeldAtAdmission,
     isClientHeld,
     isCoverageBoundaryPath,
     requestLogId,
@@ -210,7 +210,8 @@ function validAssetPath(pathname, prefix) {
 async function currentSession(
     request,
     env,
-    now = Date.now()
+    now = Date.now(),
+    options = {}
 ) {
     if (
         typeof env.SESSION_SECRET !== 'string' ||
@@ -226,7 +227,8 @@ async function currentSession(
             SESSION_COOKIE
         ),
         sessionSubject(request),
-        now
+        now,
+        { ...options, assetSession: true }
     );
 }
 
@@ -250,10 +252,17 @@ async function handleSession(
     const regionalAccess = config.localDevelopmentAccess ||
         (!config.development && config.fallbackCountries.has(country));
 
+    // Only admission may accept a signed cookie after an address change.
+    // Asset requests still require a cookie issued for their current address.
+    const previousSession = await currentSession(request, env, Date.now(), {
+        allowAddressChange: true
+    });
+
     if (
         !config.localDevelopmentAccess &&
-        await isAddressHeldAtAdmission(
+        await isClientHeldAtAdmission(
             env,
+            previousSession?.id,
             ip
         )
     ) {
@@ -303,11 +312,7 @@ async function handleSession(
     }
 
     if (request.method === 'GET') {
-        const session =
-            await currentSession(
-                request,
-                env
-            );
+        const session = previousSession;
 
         if (
             !session ||
@@ -328,14 +333,32 @@ async function handleSession(
             );
         }
 
+        const now = Date.now();
+        const expiresAt = session.expiresAt - now <= 60000
+            ? now + config.sessionLifetimeSeconds * 1000 : session.expiresAt;
+        const updateCookie = expiresAt !== session.expiresAt ||
+            session.addressMatches === false ||
+            (config.assetBudgetEnabled && !session.budgetActor);
+        const extra = {};
+        if (updateCookie) {
+            const token = await mintSession(env.SESSION_SECRET, expiresAt,
+                session.mode, sessionSubject(request), {
+                    id: session.id,
+                    budgetActor: config.assetBudgetEnabled
+                        ? session.budgetActor || await requestLogId(ip) : ''
+                });
+            extra['Set-Cookie'] = sessionCookie(token, Math.ceil((expiresAt - now) / 1000));
+        }
+
         return json(
             {
                 ok: true,
-                expiresAt: session.expiresAt,
+                expiresAt,
                 mode: session.mode
             },
             200,
-            origin
+            origin,
+            extra
         );
     }
 
@@ -393,7 +416,12 @@ async function handleSession(
             env.SESSION_SECRET,
             expiresAt,
             mode,
-            sessionSubject(request)
+            sessionSubject(request),
+            {
+                ...(previousSession ? { id: previousSession.id } : {}),
+                budgetActor: config.assetBudgetEnabled
+                    ? previousSession?.budgetActor || await requestLogId(ip) : ''
+            }
         );
 
     return json(
@@ -647,10 +675,10 @@ async function handleAsset(
 
         if (budget && namespace) {
             const actor =
-                await requestLogId(ip);
+                session.addressActor || await requestLogId(ip);
 
             const object = namespace.get(
-                namespace.idFromName(actor)
+                namespace.idFromName(session.budgetActor || actor)
             );
 
             const response =
@@ -700,7 +728,8 @@ async function handleAsset(
                     env,
                     session.id,
                     ip,
-                    decision.holdSeconds
+                    decision.holdSeconds,
+                    { address: decision.scope === 'address' }
                 );
 
                 console.warn(
@@ -826,13 +855,6 @@ async function handleAsset(
                 ? 'P02'
                 : 'P03';
 
-        await holdClient(
-            env,
-            session.id,
-            ip,
-            config.requestHoldSeconds
-        );
-
         console.warn(
             '[assets-gateway-policy]',
             JSON.stringify({
@@ -849,7 +871,7 @@ async function handleAsset(
 
         return blocked(
             origin,
-            config.requestHoldSeconds
+            !contextAllowed ? 60 : 10
         );
     }
 

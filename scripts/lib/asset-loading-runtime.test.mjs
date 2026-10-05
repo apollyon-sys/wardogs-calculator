@@ -58,6 +58,9 @@ function runtime(handler, { restricted = false, challengeGate, sessionHandler } 
     const timeouts = [];
     const timers = new Map();
     const requests = [];
+    const events = [];
+    const windowListeners = new Map();
+    const documentListeners = new Map();
     const revoked = [];
     const images = [];
     const mapElement = new Element('map');
@@ -66,7 +69,8 @@ function runtime(handler, { restricted = false, challengeGate, sessionHandler } 
     body.append(mapElement);
     const document = {
         baseURI: 'https://wardogs-artillery.com/',
-        documentElement: { lang: 'en' }, body, head,
+        documentElement: { lang: 'en' }, body, head, visibilityState: 'visible',
+        addEventListener(name, callback) { documentListeners.set(name, callback); },
         createElement: tag => new Element(tag),
         getElementById: id => body.find(node => node.id === id),
         querySelector: selector => selector === '.map' ? mapElement
@@ -93,6 +97,10 @@ function runtime(handler, { restricted = false, challengeGate, sessionHandler } 
         console: { info() {}, warn() {} }, document,
         location: { hostname: 'wardogs-artillery.com' },
         sessionStorage: { getItem: () => null },
+        navigator: { onLine: true },
+        addEventListener(name, callback) { windowListeners.set(name, callback); },
+        trackAnalytics: (name, data) => events.push({ name, data }),
+        trackOperationalFailure: (name, data) => events.push({ name, data }),
         APP_CONFIG: JSON.parse(sources.get('config/app.json')),
         normalizeConfiguredHttpUrl: value => value,
         resourceURL: value => new URL(value, document.baseURI).href,
@@ -132,6 +140,7 @@ function runtime(handler, { restricted = false, challengeGate, sessionHandler } 
         },
         S: { map: 'bakurani', weapon: 'mortar', mapStyle: 'grayscale' },
         TILE_CACHE: new Map(),
+        MAP_TOOL_STATE: { layers: { tiles: true } },
         isValidBounds: bounds => Boolean(bounds),
         isValidTileConfig: tiles => Boolean(tiles?.path),
         isMapLayerVisible: () => true,
@@ -141,7 +150,8 @@ function runtime(handler, { restricted = false, challengeGate, sessionHandler } 
     context.window = context;
     vm.runInContext(sources.get('js/core/asset-access.js'), context);
     return {
-        context, requests, images, revoked,
+        context, requests, images, revoked, events,
+        dispatch(name) { (documentListeners.get(name) || windowListeners.get(name))?.(); },
         challenges: () => challenges,
         challengeOptions: () => challengeOptions,
         timeouts,
@@ -594,6 +604,97 @@ test('caller cancellation does not pause asset delivery or invalidate admission'
     assert.equal(r.context.getAssetAccessDiagnostics().sessionValid, true);
     assert.equal(r.context.getAssetAccessDiagnostics().paused, false);
     assert.equal(r.challenges(), 1);
+});
+
+test('returning online or to a visible tab recovers exhausted retries without bypassing Retry-After', async () => {
+    let blocked = true;
+    const r = runtime(() => new Response('tile', { status: blocked ? 429 : 200,
+        headers: { 'Retry-After': '10' } }), { restricted: true });
+    await r.context.initializeAssetAccess();
+    r.context.onAssetAccessRetry(() => { void r.context.fetchAssetResource(asset).catch(() => {}); });
+    await assert.rejects(r.context.fetchAssetResource(asset));
+    const initial = r.requests.length;
+    r.dispatch('online');
+    r.dispatch('focus');
+    assert.equal(r.requests.length, initial, 'environment events cannot shorten the deadline');
+    await r.advance(120000);
+    assert.equal(r.context.getAssetAccessRetryAt(), Infinity);
+    blocked = false;
+    r.context.navigator.onLine = false;
+    r.dispatch('focus');
+    assert.equal(r.requests.length, initial + 2);
+    r.context.navigator.onLine = true;
+    r.context.document.visibilityState = 'hidden';
+    r.dispatch('online');
+    assert.equal(r.requests.length, initial + 2);
+    r.context.document.visibilityState = 'visible';
+    r.dispatch('visibilitychange');
+    r.dispatch('focus');
+    r.dispatch('online');
+    await flush();
+    assert.equal(r.context.getAssetAccessDiagnostics().lastFailure, null);
+    assert.equal(r.assetRequests().length, 4);
+    assert.equal(r.challenges(), 0);
+});
+
+test('offline recovery waits for an online event rather than spending automatic retries', async () => {
+    let blocked = true;
+    const r = runtime(() => {
+        if (blocked) throw new TypeError('Failed to fetch');
+        return new Response('tile');
+    }, { restricted: true });
+    await r.context.initializeAssetAccess();
+    r.context.onAssetAccessRetry(() => { void r.context.fetchAssetResource(asset).catch(() => {}); });
+    r.context.navigator.onLine = false;
+    await assert.rejects(r.context.fetchAssetResource(asset));
+    await r.advance(30000);
+    assert.equal(r.assetRequests().length, 1);
+    assert.equal(r.context.getAssetAccessDiagnostics().automaticRetries, 0);
+    blocked = false;
+    r.context.navigator.onLine = true;
+    r.dispatch('online');
+    await flush();
+    assert.equal(r.assetRequests().length, 2);
+    assert.equal(r.context.getAssetAccessDiagnostics().lastFailure, null);
+});
+
+test('shared admission failures report a safe diagnostic once, without tokens, raw messages or coordinates', async () => {
+    const r = runtime(() => { throw new Error('must not request assets'); }, {
+        sessionHandler() { return new Response('PRIVATE_BODY', { status: 403,
+            headers: { 'CF-Ray': 'private-ray-id' } }); }
+    });
+    r.context.S.origin = { x: 1, y: 2 };
+    await Promise.allSettled(Array.from({ length: 12 }, () => r.context.fetchAssetResource(asset)));
+    const events = r.events.filter(event => event.name === 'asset-access-failed');
+    assert.equal(events.length, 1);
+    assert.equal(events[0].data.phase, 'session-probe');
+    assert.equal(events[0].data.status, 403);
+    assert.equal(events[0].data.code, 'asset-session-http-403');
+    assert.doesNotMatch(JSON.stringify(events), /PRIVATE_|private-ray|test-token|\"x\"|Cookie/);
+    assert.equal(r.assetRequests().length, 0);
+});
+
+test('the first decoded visible tile is reported once per page, and analytics cannot block tile completion', async () => {
+    const r = runtime(() => new Response('tile'));
+    r.context.currentMap = tileMap();
+    r.load('js/map/tiles.js');
+    const first = r.context.loadTile(r.context.currentMap, 0, 0, 0);
+    await flush();
+    const second = r.context.loadTile(r.context.currentMap, 1, 0, 0);
+    await flush();
+    assert.equal(first.loaded, true);
+    assert.equal(second.loaded, true);
+    assert.equal(r.events.filter(event => event.name === 'map-first-tiles-ready').length, 1);
+    assert.equal(r.context.getMapTileDiagnostics().activeRequests, 0);
+
+    const failingAnalytics = runtime(() => new Response('tile'));
+    failingAnalytics.context.trackAnalytics = () => { throw new Error('analytics unavailable'); };
+    failingAnalytics.context.currentMap = tileMap();
+    failingAnalytics.load('js/map/tiles.js');
+    const tile = failingAnalytics.context.loadTile(failingAnalytics.context.currentMap, 0, 0, 0);
+    await flush();
+    assert.equal(tile.loaded, true);
+    assert.equal(failingAnalytics.context.getMapTileDiagnostics().activeRequests, 0);
 });
 
 test('feedback adds allowlisted load status without coordinates, tokens or raw errors', () => {

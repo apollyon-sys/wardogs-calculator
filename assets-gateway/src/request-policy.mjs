@@ -163,10 +163,8 @@ export function hasBrowserRequestContext(
         ).toLowerCase();
 
     return (
-        ['same-site', 'same-origin']
-            .includes(site) &&
-        ['cors', 'same-origin']
-            .includes(mode)
+        (!site || ['same-site', 'same-origin'].includes(site)) &&
+        (!mode || ['cors', 'same-origin'].includes(mode))
     );
 }
 
@@ -231,9 +229,9 @@ export async function assetBudgetDescriptor(
 async function clientStateKeys(sessionId, ip) {
     return {
         session:
-            `session:${sessionId}`,
+            `hold-v2:session:${sessionId}`,
         ip:
-            `ip:${await digest(
+            `hold-v2:ip:${await digest(
                 `wardogs-assets:${ip}`
             )}`
     };
@@ -356,22 +354,24 @@ export async function isClientHeld(
     /*
      * Production checks KV only on a cache-less runtime. This keeps KV reads
      * off the hot asset path. A newly created session is checked globally by
-     * isAddressHeldAtAdmission() before it can reach this function.
+     * isClientHeldAtAdmission() before it can reach this function.
      */
     return cached === null
         ? kvHas(env.REQUEST_STATE, keys)
         : cached;
 }
 
-export async function isAddressHeldAtAdmission(
+export async function isClientHeldAtAdmission(
     env,
+    sessionId,
     ip
 ) {
     const keys =
-        await clientStateKeys('', ip);
+        await clientStateKeys(sessionId || '', ip);
+    const admissionKeys = sessionId ? Object.values(keys) : [keys.ip];
 
     const cached =
-        await cacheHas([keys.ip]);
+        await cacheHas(admissionKeys);
 
     if (cached) {
         return true;
@@ -379,7 +379,7 @@ export async function isAddressHeldAtAdmission(
 
     return kvHas(
         env.REQUEST_STATE,
-        [keys.ip]
+        admissionKeys
     );
 }
 
@@ -387,15 +387,11 @@ export async function holdClient(
     env,
     sessionId,
     ip,
-    seconds
+    seconds,
+    { address = true } = {}
 ) {
-    const keys =
-        Object.values(
-            await clientStateKeys(
-                sessionId,
-                ip
-            )
-        );
+    const stateKeys = await clientStateKeys(sessionId, ip);
+    const keys = address ? Object.values(stateKeys) : [stateKeys.session];
 
     await storeClientState(
         env,

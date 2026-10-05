@@ -37,6 +37,11 @@ The browser integration lives in `js/core/asset-access.js`. Public client
 configuration lives in `config/app.json`. Server-side implementation is under
 `assets-gateway/`.
 
+The client can recover temporary access after a connection change and resume
+loading without a page reload. Browser compatibility differences alone are not
+treated as proof of automated downloading. Usage controls remain enforced when
+access is renewed.
+
 ## Development
 
 Install and run the gateway unit tests from the repository root:
@@ -66,6 +71,10 @@ The asset service may temporarily process request metadata required for
 authentication, reliability and abuse prevention. Security events use derived
 or shortened identifiers where practical. Session cookies, validation tokens,
 request bodies and secrets must never be written to application logs.
+
+Client diagnostics distinguish access failures from the first successful map
+tile load. These events contain coarse error codes and loading stages, not
+session material, player coordinates or raw server responses.
 
 ## Expected responses
 

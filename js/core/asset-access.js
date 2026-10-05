@@ -22,7 +22,10 @@ const ASSET_ACCESS_STATE = {
     awaitingRetry: false,
     lastError: null,
     failureGeneration: 0,
-    retryListeners: new Set()
+    retryListeners: new Set(),
+    environmentListenersAdded: false,
+    lastEnvironmentRetry: 0,
+    failureTelemetryKey: ''
 };
 
 const ASSET_RETRY_DELAY_MS = 10000;
@@ -147,6 +150,29 @@ function assetResponseError(response, message = `asset-http-${response.status}`)
     return error;
 }
 
+function reportAssetAccessFailure(error) {
+    if (typeof trackAnalytics !== 'function') return;
+    const code = assetFailureCode(error);
+    const key = `${error.stage}:${code}:${error.requestHost || ''}:${error.status || 0}`;
+    if (ASSET_ACCESS_STATE.failureTelemetryKey === key) return;
+    ASSET_ACCESS_STATE.failureTelemetryKey = key;
+    try {
+        trackAnalytics('asset-access-failed', {
+            build: typeof getAnalyticsBuildId === 'function' ? getAnalyticsBuildId() : '',
+            area: 'asset-access',
+            type: error.stage === 'asset-fetch' ? 'delivery' : 'session',
+            phase: error.stage,
+            code,
+            resource: error.requestHost || '',
+            map: typeof S === 'object' ? S?.map : '',
+            status: error.status,
+            attempts: ASSET_ACCESS_STATE.automaticRetries + 1
+        });
+    } catch {
+        // Diagnostics must not interrupt map recovery.
+    }
+}
+
 function pauseAssetAccess(error, response = null) {
     if (!error.stage) error.stage = ASSET_ACCESS_STATE.stage;
     const delay = Math.min(
@@ -161,6 +187,7 @@ function pauseAssetAccess(error, response = null) {
     // Concurrent failures share a deadline and one recovery attempt.
     ASSET_ACCESS_STATE.retryAt = Math.max(ASSET_ACCESS_STATE.retryAt, retryAt);
     ASSET_ACCESS_STATE.lastError = error;
+    reportAssetAccessFailure(error);
     ASSET_ACCESS_STATE.failureGeneration++;
     ASSET_ACCESS_STATE.awaitingRetry =
         ASSET_ACCESS_STATE.automaticRetries >= ASSET_AUTOMATIC_RETRIES;
@@ -174,6 +201,9 @@ function pauseAssetAccess(error, response = null) {
             return;
         }
         updateAssetAccessNotice();
+        if (window.navigator?.onLine === false || document.visibilityState === 'hidden') {
+            return;
+        }
         if (!ASSET_ACCESS_STATE.awaitingRetry) {
             ASSET_ACCESS_STATE.automaticRetries++;
             resumeAssetLoads();
@@ -188,7 +218,18 @@ function clearAssetAccessFailure() {
     if (isAssetAccessPaused()) {
         return;
     }
+    if (ASSET_ACCESS_STATE.lastError && typeof trackAnalytics === 'function') {
+        try {
+            trackAnalytics('asset-access-recovered', {
+                mode: ASSET_ACCESS_STATE.mode,
+                map: typeof S === 'object' ? S?.map : ''
+            });
+        } catch {
+            // Loading must work even when analytics is unavailable.
+        }
+    }
     ASSET_ACCESS_STATE.lastError = null;
+    ASSET_ACCESS_STATE.failureTelemetryKey = '';
     ASSET_ACCESS_STATE.retryAt = 0;
     ASSET_ACCESS_STATE.automaticRetries = 0;
     window.clearTimeout(ASSET_ACCESS_STATE.retryTimer);
@@ -214,6 +255,26 @@ async function retryAssetAccess() {
     }
     updateAssetAccessNotice();
     return allowed;
+}
+
+function retryAssetAccessAfterEnvironmentChange() {
+    const now = Date.now();
+    if (!ASSET_ACCESS_STATE.lastError || ASSET_ACCESS_STATE.pending ||
+        window.navigator?.onLine === false || document.visibilityState === 'hidden' ||
+        now < ASSET_ACCESS_STATE.retryAt ||
+        now - ASSET_ACCESS_STATE.lastEnvironmentRetry < 60000) {
+        return;
+    }
+    ASSET_ACCESS_STATE.lastEnvironmentRetry = now;
+    void retryAssetAccess();
+}
+
+function initializeAssetAccessRecovery() {
+    if (ASSET_ACCESS_STATE.environmentListenersAdded) return;
+    ASSET_ACCESS_STATE.environmentListenersAdded = true;
+    window.addEventListener?.('online', retryAssetAccessAfterEnvironmentChange);
+    window.addEventListener?.('focus', retryAssetAccessAfterEnvironmentChange);
+    document.addEventListener?.('visibilitychange', retryAssetAccessAfterEnvironmentChange);
 }
 
 function updateAssetAccessNotice() {
@@ -1245,5 +1306,6 @@ async function fetchAssetResource(
 
 async function initializeAssetAccess() {
     showLocalAssetWarning();
+    initializeAssetAccessRecovery();
     return ensureAssetAccess();
 }
