@@ -154,6 +154,8 @@ function draw() {
         drawCoordinateLabels();
     }
 
+    drawSelectedControlZone(currentMap, styles);
+
     /*
      * Layer 4:
      * circular zones.

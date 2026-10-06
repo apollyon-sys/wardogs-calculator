@@ -239,5 +239,39 @@
     "maxX": 163.81,
     "minY": -0.01,
     "maxY": 163.83
-  }
+  },
+  "controlZones": [
+    {
+      "id": "default",
+      "labelKey": "controlZoneDefault",
+      "x": 99.617344,
+      "y": 63.267094,
+      "radiusMeters": 550.0,
+      "selectionWeight": 1.0
+    },
+    {
+      "id": "farmland",
+      "labelKey": "controlZoneFarmland",
+      "x": 94.30649,
+      "y": 63.292244,
+      "radiusMeters": 550.0,
+      "selectionWeight": 0.0
+    },
+    {
+      "id": "church",
+      "labelKey": "controlZoneChurch",
+      "x": 101.23028,
+      "y": 62.963056,
+      "radiusMeters": 550.0,
+      "selectionWeight": 1.0
+    },
+    {
+      "id": "river",
+      "labelKey": "controlZoneRiver",
+      "x": 97.343594,
+      "y": 62.143556,
+      "radiusMeters": 550.0,
+      "selectionWeight": 1.0
+    }
+  ]
 }

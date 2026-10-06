@@ -768,6 +768,7 @@ function applyLanguage() {
     applyStaticLanguage();
 
     syncMapStyleSelect();
+    updateControlZoneSelect();
 
     if (
         typeof populateWeaponSelect ===

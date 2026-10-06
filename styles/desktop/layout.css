@@ -267,6 +267,7 @@ main {
     min-width: 0;
 }
 
+.map-choice-grid + .sidebar-field,
 .sidebar-field + .sidebar-field {
     margin-top: 9px;
 }

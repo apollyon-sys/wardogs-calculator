@@ -864,6 +864,7 @@ function buildMapLayers() {
             id: 'tactical',
             titleKey: 'mapToolMarkers',
             items: [
+                ['controlZones', 'controlZone'],
                 ['zones', 'mapLayerZones'],
                 ['polygons', 'mapLayerPolygons'],
                 ['presetMarkers', 'mapLayerPresetMarkers'],
@@ -893,6 +894,10 @@ function buildMapLayers() {
         grid: `
             <path d="M4 4h16v16H4z"/>
             <path d="M9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16"/>
+        `,
+        controlZones: `
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M9 18V6h7l-2 3 2 3H9"/>
         `,
         zones: `
             <circle cx="12" cy="12" r="7"/>

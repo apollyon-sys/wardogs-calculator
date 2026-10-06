@@ -255,3 +255,70 @@ The map renderer is designed to be map-independent, so additional maps can be ad
 Terrain elevation is optional. A map without terrain data continues to use the normal coordinate, map, and firing-table behavior.
 
 ---
+
+## Control zone presets
+
+Choose the variant used in your match in **Setup → Control zone**. On mobile,
+this field is in the **Map** tab next to the map settings. The overlay uses a
+white boundary, a faint white fill, a center mark, and a label with the radius.
+A dark backing keeps it readable in both color themes.
+
+**Hidden** removes the zone from the current map. The separate
+**Layers → Control zone** checkbox hides the overlay without forgetting the
+selected variant. The selection is saved separately for Bakurani, Ozeti, and
+Zestafona in this browser. No zone is selected on a first visit.
+
+The field uses a labelled native select, follows the current language and
+accessibility settings, and supports normal keyboard and touch input. This is
+a personal map overlay; choosing a preset does not change other lobby
+participants' views, user-drawn zones, or the active map tool.
+
+Each map JSON accepts a `controlZones` array:
+
+```json
+{
+  "controlZones": [
+    {
+      "id": "default",
+      "labelKey": "controlZoneDefault",
+      "x": 79.593275,
+      "y": 71.53121,
+      "radiusMeters": 500,
+      "selectionWeight": 2
+    }
+  ]
+}
+```
+
+Unlike the legacy `zones` and `markers` arrays, `controlZones.x/y` are game
+coordinates, not stored meter coordinates. One game coordinate unit is 100 m
+on the three current maps. `radiusMeters` is a physical radius, independent
+of map bounds, zoom, and screen size. `labelKey` comes from the locale catalog.
+A zero `selectionWeight` is labelled as an inactive variant but remains
+selectable for reference; it is not used to randomize the selected zone.
+
+The bundled presets were converted from the supplied FModel exports of
+`DA_ControlZoneConfig_Bakurani`, `DA_ControlZone_Config_Europe`, and
+`DA_ControlZone_Config_NorthAmerica`. Those exports enable the alternator,
+so the presets use `AlternatorZoneData`, rather than only the fallback
+`ZoneData`. Equal horizontal `ZoneScaledExtents.X/Y` produce circular outlines,
+including the Zestafona variants whose shape enum is `Ellipse`.
+
+The horizontal extents are interpreted as radii/semi-axes in Unreal centimeters:
+50000 cm → 500 m and 55000 cm → 550 m. This interpretation should be checked
+against an in-game zone boundary before treating the outlines as verified.
+The planar coordinate conversions are:
+
+| Map | Game X | Game Y |
+| --- | --- | --- |
+| Bakurani | `(WorldX_cm + 1632000) / 10000` | `(-408000 - WorldY_cm) / 10000` |
+| Ozeti | `(WorldX_cm + 1616000) / 10000` | `(16000 - WorldY_cm) / 10000` |
+| Zestafona | `(WorldX_cm + 816000) / 10000` | `(816000 - WorldY_cm) / 10000` |
+
+Zestafona's conversion uses the exported NorthAmerica landscape root at
+`(-816000, -816000)` cm, its 200 cm horizontal vertex spacing, and the existing
+Terrain3D game-coordinate mapping (50 landscape quads per game unit, inverted Y).
+
+The moving hot zone is deliberately omitted: these configuration exports do
+not supply its current position during a match. The feature makes no additional
+CDN requests and does not read live game memory.

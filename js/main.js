@@ -467,6 +467,7 @@ async function init() {
 
 
         initMapTools();
+        initControlZones();
 
         initLayout();
 

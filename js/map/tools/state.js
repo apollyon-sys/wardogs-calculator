@@ -93,6 +93,7 @@ const MAP_TOOL_STATE = {
          */
         contours: false,
         grid: true,
+        controlZones: true,
         zones: true,
         polygons: true,
         presetMarkers: true,

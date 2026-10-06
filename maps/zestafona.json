@@ -206,5 +206,39 @@
     "maxX": 163.81,
     "minY": -0.01,
     "maxY": 163.83
-  }
+  },
+  "controlZones": [
+    {
+      "id": "default",
+      "labelKey": "controlZoneDefault",
+      "x": 70.327249,
+      "y": 102.723694,
+      "radiusMeters": 500.0,
+      "selectionWeight": 1.0
+    },
+    {
+      "id": "smallFactory",
+      "labelKey": "controlZoneSmallFactory",
+      "x": 70.843908,
+      "y": 105.175142,
+      "radiusMeters": 500.0,
+      "selectionWeight": 0.0
+    },
+    {
+      "id": "waterTreatment",
+      "labelKey": "controlZoneWaterTreatment",
+      "x": 69.671204,
+      "y": 99.99581,
+      "radiusMeters": 500.0,
+      "selectionWeight": 1.0
+    },
+    {
+      "id": "houses",
+      "labelKey": "controlZoneHouses",
+      "x": 68.6151375,
+      "y": 103.7092,
+      "radiusMeters": 500.0,
+      "selectionWeight": 1.0
+    }
+  ]
 }

@@ -248,5 +248,31 @@
     "maxX": 163.81,
     "minY": -0.01,
     "maxY": 163.83
-  }
+  },
+  "controlZones": [
+    {
+      "id": "default",
+      "labelKey": "controlZoneDefault",
+      "x": 79.593275,
+      "y": 71.53121,
+      "radiusMeters": 500.0,
+      "selectionWeight": 2.0
+    },
+    {
+      "id": "farmland",
+      "labelKey": "controlZoneFarmland",
+      "x": 81.05174,
+      "y": 69.08704,
+      "radiusMeters": 500.0,
+      "selectionWeight": 1.0
+    },
+    {
+      "id": "lumberyard",
+      "labelKey": "controlZoneLumberyard",
+      "x": 82.17683,
+      "y": 71.528,
+      "radiusMeters": 500.0,
+      "selectionWeight": 1.0
+    }
+  ]
 }

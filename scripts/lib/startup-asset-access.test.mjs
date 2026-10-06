@@ -23,7 +23,7 @@ function startup(admission) {
         'applyTheme', 'bindThemeToggle', 'loadSavedTargets', 'loadAppConfig', 'loadLanguages',
         'applyStaticLanguage', 'initDeveloperMode', 'renderFooter', 'loadAppSelections',
         'loadWeapons', 'loadMapAssets', 'loadMaps', 'applyMapQuerySelection', 'initMapTools',
-        'initLayout', 'loadMapPoints', 'persistAppSelections', 'bindEvents',
+        'initControlZones', 'initLayout', 'loadMapPoints', 'persistAppSelections', 'bindEvents',
         'loadSaveArtilleryPreference', 'syncMapStyleSelect', 'updatePointLocksUI',
         'applyLanguage', 'inputs', 'resize', 'renderSavedTargets', 'initMotd'
     ]) context[name] = () => calls.push(name);
@@ -37,7 +37,7 @@ test('menus and calculator become ready while map admission remains pending', as
     const r = startup(pending);
     await flush();
     assert.equal(r.context.document.documentElement.dataset.appInitState, 'ready');
-    for (const name of ['initLayout', 'bindEvents', 'inputs', 'resize']) assert.ok(r.calls.includes(name));
+    for (const name of ['initControlZones', 'initLayout', 'bindEvents', 'inputs', 'resize']) assert.ok(r.calls.includes(name));
     assert.equal(r.calls.filter(name => name === 'admission').length, 1);
     for (const paint of r.paints) paint();
     await flush();

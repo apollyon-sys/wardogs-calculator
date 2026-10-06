@@ -34,6 +34,7 @@ const COMMON_SCRIPT_FILES = Object.freeze([
     'js/map/tiles.js',
     'js/map/contours.js',
     'js/map/overlays.js',
+    'js/map/control-zones.js',
     ...MAP_TOOL_SCRIPT_FILES,
     'js/map/grid.js',
     'js/map/renderer.js',
