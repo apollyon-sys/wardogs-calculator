@@ -66,6 +66,7 @@ const desktopStyleFiles = [
     'styles/desktop/saved-targets.css',
     'styles/desktop/chrome.css',
     'styles/desktop/map-tools.css',
+    'styles/desktop/reload-trainer.css',
     'styles/desktop/motd.css',
     'styles/desktop/lobby.css',
     'styles/desktop/feedback.css',

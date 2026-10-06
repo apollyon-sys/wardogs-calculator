@@ -1036,6 +1036,12 @@ function bindEvents() {
     window.addEventListener(
         'keydown',
         e => {
+            // The trainer owns keyboard input until its dialog is closed.
+            if (typeof isReloadTrainerOpen === 'function' && isReloadTrainerOpen()) {
+                if (handleReloadTrainerKeyDown(e)) e.preventDefault();
+                return;
+            }
+
             if (
                 e.key === 'Escape' &&
                 typeof cancelFireAdjustmentPick ===

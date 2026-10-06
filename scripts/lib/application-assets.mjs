@@ -40,6 +40,7 @@ const COMMON_SCRIPT_FILES = Object.freeze([
     'js/features/coordinates.js',
     'js/features/point-locks.js',
     'js/features/fire-adjustment.js',
+    'js/features/reload-trainer.js',
     'js/features/results.js',
     'js/ui/inputs.js',
     'js/ui/cursor.js',

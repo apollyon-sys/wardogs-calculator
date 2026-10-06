@@ -1599,6 +1599,11 @@ function updateMapToolsLocalization() {
     ensureMapHistoryTools();
     buildEraserPopover();
 
+    if (typeof initReloadTrainer === 'function') {
+        initReloadTrainer();
+        updateReloadTrainerLocalization();
+    }
+
     const undoButton =
         $('mapToolUndoButton');
 
