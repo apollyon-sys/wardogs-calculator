@@ -13,17 +13,17 @@ The report contains:
 - page path, language, map, weapon and app version;
 - UI type, browser family, OS family and a viewport rounded to the nearest 100 px.
 
-It does **not** send saved targets, artillery/target coordinates, drawing geometry, lobby codes, localStorage contents, raw user-agent strings or the visitor IP to Discord or Umami.
+It does **not** send saved targets, artillery/target coordinates, drawing geometry, lobby codes, localStorage contents, raw user-agent strings or the visitor IP in application payloads sent to Discord or GoatCounter.
 
 Cloudflare necessarily sees the source IP while serving the request. The Worker uses it only as the key for the `FEEDBACK_RATE` rate-limit binding and does not persist it in application storage.
 
-Umami receives only coarse lifecycle events:
+GoatCounter receives only coarse lifecycle events:
 
 - `feedback-opened`;
-- `feedback-sent` with `type`;
-- `feedback-failed` with `type` and a bounded reason.
+- `feedback-sent/<type>`;
+- `feedback-failed/<type>`.
 
-The feedback message, rating and optional contact are never sent to Umami.
+The feedback message, rating and optional contact are never sent to GoatCounter.
 
 ## Production setup
 

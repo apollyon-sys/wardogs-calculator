@@ -28,12 +28,6 @@ const dist = join(
     'dist'
 );
 
-const UMAMI_PRODUCTION_DOMAIN =
-    'wardogs-artillery.com';
-
-const UMAMI_EA_TAG_PREFIX =
-    'ea-build-';
-
 async function listFilesRecursive(directory) {
     const entries = await readdir(
         directory,
@@ -181,55 +175,6 @@ function versionHtml(
     );
 }
 
-/*
- * Production analytics is configured at the final HTML build stage so every
- * generated desktop/mobile/localized page gets the exact same tracker policy.
- *
- * `data-domains` prevents an updated copy of the site from reporting to this
- * Umami website when served from localhost, GitHub Pages, a mirror, or a fork.
- *
- * `data-performance` enables Umami's real-user performance measurements.
- */
-function configureProductionAnalytics(
-    html,
-    version
-) {
-    const releaseTag =
-        `${UMAMI_EA_TAG_PREFIX}${version}`;
-
-    return html.replace(
-        /<script\b(?=[^>]*\bsrc=["']https:\/\/cloud\.umami\.is\/script\.js["'])[^>]*><\/script>/gi,
-        tag => {
-            let configured =
-                tag
-                    .replace(
-                        /\sdata-domains=(["'])[^"']*\1/gi,
-                        ''
-                    )
-                    .replace(
-                        /\sdata-performance=(["'])[^"']*\1/gi,
-                        ''
-                    )
-                    .replace(
-                        /\sdata-tag=(["'])[^"']*\1/gi,
-                        ''
-                    );
-
-            configured =
-                configured.replace(
-                    /\ssrc=/i,
-                    (
-                        ` data-domains="${UMAMI_PRODUCTION_DOMAIN}"` +
-                        ' data-performance="true"' +
-                        ` data-tag="${releaseTag}" src=`
-                    )
-                );
-
-            return configured;
-        }
-    );
-}
-
 async function buildAssetFingerprint(
     files
 ) {
@@ -356,8 +301,6 @@ const htmlFiles =
                 )
     );
 
-let analyticsConfiguredPages = 0;
-
 for (const file of htmlFiles) {
     const html =
         await readFile(
@@ -365,23 +308,9 @@ for (const file of htmlFiles) {
             'utf8'
         );
 
-    const analyticsConfigured =
-        configureProductionAnalytics(
-            html,
-            version
-        );
-
-    if (
-        analyticsConfigured.includes(
-            `data-domains="${UMAMI_PRODUCTION_DOMAIN}"`
-        )
-    ) {
-        analyticsConfiguredPages++;
-    }
-
     const versioned =
         versionHtml(
-            analyticsConfigured,
+            html,
             version
         );
 
@@ -394,12 +323,4 @@ for (const file of htmlFiles) {
 
 console.log(
     `Versioned ${htmlFiles.length} HTML files with asset fingerprint ${version}`
-);
-
-console.log(
-    `Configured production Umami analytics on ${analyticsConfiguredPages} HTML files`
-);
-
-console.log(
-    `Umami Early Access release tag: ${UMAMI_EA_TAG_PREFIX}${version}`
 );

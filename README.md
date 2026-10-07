@@ -57,7 +57,7 @@ Detailed documentation is split into focused files to keep this README concise.
 - [Mobile interface](docs/mobile.md) — mobile routes, automatic routing, touch controls, and deployment architecture
 - [Localization](docs/localization.md) — supported languages, shared translations, automatic language selection, localized URLs, and SEO metadata
 - [Development](docs/development.md) — project structure, local development, unified build process, and GitHub Pages deployment
-- [Analytics](docs/analytics.md) — Umami custom events, event payloads, debouncing, and privacy considerations
+- [Analytics](docs/analytics.md) — GoatCounter setup, bounded usage events, local testing, and privacy
 - [Message of the Day](docs/motd.md) — MOTD configuration, localization, and behavior
 - [Collaborative lobbies](docs/lobbies.md) — live team map behaviour, Cloudflare deployment, limits, privacy, and recovery
 - [Security hardening](docs/security.md) — public-source threat model, Cloudflare headers, secrets, CI, and residual risks

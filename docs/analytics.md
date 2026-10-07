@@ -1,202 +1,145 @@
 # Analytics
 
-The project uses Umami for lightweight, privacy-conscious usage analytics.
+The project uses hosted [GoatCounter](https://www.goatcounter.com/) for pageviews,
+referrers and bounded feature-usage events. The endpoint is
+`https://wardogs-artillery.goatcounter.com/count`; no API token belongs in the client.
 
-The tracker is loaded by the desktop and mobile page shells. Application code sends custom events through `js/core/analytics.js` instead of calling `window.umami.track()` directly.
+## Production tracker scope
 
-## Production tracker scope and performance
+Desktop, mobile, localized and map landing pages load `js/core/analytics-loader.js`
+asynchronously. It checks the hostname before loading `https://gc.zgo.at/count.js`.
+Only `wardogs-artillery.com` is enabled by default. Local copies, GitHub Pages
+mirrors and forks do not load the hosted tracker or submit data to this account.
 
-The final build step configures every generated Umami tracker with:
+The remote tracker uses `no_onload` and `no_events`. After the document is ready,
+the loader sends exactly one pageview using the actual pathname, including
+mobile and language routes. Page and referrer query strings/fragments are
+excluded. Hash navigation, selecting a map, changing points and recalculating
+do not generate additional pageviews. Automatic click binding is disabled to
+avoid double-counting application handlers.
 
-- `data-domains="wardogs-artillery.com"` — updated builds only initialize the tracker when `window.location.hostname` is the production domain;
-- `data-performance="true"` — enables Umami real-user performance metrics such as Core Web Vitals.
+The loader also wraps the tracker's `url()` method to remove its automatic `q`
+query payload. Supplying a clean `path` alone would still upload `location.search`.
+This applies to both beacon delivery and the image fallback.
 
-The configuration is applied in `scripts/version-assets.mjs`, which runs after desktop, mobile and localized pages have been generated. This keeps the source page shells simple and ensures that all production HTML receives the same analytics policy.
-
-The domain restriction prevents updated copies, local development builds, GitHub Pages mirrors and forks from reporting production analytics when they run on another hostname.
-
-It cannot retroactively modify a stale third-party deployment that still contains an older tracker tag and the old public Umami website ID. If a stale external deployment continues reporting after this fix has shipped, rotate the Umami website ID to establish a clean production-only dataset.
+The hostname guard prevents accidental reporting by updated copies. It is not
+authentication: public JavaScript can be changed by third parties. Previously
+published copies of the old integration cannot be changed by this patch.
 
 ## Custom events
 
-The event set is deliberately quota-conscious. High-frequency actions that can be inferred from a completed calculation are not tracked separately.
+Features call `trackAnalytics(name, data)` in `js/core/analytics.js`. Only known
+event names are accepted. The wrapper derives a short path from allowlisted
+values and never uploads the original data object as event properties.
+GoatCounter receives `path`, the same path as `title`, `event: true`, an empty
+event referrer and the event's session-counting policy.
 
-| Event | When it is sent | Event data |
-|---|---|---|
-| `calculation` | First stable calculation for each map + weapon context in a sampled browser-tab session | `map`, `weapon`, `inRange` |
-| `map-style-changed` | User switches between grayscale and color map tiles | `map`, `style` |
-| `target-saved` | User saves the current target | `withArtillery` |
-| `target-restored` | User restores a saved target | `withArtillery` |
-| `target-exported` | User exports one saved target | `withArtillery` |
-| `targets-exported` | User exports the complete saved-target list | `count` |
-| `targets-imported` | A valid single-target or target-list JSON file is imported | `count`, `format` |
-| `coordinate-search` | A valid coordinate search is completed | `map` |
-| `fire-adjusted` | A fire-adjustment correction or marked/pasted impact moves the target | `map`, `weapon`, `mode` (`correction` or `impact`) |
-| `terrain3d-toggle` | User manually enables or disables experimental Terrain3D correction | `enabled`, `map` |
-| `contours-toggle` | User enables or disables terrain contours directly or through the Base layer group | `enabled`, `map` |
-| `ruler-used` | A non-zero ruler measurement is completed | `map` |
-| `drawing-created` | A pencil path is completed | `map` |
-| `zone-created` | A non-zero circular zone is completed | `map` |
-| `polygon-created` | A polygon with at least three points is completed | `map` |
-| `user-marker-placed` | A user Map Tools marker is placed | `map` |
-| `map-changes-exported` | User exports persistent Map Tools data | aggregate counts only |
-| `map-changes-imported` | A valid Map Tools JSON file is imported | aggregate counts only |
-| `partner-click` | User opens a community partner link | `partner`, `placement` |
-| `donation-click` | User opens a donation service | `service`, `placement` |
-| `feedback-opened` | User opens the feedback dialog | none |
-| `feedback-sent` | Feedback is accepted by the backend | coarse feedback `type` |
-| `feedback-failed` | Feedback submission fails | coarse `type`, bounded `reason` |
-| `desktop-version` | Mobile user chooses the desktop interface | none |
-| `lobby-*` | Completed lobby lifecycle actions | bounded lifecycle fields described below |
+| Event path | Meaning |
+| --- | --- |
+| `calculation/bakurani/spg` | SPH-2 calculation adoption on Bakurani |
+| `donation-click/boosty` | Click on the Boosty link |
+| `donation-click/ko-fi` | Click on the Ko-fi link |
+| `map-style-changed/ozeti/color` | Color map style selected |
+| `contours-toggle/zestafona/on` | Contours enabled |
+| `asset-access-failed/bakurani/403` | Asset access returned an allowlisted HTTP status |
+| `lobby-connected/bakurani/create` | Successful lobby creation |
+| `feedback-sent/bug` | Bug feedback accepted; the message is excluded |
 
-The following former high-volume events are intentionally retired:
-
-- `origin-placed`;
-- `target-placed`;
-- `preset-marker-selected`;
-- `map-changed`;
-- `weapon-changed`.
-
-Their product value was low relative to their event volume. Map and weapon context remain available on the sampled `calculation` event, while map-style, Terrain3D, saved-target, map-tool, donation, feedback and lobby telemetry stay intact.
+Saved-target actions, coordinate search, fire adjustment, completed Map Tools
+actions, map-data import/export, mobile desktop switching and lobby lifecycle
+actions retain their names. Context suffixes use only public map ids, weapon
+ids, styles, donation services, feedback types, toggle states, lobby methods,
+bounded failure categories and selected HTTP statuses.
 
 ## Event budget and sampling
 
-`calculation` is the only sampled product event. A random bucket is created once per browser-tab session and persisted in `sessionStorage`; **20% of sessions** are selected for calculation telemetry. Within a selected session, `calculation` is still emitted at most once for each map + weapon combination.
+- `calculation` is sampled in **20% of browser-tab sessions**. The first rendered
+  solution is a baseline. A changed solution must remain stable for 900 ms;
+  each map/weapon context is counted once in a selected session.
+- Most other paths are counted once per browser-tab session. `sessionStorage`
+  holds at most 128 deduplication entries. Coarse loading/error signals follow
+  this policy too, preventing failed tiles and changing error messages from
+  generating a flood.
+- `donation-click`, `partner-click`, `feedback-sent`, `lobby-connected` and
+  `lobby-left` count completed actions with a two-second cooldown per path.
+  These use `no_session: true`; adoption events use normal session deduplication.
+- At most 16 paths wait for the tracker, for up to 30 seconds. Custom sends
+  are spaced at least 750 ms apart.
+- Per-frame, pointer, panning, zooming and per-shot tracking are absent.
+  Former `origin-placed`, `target-placed`, `preset-marker-selected`, `map-changed`,
+  `weapon-changed` and `lcp-slow-*` events are ignored.
 
-This preserves an unbiased feature-usage sample while reducing the dominant custom-event source by about 80%. The initial solution rendered on application startup is still treated as a baseline and is not counted. A changed solution must remain stable for 900 ms before analytics considers it.
-
-Operational failures keep session-level deduplication by failure signature. Repeated copies of the same failure in one tab are not sent again after the first matching event.
-
-Normal product events no longer receive a `build` property automatically. Build identifiers are attached only to operational failure events, where they are useful for regression diagnosis.
+Blocked or unavailable analytics cannot interrupt maps, calculations, lobbies
+or feedback. Counts can differ from the previous provider because sampling,
+deduplication and visitor/session definitions differ.
 
 ## Performance and operational telemetry
 
-Umami's built-in `data-performance="true"` tracker remains enabled for Core Web Vitals. The previous custom `lcp-slow-*` events have been removed because they duplicated the built-in performance dataset and carried large payloads.
+GoatCounter does not replace the old built-in Core Web Vitals dataset. Detailed
+performance measurements, stack traces, source locations, build ids and firing
+diagnostics are not uploaded as analytics properties. Existing developer
+diagnostics and explicit copy/export actions remain available.
 
-Resource-error telemetry ignores failures originating from third-party scripts, Cloudflare instrumentation/challenges, and Umami itself. Application/site resources and the WARDOGS asset CDN remain observable.
-
-Client-error telemetry also suppresses known browser noise that is not actionable application code:
-
-- `ResizeObserver loop ...` warnings;
-- opaque `Script error.` events without a source;
-- errors originating from browser-extension URLs.
-
-Operational payloads omit empty diagnostic fields. This keeps `client-error`, `map-load-failed`, `asset-load-failed` and `terrain-load-failed` useful without spending quota on empty metadata.
-
-## v1.7 feature telemetry
-
-Terrain3D analytics is intentionally limited to the explicit checkbox action:
-
-```text
-terrain3d-toggle
-enabled: true | false
-map: <map id>
-```
-
-It does **not** include:
-
-- firing-table MIL;
-- corrected MIL;
-- LOW/HIGH candidate commands;
-- ΔZ;
-- artillery or target coordinates;
-- candidate status/reason;
-- ballistic payload data.
-
-Contour analytics records only whether the contour layer was enabled or disabled and the current map id.
-
-The Map Tools functions are wrapped after page initialization so contour telemetry stays centralized in `js/core/analytics.js` rather than adding direct Umami calls to the map implementation.
+Resource errors from third-party scripts, Cloudflare challenges/instrumentation
+and the analytics tracker are ignored. Application failures produce only bounded
+event paths, without raw error messages or unique failure hashes.
 
 ## v1.8 lobby telemetry
 
-Lobby analytics measures feature adoption and connection outcomes, not room activity. It uses the shared `trackAnalytics()` wrapper and emits only completed lifecycle actions:
+Lobby events measure adoption and completed connection outcomes, not room
+activity. Connection methods are `create`, `join` and `reconnect`. Failure
+categories are `invalid-invite`, `admission-limit`, `daily-limit`, `rate-limited`,
+`security` and `connection`. Presence, edits, shared-state batches and WebSocket
+heartbeats are not tracked.
 
-- `lobby-opened` when the panel is opened for the first time during the current page lifetime;
-- `lobby-connected` after a valid room snapshot establishes a connection;
-- `lobby-failed` when creation, joining or reconnection fails;
-- `lobby-disconnected` when an established connection closes unexpectedly;
-- `lobby-left` after the user explicitly leaves;
-- `lobby-invite-copied` only after the clipboard operation succeeds;
-- `lobby-recovery-exported` after a recovery file is generated.
+## Privacy
 
-The allowed lobby event values are deliberately bounded:
+Application payloads exclude coordinates, MIL, hull headings, terrain heights,
+saved-target names/content, drawing geometry, marker positions, room codes,
+owner keys, player names, feedback messages/contacts, imported files, error
+messages and localStorage contents. Tab storage contains bounded event paths
+and a random sampling bucket; the application creates no persistent visitor id.
 
-| Property | Allowed values |
-|---|---|
-| `method` / `operation` | `create`, `join`, `reconnect` |
-| `reason` | `invalid-invite`, `admission-limit`, `daily-limit`, `rate-limited`, `security`, `connection` |
-| `map` | Current public map id |
-| `withSavedTargets` | Boolean creation option; it does not report target count or contents |
-
-Presence updates, roster changes, WebSocket heartbeats, shared-state batches, acknowledgements, drawing changes and pointer movement do not generate lobby analytics events.
-
-## Privacy and event volume
-
-Custom analytics data does **not** include:
-
-- exact artillery or target coordinates;
-- saved target names;
-- saved-target JSON contents or file names;
-- drawing geometry;
-- user marker coordinates;
-- coordinate-search values;
-- any localStorage contents;
-- exported/imported JSON contents or file names.
-
-Saved-target transfer events report only counts, import format (`single` or `list`), and whether a single exported target includes an artillery position. Names and coordinates are never sent.
-
-Map data transfer events contain only aggregate item counts and whether layer settings were included. Coordinates, drawing geometry, marker positions, and imported file contents are not sent to Umami.
-
-Lobby events never include the invite or room code, owner key, player name, roster, coordinates, room contents, or recovery data. Failures are reduced to a small allowlist of categories instead of reporting raw server errors.
-
-This keeps event payloads small and avoids generating excessive event-data usage. High-frequency actions such as point placement, preset-target selection, map/weapon switching, map panning, cursor movement, mouse movement, and pinch/wheel zoom are deliberately not tracked as standalone custom events.
-
-The sampled calculation signal provides map/weapon usage context without recording every interaction. Lower-volume actions such as saved-target transfer, completed map drawings, zones and polygons, ruler use, map-style changes, Terrain3D/contour toggles, donation/partner clicks, feedback and lobby lifecycle actions continue to be recorded because their event volume is comparatively small and their action counts remain useful.
-
-## Adding an event
-
-Use the shared wrapper:
-
-```js
-trackAnalytics(
-    'event-name',
-    {
-        property: 'value'
-    }
-);
-```
-
-Do not call `window.umami.track()` directly from feature modules.
-
-Prefer events that represent a completed user action. Avoid events inside animation frames, pointer-move handlers, render loops, or other high-frequency paths.
-
-If Umami has not finished loading yet, the wrapper temporarily queues a small number of events and flushes them when the tracker becomes available. If the tracker is blocked or unavailable, application functionality is unaffected.
+GoatCounter sees ordinary connection metadata, including IP and browser headers,
+while serving requests. See its [privacy policy](https://www.goatcounter.com/help/privacy).
+Ad blockers and network filtering may prevent collection.
 
 ## Development analytics switch
 
-`npm run dev` disables production Umami analytics by default. This prevents local pageviews and custom events from contaminating production usage data.
+`npm run dev` removes the loader and sets
+`window.__WARDOGS_ANALYTICS_DISABLED__ = true` by default. Local static builds
+also remain untracked because both loader and wrapper check the hostname.
 
-The development server reads `WARDOGS_DISABLE_ANALYTICS`:
-
-```bash
-WARDOGS_DISABLE_ANALYTICS=true npm run dev
-```
-
-To deliberately test analytics locally:
-
-```bash
-WARDOGS_DISABLE_ANALYTICS=false npm run dev
-```
-
-PowerShell equivalent:
+To briefly test against the production analytics account:
 
 ```powershell
 $env:WARDOGS_DISABLE_ANALYTICS = "false"
 npm run dev
 ```
 
-When disabled, the dev server removes the Umami script from served HTML and sets `window.__WARDOGS_ANALYTICS_DISABLED__ = true`. The shared analytics wrapper checks this flag before sending or queueing events.
+The development server sets `window.__WARDOGS_ANALYTICS_ALLOW_LOCAL__ = true`;
+only loopback hosts can use this explicit exception. Restore the default with:
 
-Production builds do not inject this flag and are not affected by the development setting.
+```powershell
+Remove-Item Env:WARDOGS_DISABLE_ANALYTICS
+```
 
-Note that `data-domains="wardogs-artillery.com"` is a production-build restriction. If analytics is deliberately enabled through `npm run dev`, the source page shell is served before the final production post-processing step, so local tracker testing remains possible.
+## Deployment and verification
+
+1. Run `npm run check` and deploy `dist/`.
+2. On the official site, check the Network panel for `gc.zgo.at/count.js` and
+   `wardogs-artillery.goatcounter.com/count`. There should be no requests to the
+   old analytics provider.
+3. Click a donation provider link and check its event path in GoatCounter.
+   Temporarily disable an analytics-blocking extension for this verification.
+4. A local static copy should send no hosted analytics requests.
+
+Generated CSP allows `https://gc.zgo.at` in `script-src` and
+`https://wardogs-artillery.goatcounter.com/count` in `connect-src` and `img-src`.
+The latter permits the tracker fallback when `sendBeacon` is unavailable. Update a
+separate hosting/Cloudflare CSP response header too, if present: a meta policy
+cannot relax a stricter HTTP header.
+
+This patch replaces future collection. It does not import historical data or
+cancel the previous paid account. Keep the exported data and manage that
+subscription separately to prevent further billing.

@@ -85,7 +85,7 @@ Open `http://localhost:8000/`.
 > [Tile hosting](maps.md#tile-hosting), and
 > [Terrain3D hosting](terrain.md#terrain3d-hosting).
 
-Production analytics are disabled by default in the development server. Set `WARDOGS_DISABLE_ANALYTICS=false` only when explicitly testing the Umami integration. See [Analytics](analytics.md#development-analytics-switch) for the full local-testing behavior.
+Production analytics are disabled by default in the development server. Set `WARDOGS_DISABLE_ANALYTICS=false` only when explicitly testing the GoatCounter integration. See [Analytics](analytics.md#development-analytics-switch) for the full local-testing behavior.
 
 The lightweight map landing pages are available from the source server at `/maps/bakurani/`, `/maps/ozeti/` and `/maps/zestafona/`, with translated variants such as `/ru/maps/bakurani/` and `/zh-cn/maps/zestafona/`. Restart the server after editing `scripts/map-landing-pages.mjs` or `scripts/map-landing-locales.mjs`; template, selector JavaScript and CSS edits continue to use live reload.
 

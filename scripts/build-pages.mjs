@@ -131,8 +131,7 @@ function addProductionSecurityMeta(html, appConfig) {
         "'self'",
         'https://assets.wardogs-artillery.com',
         'https://assets-v2.wardogs-artillery.com',
-        'https://cloud.umami.is',
-        'https://gateway.umami.is'
+        'https://wardogs-artillery.goatcounter.com/count'
     ]);
 
     const addEndpoint = (value, label, websocket = false) => {
@@ -159,7 +158,7 @@ function addProductionSecurityMeta(html, appConfig) {
     addEndpoint(feedback.serverUrl, 'feedback.serverUrl');
     if (turnstileEnabled) connectSources.add('https://challenges.cloudflare.com');
 
-    const scriptSources = ["'self'", 'https://cloud.umami.is'];
+    const scriptSources = ["'self'", 'https://gc.zgo.at'];
     // Only the authenticated menu endpoint can supply additional application code.
     scriptSources.push('https://assets.wardogs-artillery.com/__developer/module');
     if (turnstileEnabled) scriptSources.push('https://challenges.cloudflare.com');
@@ -169,7 +168,9 @@ function addProductionSecurityMeta(html, appConfig) {
         'data:',
         'blob:',
         'https://assets.wardogs-artillery.com',
-        'https://assets-v2.wardogs-artillery.com',];
+        'https://assets-v2.wardogs-artillery.com',
+        'https://wardogs-artillery.goatcounter.com/count'
+    ];
     if (turnstileEnabled) imageSources.push('https://challenges.cloudflare.com');
 
     const policy = [

@@ -309,13 +309,18 @@ function prepareDevHTML(html) {
          * the application wrapper not to queue events while disabled.
          */
         prepared = prepared.replace(
-            /\s*<script[^>]*src=["']https:\/\/cloud\.umami\.is\/script\.js["'][^>]*><\/script>/gi,
+            /\s*<script[^>]*src=["']js\/core\/analytics-loader\.js(?:\?[^"']*)?["'][^>]*><\/script>/gi,
             ''
         );
 
         prepared = prepared.replace(
             '<head>',
             '<head>\n<script>window.__WARDOGS_ANALYTICS_DISABLED__ = true;</script>'
+        );
+    } else {
+        prepared = prepared.replace(
+            '<head>',
+            '<head>\n<script>window.__WARDOGS_ANALYTICS_ALLOW_LOCAL__ = true;</script>'
         );
     }
 
@@ -1112,8 +1117,8 @@ server.listen(
         console.log('');
         console.log(
             DISABLE_DEV_ANALYTICS
-                ? 'Live reload enabled. Production Umami analytics disabled.'
-                : 'Live reload enabled. Production Umami analytics ENABLED for this dev session.'
+                ? 'Live reload enabled. Production GoatCounter analytics disabled.'
+                : 'Live reload enabled. Production GoatCounter analytics ENABLED for this dev session.'
         );
         console.log(
             'Map tiles are served directly and are not watched for changes.'

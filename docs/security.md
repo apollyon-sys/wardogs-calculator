@@ -33,8 +33,8 @@ or R2 write credentials. The Turnstile site key is intentionally public.
   custom Worker domain. Worker observability remains off so invitation-bearing
   request paths are not intentionally copied into application logs.
 - Production HTML receives a restrictive CSP at build time. It allowlists only
-  the site, R2 asset host, lobby endpoint, the Umami tracker at
-  `https://cloud.umami.is`, its event endpoint at `https://gateway.umami.is`,
+  the site, R2 asset host, lobby endpoint, the GoatCounter tracker at
+  `https://gc.zgo.at`, its event endpoint at `https://wardogs-artillery.goatcounter.com/count`,
   and Turnstile. Inline event handlers, plugins, arbitrary frames and
   unexpected network destinations are blocked.
 - The local development server binds to loopback by default, validates `Host`,
@@ -131,8 +131,8 @@ actual protection.
   controls against direct hotlinking and bulk retrieval. These controls raise
   the cost of unsophisticated automation but cannot prevent a legitimate user
   saving resources already displayed by their browser.
-- Production analytics loads the remote script from `https://cloud.umami.is`
-  and allows event delivery to `https://gateway.umami.is`. The script executes
+- Production analytics loads the remote script from `https://gc.zgo.at`
+  and allows event delivery to ``. The script executes
   with page privileges, so a compromise remains a supply-chain risk despite
   CSP. Self-hosting a reviewed, pinned bundle or disabling analytics is the way
   to remove that dependency. See [Analytics](analytics.md) for the event payload

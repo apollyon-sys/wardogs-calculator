@@ -35,12 +35,13 @@ for (const path of htmlFiles) {
     assert.match(html, /script-src-attr 'none'/, `${page}: inline handlers are not blocked`);
     assert.match(html, /https:\/\/lobby\.wardogs-artillery\.com/, `${page}: lobby is not allowed by CSP`);
     assert.match(html, /https:\/\/challenges\.cloudflare\.com/, `${page}: Turnstile is not allowed by CSP`);
-    assert.match(html, /https:\/\/gateway\.umami\.is/, `${page}: Umami gateway is not allowed by CSP`);
-    assert.match(
-        html,
-        /data-tag="ea-build-[a-f0-9]{12}"/,
-        `${page}: Umami Early Access build tag is missing`
-    );
+    assert.match(html, /script-src [^;]*https:\/\/gc\.zgo\.at/, `${page}: GoatCounter script is not allowed by CSP`);
+    assert.match(html, /connect-src [^;]*https:\/\/wardogs-artillery\.goatcounter\.com\/count/, `${page}: GoatCounter endpoint is not allowed by CSP`);
+    assert.match(html, /img-src [^;]*https:\/\/wardogs-artillery\.goatcounter\.com\/count/, `${page}: GoatCounter image fallback is not allowed by CSP`);
+    const loaders = [...html.matchAll(/<script\b[^>]*src="js\/core\/analytics-loader\.js\?v=[a-f0-9]{12}"[^>]*><\/script>/gi)];
+    assert.equal(loaders.length, 1, `${page}: expected one fingerprinted analytics loader`);
+    assert.match(loaders[0][0], /data-goatcounter="https:\/\/wardogs-artillery\.goatcounter\.com\/count"/, `${page}: incorrect analytics site`);
+    assert.doesNotMatch(html, /umami\.is|data-umami|data-website-id|data-performance/i, `${page}: old analytics remains`);
     assert.doesNotMatch(html, /Content-Security-Policy[^>]+localhost/i, `${page}: development origin leaked into CSP`);
 }
 
@@ -239,8 +240,9 @@ for (const definition of languageDefinitions) {
         assert.ok(schema['@graph'].some(item => item['@type'] === 'BreadcrumbList'), `${route}: BreadcrumbList schema is missing`);
 
         const localScripts = [...html.matchAll(/\bsrc="(js\/[^"]+)"/gi)].map(match => match[1]);
-        assert.equal(localScripts.length, 1, `${route}: unexpected application JS loaded`);
-        assert.match(localScripts[0] || '', /^js\/map-landing-language\.js\?v=[a-f0-9]{12}$/i, `${route}: language switcher is not fingerprinted`);
+        assert.equal(localScripts.length, 2, `${route}: unexpected application JS loaded`);
+        assert.ok(localScripts.some(src => /^js\/map-landing-language\.js\?v=[a-f0-9]{12}$/i.test(src)), `${route}: language switcher is not fingerprinted`);
+        assert.ok(localScripts.some(src => /^js\/core\/analytics-loader\.js\?v=[a-f0-9]{12}$/i.test(src)), `${route}: analytics loader is not fingerprinted`);
         assert.doesNotMatch(html, /(?:\.bin|maps\/tiles|lobby\.js|<canvas\b)/i, `${route}: heavy resource leaked into landing HTML`);
         assert.match(html, /href="styles\/map-landing\.css\?v=[a-f0-9]{12}"/i, `${route}: CSS is not fingerprinted`);
         assert.deepEqual(dimensions, { width: 1280, height: 720 }, `${route}: map image must be 1280x720`);

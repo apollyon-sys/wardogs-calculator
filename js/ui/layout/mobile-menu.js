@@ -1009,7 +1009,7 @@ function initMobileSideMenu() {
     if (partnerLink) {
 
         partnerLink.dataset
-            .umamiEventPlacement =
+            .analyticsEventPlacement =
             'mobile-menu';
 
         partnerLink.classList.add(

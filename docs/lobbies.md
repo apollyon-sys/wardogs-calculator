@@ -135,9 +135,9 @@ Cloudflare's current Free-plan limits and billing model can change. Before launc
 
 ## Analytics and privacy
 
-The site records only low-volume lobby lifecycle events: first panel open, successful create/join/reconnect, coarse connection failures, unexpected disconnects, explicit leave, successful invite copy and recovery export. Event data is limited to the public map id, connection method, a bounded failure category and the boolean “include saved targets” option used during creation.
+The site records only low-volume lobby lifecycle events: first panel open, successful create/join/reconnect, coarse connection failures, unexpected disconnects, explicit leave, successful invite copy and recovery export. Events contain only a fixed event name and, where applicable, an allowlisted map id, connection method or failure category. These are short event-path suffixes; no separate event-property payload is uploaded.
 
-Nicknames, invitation codes, owner keys, participant rosters, artillery or target coordinates, room documents, shared drawings, presence messages, recovery contents, WebSocket heartbeats and edit batches are never sent to Umami. See [Analytics](analytics.md#v18-lobby-telemetry) for the exact event and payload contract.
+Nicknames, invitation codes, owner keys, participant rosters, artillery or target coordinates, room documents, shared drawings, presence messages, recovery contents, WebSocket heartbeats and edit batches are never sent to GoatCounter. See [Analytics](analytics.md#v18-lobby-telemetry) for the exact event and payload contract.
 
 ## Verification
 

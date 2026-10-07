@@ -2,52 +2,78 @@
    ANALYTICS
    ========================= */
 
-/*
- * Thin wrapper around the Umami tracker already loaded by
- * the page shell.
- *
- * Goals:
- * - keep tracking calls out of feature code;
- * - avoid losing very early events while the deferred Umami
- *   script is still loading;
- * - keep event data intentionally small and non-sensitive;
- * - debounce calculator changes so marker dragging does not
- *   generate an event for every animation frame.
- */
-
+/* GoatCounter receives fixed event paths, never arbitrary event properties. */
 const ANALYTICS_QUEUE = [];
-const ANALYTICS_MAX_QUEUE = 32;
-const ANALYTICS_FLUSH_INTERVAL = 500;
-const ANALYTICS_FLUSH_ATTEMPTS = 30;
+const ANALYTICS_MAX_QUEUE = 16;
+const ANALYTICS_FLUSH_INTERVAL = 750;
+const ANALYTICS_FLUSH_ATTEMPTS = 40;
 const ANALYTICS_CALCULATION_DELAY = 900;
 const ANALYTICS_CALCULATION_SAMPLE_RATE = 0.2;
-const ANALYTICS_SESSION_DEDUPE_KEY =
-    'wardogs-analytics-session-v2';
-const ANALYTICS_SESSION_SAMPLE_KEY =
-    'wardogs-analytics-sample-v1';
+const ANALYTICS_MAX_SESSION_KEYS = 128;
+const ANALYTICS_SESSION_DEDUPE_KEY = 'wardogs-goatcounter-session-v1';
+const ANALYTICS_SESSION_SAMPLE_KEY = 'wardogs-goatcounter-sample-v1';
 
-const ANALYTICS_CONTEXT_DEDUPED_EVENTS =
-    new Set([
-        'calculation',
-        'client-error',
-        'map-load-failed',
-        'asset-load-failed',
-        'terrain-load-failed'
-    ]);
+const ANALYTICS_ALLOWED_EVENTS = new Set([
+    'calculation', 'map-style-changed', 'target-saved', 'target-restored',
+    'target-exported', 'targets-exported', 'targets-imported',
+    'coordinate-search', 'fire-adjusted', 'terrain3d-toggle', 'contours-toggle',
+    'ruler-used', 'drawing-created', 'zone-created', 'polygon-created',
+    'user-marker-placed', 'map-changes-exported', 'map-changes-imported',
+    'partner-click', 'donation-click', 'donation-dialog-opened',
+    'feedback-opened', 'feedback-sent', 'feedback-failed', 'desktop-version',
+    'lobby-opened', 'lobby-connected', 'lobby-failed', 'lobby-disconnected',
+    'lobby-left', 'lobby-invite-copied', 'lobby-recovery-exported',
+    'lobby-admission-fallback', 'client-error', 'map-load-failed',
+    'asset-load-failed', 'terrain-load-failed', 'asset-access-failed',
+    'asset-access-recovered', 'map-first-tiles-ready'
+]);
+const ANALYTICS_REPEATABLE_EVENTS = new Set([
+    'donation-click', 'partner-click', 'feedback-sent',
+    'lobby-connected', 'lobby-left'
+]);
+const ANALYTICS_ACTION_TIMES = new Map();
 
+let analyticsLastSentAt = -Infinity;
 let analyticsFlushTimer = null;
 let analyticsFlushAttempts = 0;
 let analyticsCalculationTimer = null;
 let analyticsCalculationInitialized = false;
 let analyticsLastCalculationFingerprint = null;
-let analyticsSessionKeys =
-    loadAnalyticsSessionKeys();
-let analyticsSessionSampleBucket =
-    loadAnalyticsSessionSampleBucket();
+let analyticsSessionKeys = loadAnalyticsSessionKeys();
+let analyticsSessionSampleBucket = loadAnalyticsSessionSampleBucket();
+let analyticsMapLayerHooksInstalled = false;
 
-let analyticsMapLayerHooksInstalled =
-    false;
+function getGoatCounterEventPath(name, data) {
+    if (!ANALYTICS_ALLOWED_EVENTS.has(name)) return null;
+    const parts = [name];
+    const append = (value, allowed) => {
+        if (allowed.includes(value)) parts.push(value);
+    };
+    append(data?.map, ['bakurani', 'ozeti', 'zestafona']);
 
+    if (name === 'calculation') append(data?.weapon, ['mortar', 'spg']);
+    if (name === 'map-style-changed') append(data?.style, ['grayscale', 'color']);
+    if (name === 'donation-click') append(data?.service, ['ko-fi', 'boosty', 'buymeacoffee']);
+    if (name === 'partner-click') append(data?.partner, ['wardogs-hub']);
+    if (name === 'feedback-sent' || name === 'feedback-failed') {
+        append(data?.type, ['bug', 'feature', 'general']);
+    }
+    if (name === 'lobby-connected') append(data?.method, ['create', 'join', 'reconnect']);
+    if (name === 'lobby-failed') {
+        append(data?.reason, ['invalid-invite', 'admission-limit', 'daily-limit',
+            'rate-limited', 'security', 'connection']);
+    }
+    if (name === 'terrain3d-toggle' || name === 'contours-toggle') {
+        if (typeof data?.enabled === 'boolean') parts.push(data.enabled ? 'on' : 'off');
+    }
+    if (name === 'asset-access-failed') {
+        const status = Number(data?.status);
+        if ([401, 403, 408, 425, 429, 500, 502, 503, 504].includes(status)) {
+            parts.push(String(status));
+        }
+    }
+    return parts.join('/');
+}
 
 function loadAnalyticsSessionSampleBucket() {
     try {
@@ -114,9 +140,9 @@ function loadAnalyticsSessionKeys() {
 
         return new Set(
             parsed.filter(
-                value =>
-                    typeof value === 'string'
-            )
+                value => typeof value === 'string' &&
+                    /^[-a-z0-9/]+$/.test(value) && value.length <= 120
+            ).slice(-ANALYTICS_MAX_SESSION_KEYS)
         );
 
     } catch (_) {
@@ -139,142 +165,38 @@ function persistAnalyticsSessionKeys() {
     }
 }
 
-function getAnalyticsContextKey(
-    name,
-    data
-) {
-    if (
-        !ANALYTICS_CONTEXT_DEDUPED_EVENTS.has(
-            name
-        )
-    ) {
-        return null;
-    }
+function shouldSuppressAnalyticsEvent(name, data) {
+    const key = getGoatCounterEventPath(name, data);
+    if (!key) return true;
 
-    const map =
-        typeof data?.map === 'string'
-            ? data.map
-            : '';
-
-    if (name === 'calculation') {
-        const weapon =
-            typeof data?.weapon === 'string'
-                ? data.weapon
-                : '';
-
-        return [
-            name,
-            map,
-            weapon
-        ].join('|');
-    }
-
-    if (
-        name === 'client-error' ||
-        name === 'map-load-failed' ||
-        name === 'asset-load-failed' ||
-        name === 'terrain-load-failed'
-    ) {
-        const area =
-            typeof data?.area === 'string'
-                ? data.area
-                : '';
-        const type =
-            typeof data?.type === 'string'
-                ? data.type
-                : '';
-        const code =
-            typeof data?.code === 'string'
-                ? data.code
-                : '';
-        const resource =
-            typeof data?.resource === 'string'
-                ? data.resource
-                : '';
-        const origin =
-            typeof data?.origin === 'string'
-                ? data.origin
-                : '';
-
-        const parts = [
-            name,
-            map,
-            area,
-            type,
-            code,
-            resource,
-            origin
-        ];
-
-        if (name === 'client-error') {
-            parts.push(
-                typeof data?.phase === 'string'
-                    ? data.phase
-                    : '',
-                typeof data?.errorType === 'string'
-                    ? data.errorType
-                    : '',
-                typeof data?.source === 'string'
-                    ? data.source
-                    : '',
-                typeof data?.messageHash === 'string'
-                    ? data.messageHash
-                    : ''
-            );
-        }
-
-        return parts.join('|');
-    }
-
-    return [
-        name,
-        map
-    ].join('|');
-}
-
-function shouldSuppressAnalyticsEvent(
-    name,
-    data
-) {
-    const key =
-        getAnalyticsContextKey(
-            name,
-            data
-        );
-
-    if (!key) {
+    if (ANALYTICS_REPEATABLE_EVENTS.has(name)) {
+        const now = Date.now();
+        const previous = ANALYTICS_ACTION_TIMES.get(key);
+        if (previous !== undefined && now - previous < 2000) return true;
+        ANALYTICS_ACTION_TIMES.set(key, now);
         return false;
     }
 
-    if (
-        analyticsSessionKeys.has(
-            key
-        )
-    ) {
-        return true;
-    }
-
-    analyticsSessionKeys.add(
-        key
-    );
-
+    if (analyticsSessionKeys.has(key)) return true;
+    if (analyticsSessionKeys.size >= ANALYTICS_MAX_SESSION_KEYS) return true;
+    analyticsSessionKeys.add(key);
     persistAnalyticsSessionKeys();
-
     return false;
 }
 
 function isAnalyticsDisabled() {
-    return (
-        window.__WARDOGS_ANALYTICS_DISABLED__ ===
-        true
-    );
+    if (window.__WARDOGS_ANALYTICS_DISABLED__ === true) return true;
+    const host = window.location.hostname;
+    const allowLocal = ['localhost', '127.0.0.1', '[::1]', '::1'].includes(host) &&
+        window.__WARDOGS_ANALYTICS_ALLOW_LOCAL__ === true;
+    return host !== 'wardogs-artillery.com' && !allowLocal;
 }
 
 function isAnalyticsAvailable() {
     return Boolean(
         !isAnalyticsDisabled() &&
-        window.umami &&
-        typeof window.umami.track === 'function'
+        window.__WARDOGS_GOATCOUNTER_READY__ === true &&
+        typeof window.goatcounter?.count === 'function'
     );
 }
 
@@ -492,151 +414,71 @@ function normalizeAnalyticsData(data) {
         : undefined;
 }
 
-function sendAnalyticsEvent(name, data) {
-    if (!isAnalyticsAvailable()) {
+function sendAnalyticsEvent(path) {
+    if (!isAnalyticsAvailable() || Date.now() - analyticsLastSentAt < ANALYTICS_FLUSH_INTERVAL) {
         return false;
     }
-
     try {
-        window.umami.track(
-            name,
-            normalizeAnalyticsData(data)
-        );
-
+        window.goatcounter.count({
+            path,
+            title: path,
+            event: true,
+            referrer: '',
+            no_session: ANALYTICS_REPEATABLE_EVENTS.has(path.split('/')[0])
+        });
+        analyticsLastSentAt = Date.now();
         return true;
-
-    } catch (error) {
-        console.warn(
-            'Failed to send analytics event:',
-            error
-        );
-
+    } catch (_) {
+        // A broken or blocked tracker cannot interrupt application features.
+        window.__WARDOGS_ANALYTICS_DISABLED__ = true;
         return false;
     }
+}
+
+function stopAnalyticsFlush() {
+    if (analyticsFlushTimer !== null) window.clearInterval(analyticsFlushTimer);
+    analyticsFlushTimer = null;
 }
 
 function flushAnalyticsQueue() {
     if (isAnalyticsDisabled()) {
         ANALYTICS_QUEUE.length = 0;
-
-        if (analyticsFlushTimer) {
-            window.clearInterval(
-                analyticsFlushTimer
-            );
-            analyticsFlushTimer = null;
-        }
-
+        stopAnalyticsFlush();
         return;
     }
-
+    if (!ANALYTICS_QUEUE.length) {
+        stopAnalyticsFlush();
+        return;
+    }
     if (isAnalyticsAvailable()) {
-        while (ANALYTICS_QUEUE.length) {
-            const event = ANALYTICS_QUEUE.shift();
-
-            sendAnalyticsEvent(
-                event.name,
-                event.data
-            );
-        }
-
-        if (analyticsFlushTimer) {
-            window.clearInterval(
-                analyticsFlushTimer
-            );
-
-            analyticsFlushTimer = null;
-        }
-
+        if (sendAnalyticsEvent(ANALYTICS_QUEUE[0])) ANALYTICS_QUEUE.shift();
+        if (!ANALYTICS_QUEUE.length) stopAnalyticsFlush();
         return;
     }
-
-    analyticsFlushAttempts++;
-
-    if (
-        analyticsFlushAttempts >=
-        ANALYTICS_FLUSH_ATTEMPTS
-    ) {
+    if (++analyticsFlushAttempts >= ANALYTICS_FLUSH_ATTEMPTS) {
         ANALYTICS_QUEUE.length = 0;
-
-        if (analyticsFlushTimer) {
-            window.clearInterval(
-                analyticsFlushTimer
-            );
-
-            analyticsFlushTimer = null;
-        }
+        stopAnalyticsFlush();
     }
 }
 
 function scheduleAnalyticsFlush() {
-    if (
-        analyticsFlushTimer ||
-        isAnalyticsAvailable()
-    ) {
-        return;
-    }
-
+    if (analyticsFlushTimer !== null || isAnalyticsDisabled()) return;
     analyticsFlushAttempts = 0;
-
-    analyticsFlushTimer =
-        window.setInterval(
-            flushAnalyticsQueue,
-            ANALYTICS_FLUSH_INTERVAL
-        );
+    analyticsFlushTimer = window.setInterval(flushAnalyticsQueue, ANALYTICS_FLUSH_INTERVAL);
 }
 
 function trackAnalytics(name, data = undefined) {
-    if (isAnalyticsDisabled()) {
-        return;
-    }
+    if (isAnalyticsDisabled() || typeof name !== 'string') return;
+    const normalizedName = name.trim();
+    const normalizedData = normalizeAnalyticsData(data);
+    const path = getGoatCounterEventPath(normalizedName, normalizedData);
+    if (!path || !shouldSampleAnalyticsEvent(normalizedName) ||
+        shouldSuppressAnalyticsEvent(normalizedName, normalizedData)) return;
 
-    if (
-        typeof name !== 'string' ||
-        !name.trim()
-    ) {
-        return;
-    }
-
-    const normalizedName =
-        name.trim().slice(0, 64);
-
-    const normalizedData =
-        normalizeAnalyticsData(data);
-
-    if (!shouldSampleAnalyticsEvent(normalizedName)) {
-        return;
-    }
-
-    if (
-        shouldSuppressAnalyticsEvent(
-            normalizedName,
-            normalizedData
-        )
-    ) {
-        return;
-    }
-
-    if (
-        sendAnalyticsEvent(
-            normalizedName,
-            normalizedData
-        )
-    ) {
-        return;
-    }
-
-    if (
-        ANALYTICS_QUEUE.length >=
-        ANALYTICS_MAX_QUEUE
-    ) {
-        ANALYTICS_QUEUE.shift();
-    }
-
-    ANALYTICS_QUEUE.push({
-        name: normalizedName,
-        data: normalizedData
-    });
-
+    if (sendAnalyticsEvent(path)) return;
+    if (isAnalyticsDisabled()) return;
+    if (ANALYTICS_QUEUE.length >= ANALYTICS_MAX_QUEUE) ANALYTICS_QUEUE.shift();
+    ANALYTICS_QUEUE.push(path);
     scheduleAnalyticsFlush();
 }
 
@@ -768,9 +610,9 @@ function classifyOperationalResource(target) {
         ) {
             origin = 'assets-cdn';
         } else if (
-            host.includes('umami')
+            host === 'gc.zgo.at' || host.endsWith('.goatcounter.com')
         ) {
-            origin = 'umami';
+            origin = 'analytics';
         }
 
         let resource =
@@ -789,7 +631,7 @@ function classifyOperationalResource(target) {
             ) {
                 resource = 'app-script';
             } else if (
-                origin === 'umami'
+                origin === 'analytics'
             ) {
                 resource = 'analytics';
             } else if (turnstileResource) {
@@ -841,7 +683,7 @@ const ANALYTICS_IGNORED_RESOURCE_ORIGINS =
     new Set([
         'external',
         'cloudflare',
-        'umami'
+        'analytics'
     ]);
 
 function isBrowserExtensionErrorSource(value) {
@@ -996,9 +838,8 @@ function installOperationalErrorTelemetry() {
 installOperationalErrorTelemetry();
 
 /*
- * Core Web Vitals are collected by Umami's built-in
- * data-performance tracker. Keep custom analytics focused on
- * product usage and actionable application failures.
+ * Keep analytics focused on bounded product usage and application failures.
+ * Detailed performance and firing diagnostics stay in the local developer menu.
  */
 
 
@@ -1089,7 +930,7 @@ function trackCalculationState(inRange) {
    ========================= */
 
 /*
- * Keep the new feature telemetry here instead of coupling Umami calls to
+ * Keep the new feature telemetry here instead of coupling tracker calls to
  * Terrain3D or Map Tools implementation details.
  *
  * Only explicit user actions are recorded. No coordinates, MIL values,
@@ -1251,3 +1092,14 @@ window.addEventListener(
     flushAnalyticsQueue,
     { once: true }
 );
+
+window.addEventListener('wardogs-analytics-ready', flushAnalyticsQueue);
+
+// Static mobile partner links use the same bounded wrapper as generated links.
+document.addEventListener('click', event => {
+    const link = event.target?.closest?.('[data-analytics-event]');
+    if (!link) return;
+    trackAnalytics(link.dataset.analyticsEvent, {
+        partner: link.dataset.analyticsEventPartner
+    });
+});
