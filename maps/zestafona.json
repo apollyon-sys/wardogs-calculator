@@ -28,8 +28,8 @@
   "markers": [
     {
       "icon": "tower",
-      "x": 7017.2672,
-      "y": 10017.17,
+      "x": 7012,
+      "y": 10013,
       "label": "Tower 3",
       "towerNumber": 3,
       "minZoom": 0.4,
@@ -37,8 +37,8 @@
     },
     {
       "icon": "tower",
-      "x": 6859.9808,
-      "y": 10415.30,
+      "x": 6860,
+      "y": 10412,
       "label": "Tower 1",
       "towerNumber": 1,
       "minZoom": 0.4,
@@ -46,8 +46,8 @@
     },
     {
       "icon": "tower",
-      "x": 7289.2416,
-      "y": 10507.0592,
+      "x": 7289,
+      "y": 10503,
       "label": "Tower 2",
       "towerNumber": 2,
       "minZoom": 0.4,
