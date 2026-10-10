@@ -783,11 +783,7 @@ function getPresetMarkerScreenGeometry(
         );
 
     const asset =
-        typeof item.icon === 'string'
-            ? getMarkerAsset(
-                item.icon
-            )
-            : null;
+        getPresetMarkerAsset(item);
 
     if (asset) {
 
@@ -1400,6 +1396,125 @@ function drawPresetMarkerSelection(
    PRESET MARKERS
    ========================= */
 
+const PRESET_TOWER_MARKER_STYLE = Object.freeze({
+    width: 32,
+    height: 32,
+    anchorX: 0.5,
+    anchorY: 0.5,
+    fontFamily: 'WARDOGS Tower Numbers',
+    // The exported text style uses 10 pt; Slate renders at 96 DPI.
+    fontSize: 10 * 96 / 72,
+    padding: 4,
+    outlineOpacity: 0.4,
+    shadowOpacity: 0.8,
+    shadowOffset: 0.8
+});
+
+let PRESET_TOWER_FONT_STARTED = false;
+
+function getPresetTowerNumber(item) {
+    if (item?.icon !== 'tower') return null;
+
+    const configured = item.towerNumber;
+    if (Number.isInteger(configured) && configured > 0 && configured < 100) {
+        return String(configured);
+    }
+
+    // Keep older map configurations usable without inferring an array order.
+    const match = typeof item.label === 'string'
+        ? item.label.match(/(?:^|\s)([1-9]\d?)\s*$/)
+        : null;
+    return match ? String(Number(match[1])) : null;
+}
+
+function getPresetMarkerAsset(item) {
+    const asset = typeof item?.icon === 'string'
+        ? getMarkerAsset(item.icon)
+        : null;
+    return asset || (getPresetTowerNumber(item) !== null
+        ? PRESET_TOWER_MARKER_STYLE
+        : null);
+}
+
+function loadPresetTowerNumberFont() {
+    if (PRESET_TOWER_FONT_STARTED || typeof FontFace !== 'function' || !document.fonts) {
+        return;
+    }
+    PRESET_TOWER_FONT_STARTED = true;
+
+    try {
+        const font = new FontFace(
+            PRESET_TOWER_MARKER_STYLE.fontFamily,
+            `url("${resourceURL('assets/fonts/barlow/tower-numbers-semibold.woff')}")`,
+            { weight: '600', style: 'normal' }
+        );
+        font.load().then(loaded => {
+            document.fonts.add(loaded);
+            draw();
+        }).catch(() => {}); // System-font numerals remain usable if loading fails.
+    } catch {
+        // Font support is optional and must never prevent map rendering.
+    }
+}
+
+function drawPresetTowerMarker(item, x, y, selectionScale = 1) {
+    const number = getPresetTowerNumber(item);
+    if (number === null) return;
+
+    const style = PRESET_TOWER_MARKER_STYLE;
+    const layout = getMarkerImageLayout(item, getPresetMarkerAsset(item));
+    const width = layout.width * selectionScale;
+    const height = layout.height * selectionScale;
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+        return;
+    }
+    const left = x - width * layout.anchorX;
+    const top = y - height * layout.anchorY;
+    const scale = Math.min(width, height) / style.width;
+    const image = drawMarkerImage(item, x, y, selectionScale);
+
+    ctx.save();
+    ctx.filter = 'none';
+
+    if (!image?.drawn) {
+        // Preserve the numbered marker and its hit area while artwork loads.
+        ctx.beginPath();
+        ctx.moveTo(left + width / 2, top);
+        ctx.lineTo(left + width, top + height / 2);
+        ctx.lineTo(left + width / 2, top + height);
+        ctx.lineTo(left, top + height / 2);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(0, 0, 0, .92)';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = Math.max(1, scale);
+        ctx.stroke();
+    }
+
+    loadPresetTowerNumberFont();
+
+    const highContrast = document.documentElement?.dataset?.a11yHighContrast === 'true';
+    const padding = style.padding * scale;
+    const fontSize = style.fontSize * scale * getMapLabelAccessibilityScale();
+    const textX = left + width - padding;
+    const textY = top + padding;
+    const maxWidth = Math.max(1, width - padding * 2);
+
+    ctx.font = `600 ${fontSize}px "${style.fontFamily}", Barlow, system-ui, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = (highContrast ? 4 : 2) * scale;
+    ctx.strokeStyle = `rgba(0, 0, 0, ${highContrast ? 1 : style.outlineOpacity})`;
+    ctx.shadowColor = `rgba(0, 0, 0, ${style.shadowOpacity})`;
+    ctx.shadowOffsetX = style.shadowOffset * scale;
+    ctx.shadowOffsetY = style.shadowOffset * scale;
+    ctx.strokeText(number, textX, textY, maxWidth);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(number, textX, textY, maxWidth);
+    ctx.restore();
+}
+
 function getMarkerEmojiSize(v) {
 
     return Math.max(
@@ -1768,11 +1883,7 @@ function drawPresetMarkers(map) {
                 );
 
             const markerAsset =
-                typeof item.icon === 'string'
-                    ? getMarkerAsset(
-                        item.icon
-                    )
-                    : null;
+                getPresetMarkerAsset(item);
 
             const baseIconSize =
                 markerAsset
@@ -1797,6 +1908,12 @@ function drawPresetMarkers(map) {
                 y,
                 baseIconSize
             );
+
+            if (getPresetTowerNumber(item) !== null) {
+                drawPresetTowerMarker(item, x, y, selectionScale);
+                ctx.restore();
+                return;
+            }
 
             /*
              * If "icon" is specified, try to

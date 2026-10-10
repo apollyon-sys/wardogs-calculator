@@ -67,9 +67,9 @@
       "placeable": true
     },
     "tower": {
-      "path": "assets/map-markers/tower.webp",
-      "width": 32,
-      "height": 32,
+      "path": "assets/map-markers/tower-map.png",
+      "width": 42,
+      "height": 42,
       "anchorX": 0.5,
       "anchorY": 0.5,
       "placeable": false

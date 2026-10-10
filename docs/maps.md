@@ -199,7 +199,7 @@ Each marker asset supports a `placeable` flag:
 ```json
 {
     "tower": {
-        "path": "assets/map-markers/tower.webp",
+        "path": "assets/map-markers/tower-map.png",
         "width": 32,
         "height": 32,
         "anchorX": 0.5,
@@ -213,6 +213,41 @@ Each marker asset supports a `placeable` flag:
 - `placeable: false` hides the asset from the picker and prevents user placement.
 - Preset markers in map JSON can still use a non-placeable asset. The flag only controls user placement.
 - If `placeable` is omitted, it defaults to `true` for backwards compatibility.
+
+### Numbered tower markers
+
+Preset towers use `assets/map-markers/tower-map.png` and a separate white
+number with Barlow Semi Bold, a dark outline, and a drop shadow. The number is
+inset into the upper-right of the icon; it replaces the long `Tower N` label.
+The exported artwork and text settings are used for a static map marker;
+live ownership, capture progress, and game-material animations are not shown.
+
+Set `towerNumber` explicitly in the map marker:
+
+```json
+{
+    "icon": "tower",
+    "x": 8361,
+    "y": 7284,
+    "label": "Tower 4",
+    "towerNumber": 4,
+    "minZoom": 0.4,
+    "maxZoom": 100
+}
+```
+
+`towerNumber` is an integer from 1 to 99. Older configurations can still obtain
+the number from a trailing number in `label`; the marker's array position is
+never used for numbering. Other marker labels retain their normal rendering.
+Zoom visibility, coordinates, and click-to-target selection remain unchanged.
+
+The numeral-only font is hosted locally at
+`assets/fonts/barlow/tower-numbers-semibold.woff` (about 6 KB), with its SIL Open
+Font License alongside it. It is derived from
+[Barlow Semi Bold](https://github.com/google/fonts/tree/main/ofl/barlow).
+The map draws a system-font number if the font is unavailable, and a numbered
+diamond if the icon is pending or unavailable. Large-text and high-contrast
+accessibility settings also apply to the number in both interfaces.
 
 ---
 

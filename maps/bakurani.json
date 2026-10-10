@@ -31,6 +31,7 @@
       "x": 8361,
       "y": 7284,
       "label": "Tower 4",
+      "towerNumber": 4,
       "minZoom": 0.4,
       "maxZoom": 100
     },
@@ -39,6 +40,7 @@
       "x": 7716,
       "y": 7343,
       "label": "Tower 3",
+      "towerNumber": 3,
       "minZoom": 0.4,
       "maxZoom": 100
     },
@@ -47,6 +49,7 @@
       "x": 7717,
       "y": 6999,
       "label": "Tower 2",
+      "towerNumber": 2,
       "minZoom": 0.4,
       "maxZoom": 100
     },
@@ -55,6 +58,7 @@
       "x": 8049,
       "y": 6984,
       "label": "Tower 1",
+      "towerNumber": 1,
       "minZoom": 0.4,
       "maxZoom": 100
     },
@@ -63,6 +67,7 @@
       "x": 8220,
       "y": 6841,
       "label": "Tower 5",
+      "towerNumber": 5,
       "minZoom": 0.4,
       "maxZoom": 100
     },

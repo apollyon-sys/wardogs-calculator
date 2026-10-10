@@ -31,6 +31,7 @@
       "x": 7017.2672,
       "y": 10017.17,
       "label": "Tower 3",
+      "towerNumber": 3,
       "minZoom": 0.4,
       "maxZoom": 100
     },
@@ -39,6 +40,7 @@
       "x": 6859.9808,
       "y": 10415.30,
       "label": "Tower 1",
+      "towerNumber": 1,
       "minZoom": 0.4,
       "maxZoom": 100
     },
@@ -47,6 +49,7 @@
       "x": 7289.2416,
       "y": 10507.0592,
       "label": "Tower 2",
+      "towerNumber": 2,
       "minZoom": 0.4,
       "maxZoom": 100
     },
