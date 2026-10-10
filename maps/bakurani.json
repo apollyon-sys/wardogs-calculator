@@ -167,9 +167,10 @@
   "polygons": [
     {
       "color": "#d86666",
-      "fillOpacity": 0.12,
+      "renderStyle": "spawn",
+      "fillOpacity": 0.192,
       "strokeWidth": 2,
-      "dashed": true,
+      "dashed": false,
       "label": "VALKYRA Spawn",
       "points": [
         {
@@ -192,9 +193,10 @@
     },
     {
       "color": "#82c596",
-      "fillOpacity": 0.12,
+      "renderStyle": "spawn",
+      "fillOpacity": 0.192,
       "strokeWidth": 2,
-      "dashed": true,
+      "dashed": false,
       "label": "MANTICORE Spawn",
       "points": [
         {
@@ -218,9 +220,10 @@
     },
     {
       "color": "#5fa8d3",
-      "fillOpacity": 0.12,
+      "renderStyle": "spawn",
+      "fillOpacity": 0.192,
       "strokeWidth": 2,
-      "dashed": true,
+      "dashed": false,
       "label": "LONESTAR Spawn",
       "points": [
         {

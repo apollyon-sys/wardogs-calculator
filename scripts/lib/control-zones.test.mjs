@@ -31,6 +31,11 @@ function runtime(saved = null) {
         ctx: new Proxy({}, {
             get: (target, key) => Object.hasOwn(target, key) ? target[key] : key === 'measureText'
                 ? () => ({ width: 100 })
+                : key === 'createRadialGradient'
+                ? (...args) => {
+                    calls.push([key, ...args]);
+                    return { addColorStop: (...stop) => calls.push(['addColorStop', ...stop]) };
+                }
                 : (...args) => calls.push([key, ...args])
         })
     });

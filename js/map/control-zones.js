@@ -11,6 +11,15 @@ const CONTROL_ZONE_STATE = {
     uiKey: null
 };
 
+// MI_UI_Zone_Circle inherits these values from MI_UI_Zone. The Canvas
+// gradient approximates its SDF glow; thickness is normalized, not pixels.
+const CONTROL_ZONE_MATERIAL = Object.freeze({
+    innerOpacity: 0.128,
+    innerGlowStrength: 0.609177,
+    outerOpacity: 1,
+    thickness: 0.001
+});
+
 function getMapControlZones(map = getCurrentMap()) {
     if (!Array.isArray(map?.controlZones)) {
         return [];
@@ -144,27 +153,49 @@ function drawSelectedControlZone(map, styles) {
     const radius = metersToWorldDistance(zone.radiusMeters) * v.scale;
     if (!Number.isFinite(radius) || radius <= 0 ||
         !Number.isFinite(center.x) || !Number.isFinite(center.y)) return;
-    if (center.x + radius < -v.left || center.y + radius < -v.top ||
-        center.x - radius > wrap.clientWidth - v.left ||
-        center.y - radius > wrap.clientHeight - v.top) return;
+
+    const highContrast = document.documentElement.dataset.a11yHighContrast === 'true';
+    const outerRadius = radius + (highContrast ? 4 : 3);
+    if (center.x + outerRadius < -v.left || center.y + outerRadius < -v.top ||
+        center.x - outerRadius > wrap.clientWidth - v.left ||
+        center.y - outerRadius > wrap.clientHeight - v.top) return;
 
     const accent = '#ffffff';
     // A dark backing keeps the white boundary and label readable in both themes.
     const panel = '#151a1d';
-    const highContrast = document.documentElement.dataset.a11yHighContrast === 'true';
+    const innerOpacity = highContrast ? 0.18 : CONTROL_ZONE_MATERIAL.innerOpacity;
+    const edgeOpacity = innerOpacity + CONTROL_ZONE_MATERIAL.innerGlowStrength * 0.35;
+    // Bound the glow in screen pixels so zooming never washes out the map.
+    const glowWidth = Math.min(radius * 0.35, Math.max(6, Math.min(24, radius * 0.08)));
+    const lineWidth = highContrast ? 3 : Math.max(1.25, Math.min(2,
+        radius * 2 * CONTROL_ZONE_MATERIAL.thickness));
+
     ctx.save();
     ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    const fill = ctx.createRadialGradient(
+        center.x, center.y, 0,
+        center.x, center.y, outerRadius
+    );
+    fill.addColorStop(0, `rgba(255,255,255,${innerOpacity})`);
+    fill.addColorStop((radius - glowWidth) / outerRadius,
+        `rgba(255,255,255,${innerOpacity})`);
+    fill.addColorStop(radius / outerRadius, `rgba(255,255,255,${edgeOpacity})`);
+    fill.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = fill;
+    ctx.fillRect(center.x - outerRadius, center.y - outerRadius,
+        outerRadius * 2, outerRadius * 2);
+
+    // Keep the actual boundary at the configured physical radius. The glow
+    // is decorative and does not change the playable zone's geometry.
     ctx.beginPath();
     ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = accent;
-    ctx.globalAlpha = highContrast ? 0.12 : 0.07;
-    ctx.fill();
-    ctx.globalAlpha = 1;
     ctx.strokeStyle = panel;
-    ctx.lineWidth = highContrast ? 6 : 4;
+    ctx.lineWidth = highContrast ? 6 : lineWidth + 2;
     ctx.stroke();
     ctx.strokeStyle = accent;
-    ctx.lineWidth = highContrast ? 3 : 2;
+    ctx.globalAlpha = CONTROL_ZONE_MATERIAL.outerOpacity;
+    ctx.lineWidth = lineWidth;
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(center.x - 5, center.y);

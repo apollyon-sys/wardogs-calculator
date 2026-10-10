@@ -369,6 +369,138 @@ function drawPolygonLabel(
     ctx.restore();
 }
 
+// MI_UI_Safe_Zone parameters seed the Canvas approximation. Shader-space
+// thickness values are converted to bounded screen-pixel widths.
+const SPAWN_ZONE_MATERIAL = Object.freeze({
+    innerOpacity: 0.192,
+    innerGlowStrength: 1.85773,
+    outerOpacity: 0.444,
+    thickness: 0.02,
+    hookThickness: 0.05
+});
+
+function drawSpawnZonePolygon(polygon, validPoints) {
+    const points = validPoints.map(point => worldToLocalScreen(
+        storedMetersToWorldCoordinate(point.x),
+        storedMetersToWorldCoordinate(point.y)
+    ));
+    if (points.some(point => !Number.isFinite(point.x) || !Number.isFinite(point.y))) {
+        return false;
+    }
+
+    const edges = points.map((point, index) => {
+        const next = points[(index + 1) % points.length];
+        const dx = next.x - point.x;
+        const dy = next.y - point.y;
+        return { point, next, dx, dy, length: Math.hypot(dx, dy) };
+    });
+    if (edges.some(edge => edge.length <= 0)) return false;
+    const area = edges.reduce((sum, edge) =>
+        sum + edge.point.x * edge.next.y - edge.next.x * edge.point.y, 0);
+    if (!Number.isFinite(area) || Math.abs(area) < 1e-6) return false;
+
+    const minX = Math.min(...points.map(point => point.x));
+    const maxX = Math.max(...points.map(point => point.x));
+    const minY = Math.min(...points.map(point => point.y));
+    const maxY = Math.max(...points.map(point => point.y));
+    const v = view();
+    if (maxX < -v.left - 4 || maxY < -v.top - 4 ||
+        minX > wrap.clientWidth - v.left + 4 ||
+        minY > wrap.clientHeight - v.top + 4) return false;
+
+    const shortestEdge = Math.min(...edges.map(edge => edge.length));
+    const highContrast = document.documentElement.dataset.a11yHighContrast === 'true';
+    const color = polygon.color || '#d7a452';
+    const fillColor = polygon.fillColor || color;
+    const opacity = Number.isFinite(polygon.fillOpacity)
+        ? Math.max(0, Math.min(1, polygon.fillOpacity))
+        : SPAWN_ZONE_MATERIAL.innerOpacity;
+    const fillOpacity = highContrast ? Math.max(0.24, opacity) : opacity;
+    const glowWidth = Math.min(shortestEdge / 3,
+        Math.max(3, Math.min(18, shortestEdge * 0.06)));
+    const glowOpacity = highContrast ? 0.3 : SPAWN_ZONE_MATERIAL.innerGlowStrength * 0.1;
+    const lineWidth = highContrast ? 3 : Math.max(1,
+        Math.min(2, shortestEdge * SPAWN_ZONE_MATERIAL.thickness));
+    const hookWidth = highContrast ? 4 : Math.max(1.5,
+        Math.min(4, shortestEdge * SPAWN_ZONE_MATERIAL.hookThickness));
+    const hookLength = Math.min(24, shortestEdge * 0.28,
+        Math.max(4, shortestEdge * 0.16));
+    const traceBoundary = () => {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        points.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
+        ctx.closePath();
+    };
+
+    ctx.save();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'butt';
+    traceBoundary();
+    ctx.fillStyle = hexToRgba(fillColor, fillOpacity);
+    ctx.fill();
+
+    // Fade inward from each real edge instead of using a circular gradient.
+    // Clipping preserves the rotated outlines, including their corner points.
+    ctx.save();
+    ctx.clip();
+    edges.forEach(edge => {
+        const tx = edge.dx / edge.length;
+        const ty = edge.dy / edge.length;
+        const winding = area > 0 ? 1 : -1;
+        const nx = -ty * winding;
+        const ny = tx * winding;
+        const midX = (edge.point.x + edge.next.x) / 2;
+        const midY = (edge.point.y + edge.next.y) / 2;
+        const gradient = ctx.createLinearGradient(midX, midY,
+            midX + nx * glowWidth, midY + ny * glowWidth);
+        gradient.addColorStop(0, hexToRgba(color, glowOpacity));
+        gradient.addColorStop(1, hexToRgba(color, 0));
+        const startX = edge.point.x - tx * glowWidth;
+        const startY = edge.point.y - ty * glowWidth;
+        const endX = edge.next.x + tx * glowWidth;
+        const endY = edge.next.y + ty * glowWidth;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.lineTo(endX + nx * glowWidth, endY + ny * glowWidth);
+        ctx.lineTo(startX + nx * glowWidth, startY + ny * glowWidth);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
+    });
+    ctx.restore();
+
+    traceBoundary();
+    ctx.strokeStyle = '#151a1d';
+    ctx.lineWidth = lineWidth + 2;
+    ctx.stroke();
+    ctx.strokeStyle = hexToRgba(color, highContrast ? 1 : SPAWN_ZONE_MATERIAL.outerOpacity);
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+
+    // Short corner brackets distinguish deployment areas from other polygons.
+    ctx.beginPath();
+    points.forEach((point, index) => {
+        const previous = edges[(index + edges.length - 1) % edges.length];
+        const next = edges[index];
+        ctx.moveTo(point.x - previous.dx / previous.length * hookLength,
+            point.y - previous.dy / previous.length * hookLength);
+        ctx.lineTo(point.x, point.y);
+        ctx.lineTo(point.x + next.dx / next.length * hookLength,
+            point.y + next.dy / next.length * hookLength);
+    });
+    ctx.strokeStyle = '#151a1d';
+    ctx.lineWidth = hookWidth + 2;
+    ctx.stroke();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = hookWidth;
+    ctx.stroke();
+    ctx.restore();
+    return true;
+}
+
 function drawPresetPolygons(map) {
 
     if (
@@ -404,6 +536,13 @@ function drawPresetPolygons(map) {
                 validPoints.length <
                 3
             ) {
+                return;
+            }
+
+            if (polygon.renderStyle === 'spawn') {
+                if (drawSpawnZonePolygon(polygon, validPoints)) {
+                    drawPolygonLabel(polygon, validPoints);
+                }
                 return;
             }
 

@@ -170,6 +170,22 @@ See [Terrain Elevation & SPH-2 Setup](terrain.md) for runtime and validation det
 
 ---
 
+## Spawn area overlays
+
+The faction spawn polygons use `renderStyle: "spawn"`: a translucent faction
+color, an inward edge glow, a thin solid outline, and stronger corner brackets.
+The glow follows each edge of the rotated polygon. The style is a procedural
+Canvas approximation based on `MI_UI_Safe_Zone`; it requires no extra textures,
+asset requests, or animation. High-contrast mode strengthens the fill and frame,
+and stroke/glow widths are bounded in screen pixels as the map zoom changes.
+
+This style is selected explicitly in each map's `polygons` array. It is not
+inferred from labels or colors. `color` determines the faction tint and
+`fillOpacity` controls the base fill; polygons without this style use the
+ordinary renderer. Spawn polygons remain in the existing **Layers → Polygons**
+layer, with their labels and map coordinates. User-drawn polygons keep their
+own appearance.
+
 ## Marker assets and user placement
 
 Marker assets are defined in:
@@ -261,7 +277,15 @@ Terrain elevation is optional. A map without terrain data continues to use the n
 Choose the variant used in your match in **Setup → Control zone**. On mobile,
 this field is in the **Map** tab next to the map settings. The overlay uses a
 white boundary, a faint white fill, a center mark, and a label with the radius.
-A dark backing keeps it readable in both color themes.
+A soft inner glow and a short outer fade follow the appearance of the game's
+circular zone material. A dark backing keeps the boundary and label readable
+in both color themes; high-contrast mode uses a stronger fill and thicker line.
+
+The overlay is drawn procedurally in Canvas without extra asset requests or
+animation. Its opacity and glow strength are based on `MI_UI_Zone_Circle`
+and its parent `MI_UI_Zone`; the gradient is an approximation of the game
+material, not a copy of its shader. Line and glow widths stay bounded in screen
+pixels, while the boundary stays at the preset's physical radius.
 
 **Hidden** removes the zone from the current map. The separate
 **Layers → Control zone** checkbox hides the overlay without forgetting the
