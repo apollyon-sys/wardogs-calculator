@@ -150,6 +150,13 @@ function waitForStaticJsonRetry() {
 }
 
 async function fetchJSON(path) {
+    const load = () => fetchStaticJSON(path);
+    return typeof trackAssetLoadingProgress === 'function'
+        ? trackAssetLoadingProgress(`static:${path}`, load)
+        : load();
+}
+
+async function fetchStaticJSON(path) {
 
     const resource =
         versionStaticResource(

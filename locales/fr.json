@@ -351,5 +351,11 @@
   "reloadTrainerRestart": "Recommencer le tour",
   "reloadTrainerClose": "Fermer l’entraînement",
   "reloadTrainerHint": "Chaque quart se remplit en 6,5 secondes. Saisissez ses quatre flèches avec WASD pour le terminer plus tôt. Une erreur réinitialise tout le cercle et votre série de réussites.",
-  "reloadTrainerKeyboardHint": "R — commencer / recommencer · Échap — fermer. Les commandes clavier de la carte sont suspendues pendant l’entraînement."
+  "reloadTrainerKeyboardHint": "R — commencer / recommencer · Échap — fermer. Les commandes clavier de la carte sont suspendues pendant l’entraînement.",
+  "assetLoadingTitle": "Chargement des ressources de la carte",
+  "assetLoadingTerrain": "Chargement du relief",
+  "assetLoadingPreparing": "Préparation de la carte…",
+  "assetLoadingReady": "Ressources de la carte chargées",
+  "assetLoadingPartial": "Certaines ressources n’ont pas pu être chargées",
+  "assetLoadingScope": "Vue actuelle · {loaded}/{total} ressources chargées"
 }

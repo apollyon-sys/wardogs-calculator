@@ -237,12 +237,16 @@ function loadMarkerImage(asset) {
         failed: false
     };
 
+    const finishProgress = typeof beginAssetLoadingProgress === 'function'
+        ? beginAssetLoadingProgress(`marker:${key}`) : () => {};
+
     image.onload =
         () => {
 
             entry.loaded =
                 true;
 
+            finishProgress();
             draw();
         };
 
@@ -252,6 +256,7 @@ function loadMarkerImage(asset) {
             entry.failed =
                 true;
 
+            finishProgress(false);
             console.warn(
                 `Failed to load marker image: ${asset.path}`
             );

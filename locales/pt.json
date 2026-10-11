@@ -351,5 +351,11 @@
   "reloadTrainerRestart": "Reiniciar rodada",
   "reloadTrainerClose": "Fechar treino",
   "reloadTrainerHint": "Cada setor preenche-se em 6,5 segundos. Introduza as suas quatro setas com WASD para o concluir mais cedo. Uma tecla errada reinicia todo o círculo e a sequência de sucessos.",
-  "reloadTrainerKeyboardHint": "R — iniciar / reiniciar · Esc — fechar. O controle do mapa pelo teclado fica pausado durante o treino."
+  "reloadTrainerKeyboardHint": "R — iniciar / reiniciar · Esc — fechar. O controle do mapa pelo teclado fica pausado durante o treino.",
+  "assetLoadingTitle": "A carregar recursos do mapa",
+  "assetLoadingTerrain": "A carregar dados do terreno",
+  "assetLoadingPreparing": "A preparar o mapa…",
+  "assetLoadingReady": "Recursos do mapa carregados",
+  "assetLoadingPartial": "Não foi possível carregar alguns recursos",
+  "assetLoadingScope": "Vista atual · {loaded}/{total} recursos carregados"
 }

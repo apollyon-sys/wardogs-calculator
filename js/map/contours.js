@@ -224,6 +224,8 @@ function loadContours(mapId) {
         return Promise.resolve(CONTOUR_CACHE.get(mapId));
     }
 
+    const finishProgress = typeof beginAssetLoadingProgress === 'function'
+        ? beginAssetLoadingProgress(`contours:${mapId}`, { mapId }) : () => {};
     const pending = fetch(contoursUrl(mapId))
         .then(response => {
             if (!response.ok) {
@@ -245,9 +247,11 @@ function loadContours(mapId) {
 
             CONTOUR_CACHE.set(mapId, decoded);
 
+            finishProgress();
             return decoded;
         })
         .catch(error => {
+            finishProgress(false);
             console.warn(
                 `[contours] Could not load ${mapId} contours; ` +
                 'the layer will stay empty.',

@@ -1,0 +1,115 @@
+/* WARDOGS loading strip: preserve the supplied background/fill geometry. */
+.asset-loading-progress {
+    position: absolute;
+    left: 50%;
+    bottom: 76px;
+    z-index: 22;
+    width: min(480px, calc(100% - 36px));
+    padding: 13px 16px 11px;
+    box-sizing: border-box;
+    transform: translateX(-50%);
+    border: 1px solid rgba(255, 255, 255, .24);
+    background: rgba(15, 18, 20, .96);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .24);
+    pointer-events: none;
+}
+
+.asset-loading-progress[hidden],
+.asset-loading-progress [hidden] {
+    display: none !important;
+}
+
+.asset-loading-progress-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.asset-loading-progress-heading strong {
+    min-width: 0;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.asset-loading-progress-percentage {
+    flex-shrink: 0;
+    font: 600 17px/1.2 ui-monospace, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+}
+
+.asset-loading-progress-bar {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4254.67 / 196;
+    overflow: hidden;
+}
+
+.asset-loading-progress-bar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+}
+
+.asset-loading-progress-fill {
+    clip-path: inset(0 calc(100% - var(--asset-loading-progress, 0%)) 0 0);
+    transition: clip-path 120ms linear;
+}
+
+.asset-loading-progress-detail {
+    display: block;
+    margin-top: 7px;
+    color: #c6c9cc;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.asset-loading-progress.is-indeterminate .asset-loading-progress-fill {
+    animation: asset-loading-scan 1.6s ease-in-out infinite alternate;
+}
+
+.asset-loading-progress.is-partial {
+    border-color: #cba75e;
+}
+
+@keyframes asset-loading-scan {
+    from { clip-path: inset(0 78% 0 0); }
+    to { clip-path: inset(0 0 0 78%); }
+}
+
+.mobile-app .asset-loading-progress {
+    bottom: calc(var(--mobile-sheet-peek, 92px) + env(safe-area-inset-bottom) + 64px);
+    width: min(420px, calc(100% - 24px));
+    padding: 11px 12px;
+}
+
+.mobile-app.mobile-sheet-open .asset-loading-progress {
+    bottom: calc(min(64vh, 590px) + env(safe-area-inset-bottom) + 12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .asset-loading-progress-fill { transition: none; }
+    .asset-loading-progress.is-indeterminate .asset-loading-progress-fill {
+        animation: none;
+        clip-path: inset(0 35% 0 35%);
+    }
+}
+
+@media (forced-colors: active) {
+    .asset-loading-progress {
+        border-color: CanvasText;
+        background: Canvas;
+        color: CanvasText;
+    }
+    .asset-loading-progress-detail { color: CanvasText; }
+    .asset-loading-progress-bar { border: 1px solid CanvasText; }
+    .asset-loading-progress-background { visibility: hidden; }
+    .asset-loading-progress-fill { background: Highlight; }
+}

@@ -351,5 +351,11 @@
   "reloadTrainerRestart": "Zacznij od nowa",
   "reloadTrainerClose": "Zamknij trening",
   "reloadTrainerHint": "Każda ćwiartka wypełnia się w 6,5 sekundy. Wprowadź jej cztery strzałki klawiszami WASD, aby ukończyć ją wcześniej. Błędny klawisz zeruje całe koło i serię sukcesów.",
-  "reloadTrainerKeyboardHint": "R — start / restart · Esc — zamknij. Sterowanie mapą z klawiatury jest wstrzymane podczas treningu."
+  "reloadTrainerKeyboardHint": "R — start / restart · Esc — zamknij. Sterowanie mapą z klawiatury jest wstrzymane podczas treningu.",
+  "assetLoadingTitle": "Ładowanie zasobów mapy",
+  "assetLoadingTerrain": "Ładowanie danych terenu",
+  "assetLoadingPreparing": "Przygotowywanie mapy…",
+  "assetLoadingReady": "Zasoby mapy załadowane",
+  "assetLoadingPartial": "Nie udało się załadować części zasobów",
+  "assetLoadingScope": "Bieżący widok · załadowano {loaded}/{total} zasobów"
 }

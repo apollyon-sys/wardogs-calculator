@@ -347,5 +347,11 @@
   "reloadTrainerRestart": "Начать заново",
   "reloadTrainerClose": "Закрыть тренажёр",
   "reloadTrainerHint": "Каждая четверть заполняется за 6,5 секунды. Введите четыре стрелки с помощью WASD, чтобы завершить её раньше. Ошибка сбрасывает весь круг и стрик.",
-  "reloadTrainerKeyboardHint": "R — начать / заново · Esc — закрыть. Во время тренировки управление картой с клавиатуры отключено."
+  "reloadTrainerKeyboardHint": "R — начать / заново · Esc — закрыть. Во время тренировки управление картой с клавиатуры отключено.",
+  "assetLoadingTitle": "Загрузка ассетов карты",
+  "assetLoadingTerrain": "Загрузка рельефа",
+  "assetLoadingPreparing": "Подготовка карты…",
+  "assetLoadingReady": "Ассеты карты загружены",
+  "assetLoadingPartial": "Часть ассетов не удалось загрузить",
+  "assetLoadingScope": "Текущий вид · загружено {loaded}/{total}"
 }

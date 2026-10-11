@@ -347,5 +347,11 @@
   "reloadTrainerRestart": "Začít znovu",
   "reloadTrainerClose": "Zavřít trénink",
   "reloadTrainerHint": "Každá čtvrtina se vyplní za 6,5 sekundy. Zadejte její čtyři šipky pomocí WASD a dokončete ji dříve. Chybná klávesa resetuje celý kruh i sérii úspěchů.",
-  "reloadTrainerKeyboardHint": "R — start / restart · Esc — zavřít. Ovládání mapy klávesnicí je během tréninku pozastaveno."
+  "reloadTrainerKeyboardHint": "R — start / restart · Esc — zavřít. Ovládání mapy klávesnicí je během tréninku pozastaveno.",
+  "assetLoadingTitle": "Načítání prostředků mapy",
+  "assetLoadingTerrain": "Načítání dat terénu",
+  "assetLoadingPreparing": "Příprava mapy…",
+  "assetLoadingReady": "Prostředky mapy načteny",
+  "assetLoadingPartial": "Některé prostředky se nepodařilo načíst",
+  "assetLoadingScope": "Aktuální pohled · načteno {loaded}/{total} prostředků"
 }

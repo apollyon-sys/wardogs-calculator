@@ -351,5 +351,11 @@
   "reloadTrainerRestart": "Reiniciar ronda",
   "reloadTrainerClose": "Cerrar entrenamiento",
   "reloadTrainerHint": "Cada sector se llena en 6,5 segundos. Introduce sus cuatro flechas con WASD para completarlo antes. Una tecla incorrecta reinicia todo el círculo y la racha.",
-  "reloadTrainerKeyboardHint": "R — iniciar / reiniciar · Esc — cerrar. El control del mapa con el teclado se pausa durante el entrenamiento."
+  "reloadTrainerKeyboardHint": "R — iniciar / reiniciar · Esc — cerrar. El control del mapa con el teclado se pausa durante el entrenamiento.",
+  "assetLoadingTitle": "Cargando recursos del mapa",
+  "assetLoadingTerrain": "Cargando datos del terreno",
+  "assetLoadingPreparing": "Preparando el mapa…",
+  "assetLoadingReady": "Recursos del mapa cargados",
+  "assetLoadingPartial": "No se pudieron cargar algunos recursos",
+  "assetLoadingScope": "Vista actual · {loaded}/{total} recursos cargados"
 }

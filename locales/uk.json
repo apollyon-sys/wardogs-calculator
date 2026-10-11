@@ -351,5 +351,11 @@
   "reloadTrainerRestart": "Почати заново",
   "reloadTrainerClose": "Закрити тренажер",
   "reloadTrainerHint": "Кожна чверть заповнюється за 6,5 секунди. Введіть чотири стрілки за допомогою WASD, щоб завершити її раніше. Помилка скидає все коло та серію успіхів.",
-  "reloadTrainerKeyboardHint": "R — почати / заново · Esc — закрити. Під час тренування керування картою з клавіатури вимкнено."
+  "reloadTrainerKeyboardHint": "R — почати / заново · Esc — закрити. Під час тренування керування картою з клавіатури вимкнено.",
+  "assetLoadingTitle": "Завантаження ресурсів карти",
+  "assetLoadingTerrain": "Завантаження рельєфу",
+  "assetLoadingPreparing": "Підготовка карти…",
+  "assetLoadingReady": "Ресурси карти завантажено",
+  "assetLoadingPartial": "Частину ресурсів не вдалося завантажити",
+  "assetLoadingScope": "Поточний вид · завантажено {loaded}/{total}"
 }

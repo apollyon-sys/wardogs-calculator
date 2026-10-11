@@ -347,5 +347,11 @@
   "reloadTrainerRestart": "처음부터 다시 시작",
   "reloadTrainerClose": "연습 닫기",
   "reloadTrainerHint": "각 구간은 6.5초에 걸쳐 채워집니다. 화살표 4개를 WASD로 입력하면 더 빨리 완료할 수 있습니다. 잘못 입력하면 전체 원의 진행도와 연속 성공 횟수가 초기화됩니다.",
-  "reloadTrainerKeyboardHint": "R: 시작 / 재시작 · Esc: 닫기. 연습 중에는 키보드로 지도를 조작할 수 없습니다."
+  "reloadTrainerKeyboardHint": "R: 시작 / 재시작 · Esc: 닫기. 연습 중에는 키보드로 지도를 조작할 수 없습니다.",
+  "assetLoadingTitle": "지도 리소스 로딩 중",
+  "assetLoadingTerrain": "지형 데이터 로딩 중",
+  "assetLoadingPreparing": "지도 준비 중…",
+  "assetLoadingReady": "지도 리소스 로딩 완료",
+  "assetLoadingPartial": "일부 리소스를 불러오지 못했습니다",
+  "assetLoadingScope": "현재 화면 · {loaded}/{total}개 리소스 로딩 완료"
 }

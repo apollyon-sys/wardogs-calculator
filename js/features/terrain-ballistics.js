@@ -420,6 +420,14 @@
     }
 
     async function fetchJson(url) {
+        const load = () => fetchTerrainJsonData(url);
+        return typeof trackAssetLoadingProgress === 'function'
+            ? trackAssetLoadingProgress(`terrain-json:${url}`, load, {
+                mapId: assetLoadingMapId(url), kind: 'terrain'
+            }) : load();
+    }
+
+    async function fetchTerrainJsonData(url) {
         const response =
             await fetchTerrainResource(
                 url
@@ -841,6 +849,10 @@
             );
         }
 
+        const finishProgress = typeof beginAssetLoadingProgress === 'function'
+            ? beginAssetLoadingProgress(`terrain-chunk:${terrain.mapId}:${key}`, {
+                mapId: terrain.mapId, kind: 'terrain'
+            }) : () => {};
         const promise = (async () => {
             const response =
                 await fetchTerrainResource(
@@ -869,7 +881,13 @@
 
             terrain.chunkCache.set(key, chunk);
             return chunk;
-        })();
+        })().then(chunk => {
+            finishProgress();
+            return chunk;
+        }, error => {
+            finishProgress(false);
+            throw error;
+        });
 
         terrain.chunkPending.set(key, promise);
 

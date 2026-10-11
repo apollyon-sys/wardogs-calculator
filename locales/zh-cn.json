@@ -359,5 +359,11 @@
   "reloadTrainerRestart": "重新开始",
   "reloadTrainerClose": "关闭训练",
   "reloadTrainerHint": "每个区域会在6.5秒内逐渐填满。用WASD输入该区域的四个箭头可提前完成。输入错误会重置整个圆的进度和连胜次数。",
-  "reloadTrainerKeyboardHint": "R：开始 / 重来 · Esc：关闭。训练期间暂停地图键盘控制。"
+  "reloadTrainerKeyboardHint": "R：开始 / 重来 · Esc：关闭。训练期间暂停地图键盘控制。",
+  "assetLoadingTitle": "正在加载地图资源",
+  "assetLoadingTerrain": "正在加载地形数据",
+  "assetLoadingPreparing": "正在准备地图…",
+  "assetLoadingReady": "地图资源已加载",
+  "assetLoadingPartial": "部分资源无法加载",
+  "assetLoadingScope": "当前视图 · 已加载 {loaded}/{total} 个资源"
 }

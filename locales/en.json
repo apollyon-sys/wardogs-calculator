@@ -347,5 +347,11 @@
   "reloadTrainerRestart": "Restart circle",
   "reloadTrainerClose": "Close trainer",
   "reloadTrainerHint": "Each section fills in 6.5 seconds. Enter its four WASD arrows to finish it sooner. A wrong key resets the entire circle and your streak.",
-  "reloadTrainerKeyboardHint": "R — start / restart · Esc — close. Map keyboard controls are suspended while training."
+  "reloadTrainerKeyboardHint": "R — start / restart · Esc — close. Map keyboard controls are suspended while training.",
+  "assetLoadingTitle": "Loading map assets",
+  "assetLoadingTerrain": "Loading terrain data",
+  "assetLoadingPreparing": "Preparing the map…",
+  "assetLoadingReady": "Map assets ready",
+  "assetLoadingPartial": "Some assets could not be loaded",
+  "assetLoadingScope": "Current view · {loaded}/{total} assets ready"
 }

@@ -63,6 +63,7 @@ const desktopStyleFiles = [
     'styles/desktop/layout.css',
     'styles/desktop/controls.css',
     'styles/desktop/map.css',
+    'styles/desktop/asset-progress.css',
     'styles/desktop/saved-targets.css',
     'styles/desktop/chrome.css',
     'styles/desktop/map-tools.css',

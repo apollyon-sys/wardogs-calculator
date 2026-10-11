@@ -377,6 +377,14 @@
     }
 
     async function fetchJson(url) {
+        const load = () => fetchTerrainJsonData(url);
+        return typeof trackAssetLoadingProgress === 'function'
+            ? trackAssetLoadingProgress(`terrain-correction-json:${url}`, load, {
+                kind: 'terrain'
+            }) : load();
+    }
+
+    async function fetchTerrainJsonData(url) {
         const response =
             await fetchAssetResource(
                 url
@@ -391,7 +399,15 @@
         return response.json();
     }
 
-    async function fetchVerifiedPayload(
+    async function fetchVerifiedPayload(definition, label) {
+        const load = () => fetchVerifiedPayloadData(definition, label);
+        return typeof trackAssetLoadingProgress === 'function'
+            ? trackAssetLoadingProgress(`terrain-payload:${label}`, load, {
+                kind: 'terrain'
+            }) : load();
+    }
+
+    async function fetchVerifiedPayloadData(
         definition,
         label
     ) {

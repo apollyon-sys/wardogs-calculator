@@ -254,6 +254,17 @@ function getMapTileDiagnostics() {
 let TILE_ACTIVE_REQUESTS = 0;
 let TILE_QUEUE_EPOCH = 0;
 
+function getVisibleTileLoadingProgress() {
+    const counts = { total: 0, loaded: 0, failed: 0 };
+    for (const tile of TILE_CACHE.values()) {
+        if (!isTileRequestRelevant(tile)) continue;
+        counts.total++;
+        if (tile.loaded) counts.loaded++;
+        else if (tile.failed && !tile.deferred) counts.failed++;
+    }
+    return counts;
+}
+
 function sortTileLoadQueue() {
     TILE_LOAD_QUEUE.sort(
         (a, b) =>

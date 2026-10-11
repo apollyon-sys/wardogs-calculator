@@ -351,5 +351,11 @@
   "reloadTrainerRestart": "Runde neu starten",
   "reloadTrainerClose": "Training schließen",
   "reloadTrainerHint": "Jedes Viertel füllt sich in 6,5 Sekunden. Gib seine vier Pfeile mit WASD ein, um es früher abzuschließen. Eine falsche Taste setzt den gesamten Kreis und deine Erfolgsserie zurück.",
-  "reloadTrainerKeyboardHint": "R — Start / Neustart · Esc — Schließen. Die Kartensteuerung per Tastatur pausiert während des Trainings."
+  "reloadTrainerKeyboardHint": "R — Start / Neustart · Esc — Schließen. Die Kartensteuerung per Tastatur pausiert während des Trainings.",
+  "assetLoadingTitle": "Kartenressourcen werden geladen",
+  "assetLoadingTerrain": "Geländedaten werden geladen",
+  "assetLoadingPreparing": "Karte wird vorbereitet…",
+  "assetLoadingReady": "Kartenressourcen geladen",
+  "assetLoadingPartial": "Einige Ressourcen konnten nicht geladen werden",
+  "assetLoadingScope": "Aktuelle Ansicht · {loaded}/{total} Ressourcen geladen"
 }

@@ -359,5 +359,11 @@
   "reloadTrainerRestart": "Reiniciar ronda",
   "reloadTrainerClose": "Tancar l’entrenament",
   "reloadTrainerHint": "Cada sector s’omple en 6,5 segons. Introdueix les quatre fletxes amb WASD per completar-lo abans. Una tecla incorrecta reinicia tot el cercle i la ratxa.",
-  "reloadTrainerKeyboardHint": "R — iniciar / reiniciar · Esc — tancar. El control del mapa amb el teclat es pausa durant l’entrenament."
+  "reloadTrainerKeyboardHint": "R — iniciar / reiniciar · Esc — tancar. El control del mapa amb el teclat es pausa durant l’entrenament.",
+  "assetLoadingTitle": "Meow map meow",
+  "assetLoadingTerrain": "Meow terrain meow",
+  "assetLoadingPreparing": "Purr…",
+  "assetLoadingReady": "Map purrfect",
+  "assetLoadingPartial": "Some meows are missing",
+  "assetLoadingScope": "Current meow · {loaded}/{total} meows ready"
 }

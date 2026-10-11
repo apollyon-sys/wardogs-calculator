@@ -39,6 +39,10 @@ function draw() {
         return;
     }
 
+    if (typeof queueAssetLoadingProgressUpdate === 'function') {
+        queueAssetLoadingProgressUpdate();
+    }
+
     const W =
         wrap.clientWidth;
 
