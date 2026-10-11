@@ -9,16 +9,20 @@ const ASSET_LOADING_PROGRESS = {
     panel: null,
     context: '',
     wasBusy: false,
-    showUntil: 0
+    showUntil: 0,
+    completed: false
 };
 
 // Observe existing loads only. This UI must never fetch or prefetch assets.
 function beginAssetLoadingProgress(key, { mapId = null, kind = 'assets' } = {}) {
+    // Once startup finishes, later loads must never restart this indicator.
+    if (ASSET_LOADING_PROGRESS.completed) return () => {};
     const task = { mapId, kind, state: 'loading' };
     ASSET_LOADING_PROGRESS.resources.set(key, task);
     queueAssetLoadingProgressUpdate();
     return (success = true) => {
-        if (ASSET_LOADING_PROGRESS.resources.get(key) !== task) return;
+        if (ASSET_LOADING_PROGRESS.completed ||
+            ASSET_LOADING_PROGRESS.resources.get(key) !== task) return;
         task.state = success ? 'loaded' : 'failed';
         queueAssetLoadingProgressUpdate();
     };
@@ -74,11 +78,13 @@ function getAssetLoadingProgress() {
 }
 
 function queueAssetLoadingProgressUpdate() {
-    if (ASSET_LOADING_PROGRESS.timer !== null) return;
+    if (ASSET_LOADING_PROGRESS.completed) return false;
+    if (ASSET_LOADING_PROGRESS.timer !== null) return true;
     ASSET_LOADING_PROGRESS.timer = window.setTimeout(() => {
         ASSET_LOADING_PROGRESS.timer = null;
         updateAssetLoadingProgress();
     }, 100);
+    return true;
 }
 
 function createAssetLoadingProgress() {
@@ -128,16 +134,17 @@ function createAssetLoadingProgress() {
     return { panel, title, percentage, bar, detail };
 }
 
-function pruneFinishedAssetProgress() {
-    for (const [key, task] of ASSET_LOADING_PROGRESS.resources) {
-        if (task.state !== 'loading') ASSET_LOADING_PROGRESS.resources.delete(key);
-    }
-}
-
 function updateAssetLoadingProgress() {
     const state = ASSET_LOADING_PROGRESS;
-    const progress = getAssetLoadingProgress();
     const now = Date.now();
+    if (state.completed) {
+        if (now >= state.showUntil) {
+            if (state.panel) state.panel.panel.hidden = true;
+            state.resources.clear();
+        }
+        return;
+    }
+    const progress = getAssetLoadingProgress();
     if (progress.context !== state.context) {
         state.context = progress.context;
         state.wasBusy = false;
@@ -149,6 +156,9 @@ function updateAssetLoadingProgress() {
         if (state.panel) state.panel.panel.hidden = true;
         state.wasBusy = false;
         state.showUntil = 0;
+        state.completed = true;
+        state.resources.clear();
+        window.clearTimeout(state.hideTimer);
         return;
     }
     if (progress.busy) {
@@ -157,12 +167,14 @@ function updateAssetLoadingProgress() {
         window.clearTimeout(state.hideTimer);
     } else if (state.wasBusy) {
         state.wasBusy = false;
+        state.completed = true;
         const duration = progress.failed ? 3500 : 900;
         state.showUntil = now + duration;
         state.hideTimer = window.setTimeout(updateAssetLoadingProgress, duration);
     } else if (now >= state.showUntil) {
+        state.completed = true;
         if (state.panel) state.panel.panel.hidden = true;
-        pruneFinishedAssetProgress();
+        state.resources.clear();
         return;
     }
 

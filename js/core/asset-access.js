@@ -278,8 +278,8 @@ function initializeAssetAccessRecovery() {
 }
 
 function updateAssetAccessNotice() {
-    const hasProgress = typeof queueAssetLoadingProgressUpdate === 'function';
-    if (hasProgress) queueAssetLoadingProgressUpdate();
+    const hasProgress = typeof queueAssetLoadingProgressUpdate === 'function' &&
+        queueAssetLoadingProgressUpdate() !== false;
     window.clearTimeout(ASSET_ACCESS_STATE.noticeTimer);
     ASSET_ACCESS_STATE.noticeTimer = null;
     let notice = document.getElementById('assetAccessNotice');

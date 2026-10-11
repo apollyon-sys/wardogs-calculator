@@ -214,14 +214,19 @@ Distance, MIL, and azimuth are treated as the three primary firing-solution valu
 ## Map loading progress
 
 A compact white segmented progress bar, based on the in-game loading artwork,
-shows the assets needed for the current map view on desktop and mobile. It
+shows the initial map view while the page starts on desktop and mobile. It
 observes existing tile, marker, contour, configuration and Terrain3D loads; it
 does not prefetch the whole map. A file is ready after its body is read and its
 image or data is decoded, not merely after response headers arrive.
 
 The percentage is based on the number of currently known assets, including
 visible cached tiles, rather than transferred bytes or the full tile pyramid.
-Panning, zooming or changing maps can change that set and its percentage.
+The set can change while startup is still in progress. Once the initial load
+finishes, the indicator is disabled for the rest of that page visit. Panning,
+zooming, switching maps or styles and loading further Terrain3D data never
+reopen it, including during its brief completion display. Reloading the page
+starts a new initial load. A startup admission error also ends the indicator;
+the existing error notice handles recovery instead.
 Access checks use an indeterminate state; failed loads never count as ready.
 After completion the indicator disappears. Existing admission-error countdowns
 and retry controls are retained. Screen readers receive a labelled progress

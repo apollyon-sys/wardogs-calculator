@@ -135,7 +135,7 @@ test('admission waits are indeterminate and existing errors retain the retry not
     assert.equal(r.requests(), 0);
 });
 
-test('new work cancels completion hiding and rejects preserve the original error', async () => {
+test('later loads cannot cancel the initial completion or reopen the indicator', async () => {
     const r = runtime();
     const first = r.context.beginAssetLoadingProgress('first');
     await r.advance(100);
@@ -143,12 +143,93 @@ test('new work cancels completion hiding and rejects preserve the original error
     await r.advance(100);
     const second = r.context.beginAssetLoadingProgress('second');
     await r.advance(1000);
-    assert.equal(r.panel().hidden, false);
+    assert.equal(r.panel().hidden, true);
+    assert.equal(r.snapshot().total, 0);
     second();
+    // A changed viewport, map, style or session must not start a second cycle.
+    r.context.S.map = 'zestafona';
+    r.context.S.mapStyle = 'color';
+    r.context.visibleTiles = { total: 12, loaded: 3, failed: 0 };
+    r.context.ASSET_ACCESS_STATE.pending = Promise.resolve(true);
+    r.context.getVisibleTileLoadingProgress = () => {
+        throw new Error('Background redraws must not keep scanning the tile cache');
+    };
+    assert.equal(r.context.queueAssetLoadingProgressUpdate(), false);
+    r.context.beginAssetLoadingProgress('terrain-after-startup', { kind: 'terrain' });
+    await r.advance(1000);
+    assert.equal(r.panel().hidden, true);
+    assert.equal(r.map.children.length, 1);
     const error = new Error('decode failed');
     await assert.rejects(r.context.trackAssetLoadingProgress('invalid', async () => { throw error; }),
         actual => actual === error);
-    assert.equal(r.snapshot().failed, 1);
+    await r.advance(100);
+    assert.equal(r.panel().hidden, true);
+    assert.equal(r.requests(), 0);
+});
+
+test('startup remains visible until application initialization and initial tiles finish', async () => {
+    const r = runtime();
+    r.context.document.documentElement.dataset.appInitState = 'loading';
+    const config = r.context.beginAssetLoadingProgress('configuration');
+    config();
+    await r.advance(100);
+    assert.equal(r.panel().hidden, false);
+    await r.advance(1000);
+    assert.equal(r.panel().hidden, false);
+    r.context.visibleTiles = { total: 4, loaded: 1, failed: 0 };
+    r.context.document.documentElement.dataset.appInitState = 'ready';
+    r.context.queueAssetLoadingProgressUpdate();
+    await r.advance(100);
+    assert.equal(r.snapshot().waiting, 3);
+    assert.equal(r.panel().hidden, false);
+    r.context.visibleTiles.loaded = 4;
+    r.context.queueAssetLoadingProgressUpdate();
+    await r.advance(100);
+    assert.equal(r.panel().children[1].attributes.get('aria-valuenow'), '100');
+    await r.advance(900);
+    assert.equal(r.panel().hidden, true);
+    assert.equal(r.context.queueAssetLoadingProgressUpdate(), false);
+});
+
+test('a fast cached startup does not flash a loader on the first later asset', async () => {
+    const r = runtime();
+    r.context.beginAssetLoadingProgress('cached')();
+    await r.advance(100);
+    assert.equal(r.panel(), undefined);
+    r.context.beginAssetLoadingProgress('later');
+    r.context.queueAssetLoadingProgressUpdate();
+    await r.advance(1000);
+    assert.equal(r.panel(), undefined);
+});
+
+test('an initial access failure ends the loader and leaves later recovery to the notice', async () => {
+    const r = runtime();
+    const finish = r.context.beginAssetLoadingProgress('initial');
+    await r.advance(100);
+    r.context.ASSET_ACCESS_STATE.lastError = new Error('rate-limited');
+    r.context.queueAssetLoadingProgressUpdate();
+    await r.advance(100);
+    assert.equal(r.panel().hidden, true);
+    r.context.ASSET_ACCESS_STATE.lastError = null;
+    r.context.ASSET_ACCESS_STATE.pending = Promise.resolve(true);
+    finish();
+    r.context.beginAssetLoadingProgress('retry');
+    assert.equal(r.context.queueAssetLoadingProgressUpdate(), false);
+    await r.advance(1000);
+    assert.equal(r.panel().hidden, true);
+});
+
+test('reloading the page creates an independent initial loading cycle', async () => {
+    const firstPage = runtime();
+    const finish = firstPage.context.beginAssetLoadingProgress('initial');
+    await firstPage.advance(100);
+    finish();
+    await firstPage.advance(1000);
+    assert.equal(firstPage.panel().hidden, true);
+    const newPage = runtime();
+    newPage.context.beginAssetLoadingProgress('initial');
+    await newPage.advance(100);
+    assert.equal(newPage.panel().hidden, false);
 });
 
 test('tile progress counts current viewport and style only, keeping deferred loads pending', () => {
