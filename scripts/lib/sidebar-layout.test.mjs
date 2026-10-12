@@ -276,7 +276,14 @@ test('release MOTD is concise user-facing copy in every language', async () => {
         )
     );
 
-    assert.equal(motd.id, 'release-1-10-3-2026-10-06');
+    const config = JSON.parse(await readFile(join(root, 'config', 'app.json'), 'utf8'));
+    const version = config.site.footer.version;
+    assert.ok(motd.id.startsWith(`release-${version.replaceAll('.', '-')}-`),
+        'release announcement must match the application version');
+    assert.match(motd.id, /-\d{4}-\d{2}-\d{2}$/);
+    for (const title of Object.values(motd.title)) {
+        assert.ok(title.startsWith(`v${version} — `), 'localized title must match the release');
+    }
     assert.equal(Object.keys(motd.title).length, 13);
     assert.equal(Object.keys(motd.message).length, 13);
 

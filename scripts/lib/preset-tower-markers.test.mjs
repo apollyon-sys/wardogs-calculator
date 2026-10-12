@@ -98,8 +98,8 @@ test('pending or missing artwork retains numbered towers and the same target geo
         fixture.context.map.markers = [fixture.context.map.markers[1]];
         const geometry = fixture.run('getPresetMarkerScreenGeometry(map.markers[0])');
         fixture.run('drawPresetMarkers(map)');
-        assert.equal(geometry.width, 32);
-        assert.equal(geometry.height, 32);
+        assert.equal(geometry.width, options.missingAsset ? 32 : assets.tower.width);
+        assert.equal(geometry.height, options.missingAsset ? 32 : assets.tower.height);
         assert.deepEqual(fixture.calls.filter(call => call.name === 'fillText').map(call => call.args[0]), ['1']);
         assert.ok(fixture.calls.some(call => call.name === 'closePath'));
         fixture.context.pointer = geometry.center;
@@ -115,7 +115,10 @@ test('pending or missing artwork retains numbered towers and the same target geo
 
 test('rounded Zestafona coordinates still select and highlight the numbered tower', () => {
     const fixture = runtime();
-    fixture.context.map.markers = [fixture.context.map.markers[1]];
+    // Keep the fractional-coordinate regression independent of live map edits.
+    fixture.context.map.markers = [{
+        ...fixture.context.map.markers[1], x: 6860.1243, y: 10415.3977
+    }];
     assert.equal(fixture.run('selectPresetMarkerAsTarget(map.markers[0], 0)'), true);
     assert.equal(fixture.context.S.target.x, 68.6);
     assert.equal(fixture.context.S.target.y, 104.15);
