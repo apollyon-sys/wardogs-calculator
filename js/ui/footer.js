@@ -3,12 +3,7 @@
    ========================= */
 
 const FOOTER_PARTNERS = [
-    {
-        id: 'wardogs-hub',
-        label: 'Community partner',
-        name: 'WARDOGSHUB',
-        url: 'https://wardogshub.net/?utm_source=wardogs-artillery&utm_medium=partner&utm_campaign=footer'
-    }
+
 ];
 
 const DONATION_LINKS = [
