@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const root = new URL('../../', import.meta.url);
 const sources = new Map(await Promise.all([
-    'js/core/asset-access.js', 'js/map/tiles.js',
+    'js/core/asset-access.js', 'js/core/config.js', 'js/map/tiles.js',
     'js/features/terrain-ballistics.js', 'config/app.json',
     'data/ballistics/terrain-context.json', 'data/terrain/bakurani/manifest.json', 'js/ui/feedback.js'
 ].map(async path => [path, await readFile(new URL(path, root), 'utf8')])));
@@ -48,7 +48,7 @@ class Element {
     querySelector(selector) { return this.find(node => node.tag === selector); }
 }
 
-function runtime(handler, { restricted = false, challengeGate, sessionHandler } = {}) {
+function runtime(handler, { restricted = false, challengeGate, sessionHandler, deliveryCheck } = {}) {
     let now = Date.parse('2026-10-03T12:00:00Z');
     let timerId = 0;
     let challenges = 0;
@@ -58,6 +58,7 @@ function runtime(handler, { restricted = false, challengeGate, sessionHandler } 
     const timeouts = [];
     const timers = new Map();
     const requests = [];
+    const deliveryChecks = [];
     const events = [];
     const windowListeners = new Map();
     const documentListeners = new Map();
@@ -92,7 +93,7 @@ function runtime(handler, { restricted = false, challengeGate, sessionHandler } 
         }
     }
     const context = vm.createContext({
-        Date: ClockDate, URL: BlobURL, Image: TestImage,
+        Date: ClockDate, URL: BlobURL, URLSearchParams, Image: TestImage,
         AbortSignal: { timeout: delay => { timeouts.push(delay); return AbortSignal.timeout(delay); } },
         console: { info() {}, warn() {} }, document,
         location: { hostname: 'wardogs-artillery.com' },
@@ -113,6 +114,11 @@ function runtime(handler, { restricted = false, challengeGate, sessionHandler } 
         clearTimeout: id => timers.delete(id),
         fetch: async (url, options = {}) => {
             requests.push({ url, options, time: now });
+            if (options.method === 'HEAD') {
+                deliveryChecks.push({ url, options, time: now });
+                return deliveryCheck ? deliveryCheck(url, options) :
+                    new Response(null, { headers: { 'Content-Type': 'image/webp' } });
+            }
             if (url === `${gateway}/__session`) {
                 if (sessionHandler) return sessionHandler(options, now);
                 if (options.method === 'GET' && !sessionCreated) {
@@ -150,13 +156,13 @@ function runtime(handler, { restricted = false, challengeGate, sessionHandler } 
     context.window = context;
     vm.runInContext(sources.get('js/core/asset-access.js'), context);
     return {
-        context, requests, images, revoked, events,
+        context, requests, deliveryChecks, images, revoked, events,
         dispatch(name) { (documentListeners.get(name) || windowListeners.get(name))?.(); },
         challenges: () => challenges,
         challengeOptions: () => challengeOptions,
         timeouts,
         now: () => now,
-        assetRequests: () => requests.filter(request => !request.url.endsWith('/__session')),
+        assetRequests: () => requests.filter(request => !request.url.endsWith('/__session') && request.options.method !== 'HEAD'),
         load(path) { vm.runInContext(sources.get(path), context, { filename: path }); },
         async advance(milliseconds) {
             const until = now + milliseconds;
@@ -206,10 +212,132 @@ test('standard and regional sessions select the correct host with credentials', 
         assert.equal(request.options.credentials, 'include');
         assert.equal(request.options.referrerPolicy, 'no-referrer');
         assert.equal(r.challenges(), restricted ? 0 : 1);
+        assert.equal(r.deliveryChecks.length, restricted ? 0 : 1);
         assert.equal(new URL(r.context.resolveProtectedAssetURL(
             `${direct}/releases/assets-v1/maps/test.webp`
         )).origin, restricted ? gateway : direct);
     }
+});
+
+test('successful admission does not start tiles when R2 still returns a challenge', async () => {
+    const r = runtime(() => { throw new Error('must not load assets'); }, {
+        deliveryCheck: () => new Response('challenge', { status: 403,
+            headers: { 'Content-Type': 'text/html', 'cf-mitigated': 'challenge' } })
+    });
+    const results = await Promise.allSettled(Array.from({ length: 20 }, () => r.context.fetchAssetResource(asset)));
+    assert.ok(results.every(result => result.status === 'rejected'));
+    assert.equal(r.deliveryChecks.length, 1, 'all callers share one direct check');
+    assert.equal(r.assetRequests().length, 0);
+    const diagnostics = r.context.getAssetAccessDiagnostics();
+    assert.equal(diagnostics.sessionValid, false);
+    assert.equal(diagnostics.verificationRequired, true);
+    assert.equal(diagnostics.lastFailure.stage, 'delivery-check');
+    assert.equal(diagnostics.lastFailure.requestHost, new URL(direct).hostname);
+    assert.equal(diagnostics.lastFailure.code, 'asset-clearance-required');
+    const link = r.context.document.getElementById('assetAccessNotice').querySelector('a');
+    assert.equal(link.hidden, false);
+    const url = new URL(link.href);
+    assert.equal(url.origin, direct);
+    assert.equal(url.pathname, '/releases/assets-v1/access-check.html');
+    assert.equal(url.search, '', 'the WAF rejects query parameters');
+});
+
+test('HTML success responses and CORS failures are not accepted as direct access', async () => {
+    for (const deliveryCheck of [
+        () => new Response('challenge', { headers: { 'Content-Type': 'text/html' } }),
+        () => { throw new TypeError('Failed to fetch'); }
+    ]) {
+        const r = runtime(() => { throw new Error('must not load assets'); }, { deliveryCheck });
+        assert.equal(await r.context.ensureAssetAccess(), false);
+        assert.equal(r.context.getAssetAccessDiagnostics().verificationRequired, true);
+        assert.equal(r.assetRequests().length, 0);
+    }
+});
+
+test('one credentialed body-free direct check admits many successful resources', async () => {
+    const r = runtime(() => new Response('tile'));
+    const responses = await Promise.all(Array.from({ length: 30 }, () => r.context.fetchAssetResource(asset)));
+    assert.ok(responses.every(response => response.ok));
+    assert.equal(r.deliveryChecks.length, 1);
+    const { url, options } = r.deliveryChecks[0];
+    assert.equal(options.method, 'HEAD');
+    assert.equal(options.credentials, 'include');
+    assert.equal(options.cache, 'no-store');
+    assert.equal(new URL(url).origin, direct);
+    assert.equal(new URL(url).search, '');
+    assert.equal(r.context.getAssetAccessDiagnostics().directVerified, true);
+});
+
+test('a rate-limited direct check honors Retry-After without offering a verification bypass', async () => {
+    const r = runtime(() => { throw new Error('must not load assets'); }, {
+        deliveryCheck: () => new Response('', { status: 429, headers: { 'Retry-After': '42' } })
+    });
+    assert.equal(await r.context.ensureAssetAccess(), false);
+    assert.equal(r.context.getAssetAccessRetryAt(), r.now() + 42000);
+    assert.equal(await r.context.retryAssetAccess(), false);
+    assert.equal(r.deliveryChecks.length, 1);
+    assert.equal(r.context.document.getElementById('assetAccessNotice').querySelector('a').hidden, true);
+});
+
+test('a failed direct check resumes the queue after one shared recovery', async () => {
+    let blocked = true;
+    const r = runtime(() => new Response('tile'), { deliveryCheck: () =>
+        blocked ? new Response('', { status: 403 }) :
+            new Response(null, { headers: { 'Content-Type': 'image/webp' } }) });
+    r.context.onAssetAccessRetry(() => { void r.context.fetchAssetResource(asset).catch(() => {}); });
+    await assert.rejects(r.context.fetchAssetResource(asset));
+    assert.equal(r.assetRequests().length, 0);
+    blocked = false;
+    await r.advance(30000);
+    assert.equal(r.deliveryChecks.length, 2);
+    assert.equal(r.assetRequests().length, 1);
+    assert.equal(r.context.getAssetAccessDiagnostics().lastFailure, null);
+    assert.equal(r.context.document.getElementById('assetAccessNotice').hidden, true);
+});
+
+test('full-page verification reuses proven clearance and restores the original private URL locally', async () => {
+    const saved = 'https://wardogs-artillery.com/mobile/ru/?room=PRIVATE_ROOM#private';
+    const r = runtime(() => new Response('tile'), {
+        sessionHandler: (_options, now) => Response.json({ mode: 'standard', expiresAt: now + 3600000 })
+    });
+    let restored;
+    r.context.location = { hostname: 'wardogs-artillery.com', pathname: '/mobile/ru/',
+        hash: '#asset-access-verified', href: 'https://wardogs-artillery.com/mobile/ru/#asset-access-verified' };
+    r.context.sessionStorage = { getItem: () => saved, removeItem() {} };
+    r.context.history = { replaceState: (_state, _title, url) => { restored = url; } };
+    assert.equal(await r.context.initializeAssetAccess(), true);
+    assert.equal(restored, saved);
+    assert.equal(r.deliveryChecks.length, 1);
+    assert.equal(r.challenges(), 0, 'do not replace the newly proven native clearance');
+    assert.equal(r.context.getAssetAccessDiagnostics().sessionValid, true);
+    assert.doesNotMatch(JSON.stringify(r.requests), /PRIVATE_ROOM|#private/);
+});
+
+test('unbuilt clients retry failed configuration before sending any protected requests', async () => {
+    const r = runtime(() => new Response('tile'));
+    r.context.fetchJSON = async () => { throw new TypeError('configuration unavailable'); };
+    r.load('js/core/config.js');
+    assert.equal(await r.context.loadAppConfig(), false);
+    await assert.rejects(r.context.fetchAssetResource(asset));
+    assert.equal(r.requests.length, 0, 'do not fall through to the legacy host');
+    assert.equal(r.context.getAssetAccessDiagnostics().sessionValid, false);
+    assert.equal(r.context.getAssetAccessDiagnostics().lastFailure.code, 'asset-config-unavailable');
+    await r.advance(10000);
+    r.context.fetchJSON = async () => JSON.parse(sources.get('config/app.json'));
+    assert.equal(await r.context.retryAssetAccess(), true);
+    assert.ok((await r.context.fetchAssetResource(asset)).ok);
+    assert.equal(new URL(r.assetRequests()[0].url).origin, direct);
+});
+
+test('verification return keeps the mobile locale when session storage is unavailable', () => {
+    const r = runtime(() => new Response('tile'));
+    let restored;
+    r.context.location = { hostname: 'wardogs-artillery.com', pathname: '/mobile/ru/',
+        hash: '#asset-access-verified', href: 'https://wardogs-artillery.com/mobile/ru/#asset-access-verified' };
+    r.context.sessionStorage = { getItem() { throw new Error('storage disabled'); } };
+    r.context.history = { replaceState: (_state, _title, url) => { restored = url; } };
+    r.context.restoreAssetVerificationReturn();
+    assert.equal(restored, 'https://wardogs-artillery.com/mobile/ru/');
 });
 
 test('tiles wait for authorization and discard a viewport replaced while waiting', async () => {

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gAu5OZdY1WXMmCCKXwDVCpd/XvuFrrlesuPYXZFARgk='; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <title>WARDOGS — Map access</title>
+  <style>
+    :root{color-scheme:dark;font:16px/1.5 system-ui,sans-serif;background:#17191b;color:#e7e9eb}
+    body{margin:0;min-height:100svh;display:grid;place-items:center;padding:24px;box-sizing:border-box}
+    main{width:min(100%,440px);padding:24px;box-sizing:border-box;border:1px solid #a88942;border-radius:12px;background:#202326}
+    h1{font-size:22px;margin:0 0 12px}p{color:#b8bdc3}a{display:block;padding:12px;border:1px solid #c7a454;border-radius:8px;color:#e4c572;text-align:center;text-decoration:none}
+    a:focus-visible{outline:2px solid #e4c572;outline-offset:4px}
+  </style>
+</head>
+<body>
+  <main>
+    <h1 id="title">Map access verified</h1>
+    <p id="hint">Returning to the calculator. If nothing happens, use the link below.</p>
+    <a id="return" href="https://wardogs-artillery.com/">Return to calculator</a>
+  </main>
+  <script>
+    (() => {
+      const origin = 'https://wardogs-artillery.com';
+      let target = new URL('/', origin);
+      try {
+        const path = new URLSearchParams(window.location.hash.slice(1)).get('return') || '/';
+        const parsed = new URL(path, origin);
+        if (parsed.origin === origin && !parsed.username && !parsed.password) target = parsed;
+      } catch { /* Use the official homepage for malformed return paths. */ }
+      target.search = '';
+      target.hash = 'asset-access-verified';
+      document.getElementById('return').href = target.href;
+      window.location.replace(target.href);
+    })();
+  </script>
+</body>
+</html>

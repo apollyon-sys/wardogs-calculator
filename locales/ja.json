@@ -59,6 +59,8 @@
   "assetAccessWaiting": "{seconds} 秒後に再試行してください。",
   "assetAccessRetryHint": "マップと地形データの読み込みを再試行してください。",
   "assetAccessRetry": "読み込みを再試行",
+  "assetAccessVerify": "マップへのアクセスを確認",
+  "assetAccessVerifyHint": "ブラウザーの確認を完了してから計算機に戻ってください。",
   "assetAccessVerificationTitle": "マップを読み込むには確認が必要です",
   "assetAccessVerificationHint": "以下の確認を完了すると、読み込みを続行します。",
   "assetAccessLoading": "マップを読み込み中…",

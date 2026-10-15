@@ -63,6 +63,8 @@
   "assetAccessWaiting": "In {seconds} s erneut versuchen.",
   "assetAccessRetryHint": "Karte und Geländedaten erneut laden.",
   "assetAccessRetry": "Erneut laden",
+  "assetAccessVerify": "Kartenzugriff überprüfen",
+  "assetAccessVerifyHint": "Schließe die Browserprüfung ab und kehre zum Rechner zurück.",
   "assetAccessVerificationTitle": "Bestätigung zum Laden der Karte",
   "assetAccessVerificationHint": "Schließe die Prüfung unten ab, um die Karte weiterzuladen.",
   "assetAccessLoading": "Karte wird geladen…",

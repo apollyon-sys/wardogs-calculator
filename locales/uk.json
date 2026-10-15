@@ -63,6 +63,8 @@
   "assetAccessWaiting": "Повторіть через {seconds} с.",
   "assetAccessRetryHint": "Повторіть завантаження карти та даних рельєфу.",
   "assetAccessRetry": "Повторити завантаження",
+  "assetAccessVerify": "Перевірити доступ до карти",
+  "assetAccessVerifyHint": "Пройдіть перевірку браузера та поверніться до калькулятора.",
   "assetAccessVerificationTitle": "Підтвердьте доступ до карти",
   "assetAccessVerificationHint": "Пройдіть перевірку нижче, щоб продовжити завантаження.",
   "assetAccessLoading": "Завантаження карти…",

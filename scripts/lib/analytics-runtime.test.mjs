@@ -206,6 +206,19 @@ test('changing failure metadata does not create repeated tile-error events', () 
     assert.equal(reloaded.counts.length, 0);
 });
 
+test('asset failures retain bounded causes without sending private diagnostics', () => {
+    const r = environment();
+    r.context.trackAnalytics('asset-access-failed', { map: 'bakurani', phase: 'delivery-check',
+        code: 'asset-clearance-required', status: 403, cookie: 'SECRET', requestHost: 'PRIVATE_HOST' });
+    r.context.trackAnalytics('app-config-failed', { recovery: 'embedded', error: 'PRIVATE_ERROR' });
+    r.advance(1500);
+    assert.deepEqual(r.counts.map(item => item.path), [
+        'asset-access-failed/bakurani/delivery-check/asset-clearance-required/403',
+        'app-config-failed/embedded'
+    ]);
+    assert.doesNotMatch(JSON.stringify(r.counts), /SECRET|PRIVATE_/);
+});
+
 test('calculation adoption retains the twenty-percent session sample and bounded map/weapon context', () => {
     const selected = environment({ sample: 0.1 });
     for (let i = 0; i < 30; i++) {

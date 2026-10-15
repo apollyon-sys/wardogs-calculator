@@ -42,6 +42,9 @@ event referrer and the event's session-counting policy.
 | `map-style-changed/ozeti/color` | Color map style selected |
 | `contours-toggle/zestafona/on` | Contours enabled |
 | `asset-access-failed/bakurani/403` | Asset access returned an allowlisted HTTP status |
+| `asset-access-failed/bakurani/delivery-check/asset-clearance-required/403` | CDN access was not accepted after admission |
+| `app-config-failed/embedded` | Configuration request failed; the matching build snapshot was used |
+| `app-config-failed/pending` | Configuration is unavailable; protected loading waits for recovery |
 | `lobby-connected/bakurani/create` | Successful lobby creation |
 | `feedback-sent/bug` | Bug feedback accepted; the message is excluded |
 

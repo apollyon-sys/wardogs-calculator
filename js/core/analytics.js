@@ -25,7 +25,7 @@ const ANALYTICS_ALLOWED_EVENTS = new Set([
     'lobby-left', 'lobby-invite-copied', 'lobby-recovery-exported',
     'lobby-admission-fallback', 'client-error', 'map-load-failed',
     'asset-load-failed', 'terrain-load-failed', 'asset-access-failed',
-    'asset-access-recovered', 'map-first-tiles-ready'
+    'asset-access-recovered', 'map-first-tiles-ready', 'app-config-failed'
 ]);
 const ANALYTICS_REPEATABLE_EVENTS = new Set([
     'donation-click', 'partner-click', 'feedback-sent',
@@ -67,11 +67,20 @@ function getGoatCounterEventPath(name, data) {
         if (typeof data?.enabled === 'boolean') parts.push(data.enabled ? 'on' : 'off');
     }
     if (name === 'asset-access-failed') {
+        append(data?.phase, ['app-config', 'session-probe', 'turnstile-script',
+            'turnstile-challenge', 'session-create', 'session-confirm', 'delivery-check', 'asset-fetch']);
+        const code = String(data?.code || '');
+        const category = /^turnstile-/.test(code) ? 'turnstile'
+            : /^asset-(?:session-http-|http-)/.test(code) ? 'http'
+                : code;
+        append(category, ['turnstile', 'http', 'network-or-cors', 'timeout',
+            'asset-clearance-required', 'asset-config-unavailable', 'session-cookie-unavailable']);
         const status = Number(data?.status);
         if ([401, 403, 408, 425, 429, 500, 502, 503, 504].includes(status)) {
             parts.push(String(status));
         }
     }
+    if (name === 'app-config-failed') append(data?.recovery, ['embedded', 'pending']);
     return parts.join('/');
 }
 

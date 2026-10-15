@@ -175,11 +175,13 @@
 }
 
 .asset-access-notice[hidden],
-.asset-access-notice button[hidden] {
+.asset-access-notice button[hidden],
+.asset-access-notice a[hidden] {
     display: none !important;
 }
 
-.asset-access-notice button {
+.asset-access-notice button,
+.asset-access-notice .asset-access-verify {
     min-height: 36px;
     padding: 6px 12px;
     border: 1px solid var(--accent-border);
@@ -190,12 +192,21 @@
     cursor: pointer;
 }
 
+.asset-access-notice .asset-access-verify {
+    display: block;
+    margin-top: 8px;
+    box-sizing: border-box;
+    text-align: center;
+    text-decoration: none;
+}
+
 .asset-access-notice button:disabled {
     opacity: .6;
     cursor: default;
 }
 
-.asset-access-notice button:focus-visible {
+.asset-access-notice button:focus-visible,
+.asset-access-notice a:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
 }

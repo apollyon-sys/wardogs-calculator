@@ -59,6 +59,8 @@
   "assetAccessWaiting": "{seconds}초 후에 다시 시도해 주세요.",
   "assetAccessRetryHint": "지도와 지형 데이터를 다시 불러와 주세요.",
   "assetAccessRetry": "다시 불러오기",
+  "assetAccessVerify": "지도 접근 확인",
+  "assetAccessVerifyHint": "브라우저 확인을 완료한 후 계산기로 돌아오세요.",
   "assetAccessVerificationTitle": "지도를 불러오려면 인증해 주세요",
   "assetAccessVerificationHint": "아래 인증을 완료하면 지도를 계속 불러옵니다.",
   "assetAccessLoading": "지도를 불러오는 중…",

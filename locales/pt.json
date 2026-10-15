@@ -63,6 +63,8 @@
   "assetAccessWaiting": "Tente novamente em {seconds} s.",
   "assetAccessRetryHint": "Tente carregar o mapa e os dados do terreno novamente.",
   "assetAccessRetry": "Tentar novamente",
+  "assetAccessVerify": "Verificar acesso ao mapa",
+  "assetAccessVerifyHint": "Conclua a verificação do navegador e volte à calculadora.",
   "assetAccessVerificationTitle": "Verifica para carregar o mapa",
   "assetAccessVerificationHint": "Conclui a verificação abaixo para continuar o carregamento.",
   "assetAccessLoading": "A carregar o mapa…",

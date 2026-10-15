@@ -63,6 +63,8 @@
   "assetAccessWaiting": "Spróbuj ponownie za {seconds} s.",
   "assetAccessRetryHint": "Ponów wczytywanie mapy i danych terenu.",
   "assetAccessRetry": "Wczytaj ponownie",
+  "assetAccessVerify": "Sprawdź dostęp do mapy",
+  "assetAccessVerifyHint": "Przejdź weryfikację przeglądarki i wróć do kalkulatora.",
   "assetAccessVerificationTitle": "Potwierdź dostęp do mapy",
   "assetAccessVerificationHint": "Przejdź weryfikację poniżej, aby kontynuować wczytywanie.",
   "assetAccessLoading": "Wczytywanie mapy…",

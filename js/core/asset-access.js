@@ -14,6 +14,9 @@ const ASSET_ACCESS_STATE = {
     challengeTimer: null,
     lastFailureRefresh: 0,
     regionalFallback: false,
+    directVerified: false,
+    verificationRequired: false,
+    verificationReturn: false,
     stage: 'idle',
     retryAt: 0,
     retryTimer: null,
@@ -33,6 +36,8 @@ const ASSET_AUTOMATIC_RETRIES = 2;
 const ASSET_SESSION_TIMEOUT_MS = 30000;
 const ASSET_TURNSTILE_SCRIPT_TIMEOUT_MS = 30000;
 const ASSET_CHALLENGE_TIMEOUT_MS = 60000;
+const ASSET_VERIFICATION_RETURN_KEY = 'wardogs-asset-verification-return';
+const ASSET_VERIFICATION_RETURN_HASH = '#asset-access-verified';
 
 function assetAccessText(key, fallback) {
     const translated = typeof tr === 'function' ? tr(key) : '';
@@ -41,7 +46,7 @@ function assetAccessText(key, fallback) {
 
 function assetFailureCode(error) {
     const message = String(error?.message || '');
-    if (/^(turnstile-(?:unavailable|not-configured|expired|timeout|unsupported|\d{3,8})|asset-session-(?:invalid|http-\d{3})|asset-http-\d{3}|session-cookie-unavailable|session-required|gateway-not-configured|challenge-(?:required|unavailable|failed)|rate-limited|forbidden-origin|unavailable)$/.test(message)) {
+    if (/^(turnstile-(?:unavailable|not-configured|expired|timeout|unsupported|\d{3,8})|asset-session-(?:invalid|http-\d{3})|asset-http-\d{3}|asset-clearance-required|asset-config-unavailable|session-cookie-unavailable|session-required|gateway-not-configured|challenge-(?:required|unavailable|failed)|rate-limited|forbidden-origin|unavailable)$/.test(message)) {
         return message;
     }
     if (error?.name === 'TimeoutError') return 'timeout';
@@ -59,6 +64,7 @@ function assetFailureContext(error, stage, url = '') {
 
 function invalidateAssetSession() {
     ASSET_ACCESS_STATE.expiresAt = 0;
+    ASSET_ACCESS_STATE.directVerified = false;
     clearAssetRefreshTimer();
 }
 
@@ -78,6 +84,8 @@ function getAssetAccessDiagnostics() {
         expiresAt: state.expiresAt || null,
         pending: Boolean(state.pending),
         regionalFallback: state.regionalFallback,
+        directVerified: state.directVerified,
+        verificationRequired: state.verificationRequired,
         paused: isAssetAccessPaused(),
         awaitingManualRetry: state.awaitingRetry,
         retryAt: state.retryAt || null,
@@ -187,6 +195,7 @@ function pauseAssetAccess(error, response = null) {
     // Concurrent failures share a deadline and one recovery attempt.
     ASSET_ACCESS_STATE.retryAt = Math.max(ASSET_ACCESS_STATE.retryAt, retryAt);
     ASSET_ACCESS_STATE.lastError = error;
+    ASSET_ACCESS_STATE.verificationRequired = Boolean(error.requiresVerification);
     reportAssetAccessFailure(error);
     ASSET_ACCESS_STATE.failureGeneration++;
     ASSET_ACCESS_STATE.awaitingRetry =
@@ -229,6 +238,7 @@ function clearAssetAccessFailure() {
         }
     }
     ASSET_ACCESS_STATE.lastError = null;
+    ASSET_ACCESS_STATE.verificationRequired = false;
     ASSET_ACCESS_STATE.failureTelemetryKey = '';
     ASSET_ACCESS_STATE.retryAt = 0;
     ASSET_ACCESS_STATE.automaticRetries = 0;
@@ -277,6 +287,43 @@ function initializeAssetAccessRecovery() {
     document.addEventListener?.('visibilitychange', retryAssetAccessAfterEnvironmentChange);
 }
 
+function assetVerificationURL() {
+    if (!usesPreclearanceAssetDelivery() || ASSET_ACCESS_STATE.regionalFallback) return '';
+    const base = new URL(document.baseURI);
+    // The production verification page only returns to the official site.
+    if (base.origin !== 'https://wardogs-artillery.com') return '';
+    const path = getAssetGatewayConfig().verificationPath;
+    if (typeof path !== 'string' || !path.startsWith('/releases/assets-v1/') || /[?#]/.test(path)) return '';
+    const url = new URL(path, getAssetDirectOrigin());
+    if (!url.pathname.startsWith('/releases/assets-v1/')) return '';
+    url.hash = new URLSearchParams({ return: window.location.pathname || base.pathname }).toString();
+    return url.href;
+}
+
+function rememberAssetVerificationReturn() {
+    try {
+        // Private URL parameters stay on the application origin, not in the
+        // verification page URL, logs or analytics.
+        window.sessionStorage.setItem(ASSET_VERIFICATION_RETURN_KEY, window.location.href);
+    } catch { /* The clean locale/mobile path is still a usable return URL. */ }
+}
+
+function restoreAssetVerificationReturn() {
+    if (window.location.hash !== ASSET_VERIFICATION_RETURN_HASH) return;
+    ASSET_ACCESS_STATE.verificationReturn = true;
+    let target = new URL(window.location.href || document.baseURI);
+    target.hash = '';
+    try {
+        const saved = window.sessionStorage.getItem(ASSET_VERIFICATION_RETURN_KEY);
+        window.sessionStorage.removeItem(ASSET_VERIFICATION_RETURN_KEY);
+        if (saved) {
+            const parsed = new URL(saved);
+            if (parsed.origin === target.origin && !parsed.username && !parsed.password) target = parsed;
+        }
+    } catch { /* Storage may be disabled. */ }
+    window.history?.replaceState(null, '', target.href);
+}
+
 function updateAssetAccessNotice() {
     const hasProgress = typeof queueAssetLoadingProgressUpdate === 'function' &&
         queueAssetLoadingProgressUpdate() !== false;
@@ -308,7 +355,10 @@ function updateAssetAccessNotice() {
         const retry = document.createElement('button');
         retry.type = 'button';
         retry.addEventListener('click', () => { void retryAssetAccess(); });
-        content.append(title, message, retry);
+        const verify = document.createElement('a');
+        verify.className = 'asset-access-verify';
+        verify.addEventListener('click', rememberAssetVerificationReturn);
+        content.append(title, message, retry, verify);
         notice.append(content);
         map.append(notice);
     }
@@ -329,6 +379,16 @@ function updateAssetAccessNotice() {
         : seconds
             ? text('assetAccessWaiting', 'Try again in {seconds} s.').replace('{seconds}', seconds)
             : text('assetAccessRetryHint', 'Retry loading the map and terrain data.');
+    const verificationURL = ASSET_ACCESS_STATE.verificationRequired ? assetVerificationURL() : '';
+    const verify = notice.querySelector('a');
+    verify.hidden = !verificationURL || pending;
+    if (verificationURL) {
+        verify.href = verificationURL;
+        verify.textContent = text('assetAccessVerify', 'Verify map access');
+        if (!pending) notice.querySelector('p').textContent = text(
+            'assetAccessVerifyHint', 'Complete a browser check, then return to the calculator.'
+        );
+    }
     const retry = notice.querySelector('button');
     retry.hidden = pending;
     retry.disabled = seconds > 0 || Boolean(ASSET_ACCESS_STATE.pending);
@@ -660,10 +720,12 @@ function resolveProtectedAssetURL(value) {
 }
 
 function hasValidAssetAccess() {
+    if (typeof APP_CONFIG_LOAD_STATE === 'object' && APP_CONFIG_LOAD_STATE.failed) return false;
     return (
         !isAssetGatewayEnabled() ||
-        ASSET_ACCESS_STATE.expiresAt >
-            Date.now() + 15000
+        (ASSET_ACCESS_STATE.expiresAt > Date.now() + 15000 &&
+            (!usesPreclearanceAssetDelivery() || ASSET_ACCESS_STATE.mode === 'restricted' ||
+                ASSET_ACCESS_STATE.directVerified))
     );
 }
 
@@ -742,6 +804,7 @@ function rememberAssetSession(data) {
     ASSET_ACCESS_STATE.regionalFallback =
         ASSET_ACCESS_STATE.mode ===
             'restricted';
+    ASSET_ACCESS_STATE.directVerified = false;
 
     clearAssetRefreshTimer();
 
@@ -1078,6 +1141,45 @@ async function probeAssetSession(stage = 'session-probe') {
     );
 }
 
+async function verifyDirectAssetAccess() {
+    if (!usesPreclearanceAssetDelivery() || ASSET_ACCESS_STATE.mode !== 'standard') return;
+    const path = getAssetGatewayConfig().probePath ||
+        '/releases/assets-v1/maps/tiles/bakurani/zoom_0/0_0.webp';
+    const url = new URL(path, getAssetDirectOrigin());
+    if (url.origin !== getAssetDirectOrigin() ||
+        !url.pathname.startsWith('/releases/assets-v1/') || url.search || url.hash) {
+        throw new Error('asset-config-unavailable');
+    }
+    ASSET_ACCESS_STATE.stage = 'delivery-check';
+    let response;
+    try {
+        // One body-free request per admission, shared by all tiles and terrain
+        // callers. A signed Worker session is not proof of R2 pre-clearance.
+        response = await fetch(url.href, {
+            method: 'HEAD', credentials: 'include', cache: 'no-store',
+            referrerPolicy: 'no-referrer', redirect: 'error',
+            signal: AbortSignal.timeout(ASSET_SESSION_TIMEOUT_MS)
+        });
+    } catch (error) {
+        error.requiresVerification = true;
+        throw assetFailureContext(error, 'delivery-check', url.href);
+    }
+    if (!response.ok) {
+        const error = assetResponseError(response);
+        error.requiresVerification = response.status === 401 || response.status === 403;
+        if (error.requiresVerification) error.message = 'asset-clearance-required';
+        throw assetFailureContext(error, 'delivery-check', url.href);
+    }
+    if (response.headers.get('cf-mitigated') === 'challenge' ||
+        !/^image\/webp(?:\s*;|$)/i.test(response.headers.get('content-type') || '')) {
+        const error = new Error('asset-clearance-required');
+        error.requiresVerification = true;
+        throw assetFailureContext(error, 'delivery-check', url.href);
+    }
+    ASSET_ACCESS_STATE.directVerified = true;
+    ASSET_ACCESS_STATE.verificationRequired = false;
+}
+
 async function createAssetSession() {
     let challengeToken = '';
 
@@ -1114,13 +1216,15 @@ async function createAssetSession() {
         error.status = 401;
         throw error;
     }
+    await verifyDirectAssetAccess();
     return true;
 }
 
 async function ensureAssetAccess({
     force = false
 } = {}) {
-    if (!isAssetGatewayEnabled()) {
+    const configurationFailed = typeof APP_CONFIG_LOAD_STATE === 'object' && APP_CONFIG_LOAD_STATE.failed;
+    if (!configurationFailed && !isAssetGatewayEnabled()) {
         return true;
     }
 
@@ -1138,9 +1242,25 @@ async function ensureAssetAccess({
 
     ASSET_ACCESS_STATE.pending =
         (async () => {
+            if (configurationFailed) {
+                ASSET_ACCESS_STATE.stage = 'app-config';
+                if (!await loadAppConfig()) throw new Error('asset-config-unavailable');
+                if (!isAssetGatewayEnabled()) return true;
+            }
             // Re-probe even on a forced refresh: the connection/region may
             // have changed, and the server decides the permitted delivery path.
             const reused = await probeAssetSession();
+
+            // After a full-page challenge, test its real result before running
+            // another embedded widget that might replace the working clearance.
+            if (reused && ASSET_ACCESS_STATE.verificationReturn && usesPreclearanceAssetDelivery() &&
+                ASSET_ACCESS_STATE.mode === 'standard') {
+                ASSET_ACCESS_STATE.verificationReturn = false;
+                await verifyDirectAssetAccess();
+                ASSET_ACCESS_STATE.stage = 'ready';
+                return true;
+            }
+            ASSET_ACCESS_STATE.verificationReturn = false;
 
             if (
                 reused &&
@@ -1157,9 +1277,11 @@ async function ensureAssetAccess({
         })()
             .catch(error => {
                 ASSET_ACCESS_STATE.expiresAt = 0;
+                ASSET_ACCESS_STATE.directVerified = false;
                 ASSET_ACCESS_STATE.mode = '';
                 clearAssetRefreshTimer();
-                pauseAssetAccess(assetFailureContext(error, ASSET_ACCESS_STATE.stage, assetSessionURL()), error.response);
+                pauseAssetAccess(assetFailureContext(error, error.stage || ASSET_ACCESS_STATE.stage,
+                    error.requestHost ? '' : ASSET_ACCESS_STATE.stage === 'app-config' ? document.baseURI : getAssetGatewayOrigin()), error.response);
 
                 console.warn(
                     '[asset-access] Protected map assets are unavailable.',
@@ -1307,6 +1429,7 @@ async function fetchAssetResource(
 }
 
 async function initializeAssetAccess() {
+    restoreAssetVerificationReturn();
     showLocalAssetWarning();
     initializeAssetAccessRecovery();
     return ensureAssetAccess();

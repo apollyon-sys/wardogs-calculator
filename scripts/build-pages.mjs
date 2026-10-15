@@ -250,9 +250,10 @@ async function bundleStyles() {
 
 async function bundleScriptFiles(
     files,
-    outputName
+    outputName,
+    appConfig
 ) {
-    let javascript = '';
+    let javascript = `const BUILT_APP_CONFIG = ${JSON.stringify(appConfig)};\n`;
 
     for (const file of files) {
         javascript +=
@@ -289,14 +290,17 @@ async function bundleScriptFiles(
 }
 
 async function bundleScripts() {
+    const appConfig = await readAppConfig();
     await bundleScriptFiles(
         desktopScriptFiles,
-        'app.bundle.js'
+        'app.bundle.js',
+        appConfig
     );
 
     await bundleScriptFiles(
         mobileScriptFiles,
-        'mobile.bundle.js'
+        'mobile.bundle.js',
+        appConfig
     );
 }
 

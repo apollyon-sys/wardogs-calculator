@@ -217,6 +217,8 @@
   "assetAccessWaiting": "Torna-ho a provar d’aquí a {seconds} s.",
   "assetAccessRetryHint": "Torna a carregar el mapa i les dades del terreny.",
   "assetAccessRetry": "Torna a carregar",
+  "assetAccessVerify": "Verifica l’accés al mapa",
+  "assetAccessVerifyHint": "Completa la verificació del navegador i torna a la calculadora.",
   "assetAccessVerificationTitle": "Verifica per carregar el mapa",
   "assetAccessVerificationHint": "Completa la verificació de sota per continuar la càrrega.",
   "assetAccessLoading": "S’està carregant el mapa…",

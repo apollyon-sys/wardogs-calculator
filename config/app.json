@@ -27,6 +27,8 @@
     "mode": "preclearance",
     "origin": "https://assets.wardogs-artillery.com",
     "directOrigin": "https://assets-v2.wardogs-artillery.com",
+    "probePath": "/releases/assets-v1/maps/tiles/bakurani/zoom_0/0_0.webp",
+    "verificationPath": "/releases/assets-v1/access-check.html",
     "sessionPath": "/__session",
     "turnstile": {
       "enabled": true,

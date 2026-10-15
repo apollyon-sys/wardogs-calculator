@@ -63,6 +63,8 @@
   "assetAccessWaiting": "Réessayez dans {seconds} s.",
   "assetAccessRetryHint": "Relancez le chargement de la carte et des données du terrain.",
   "assetAccessRetry": "Réessayer",
+  "assetAccessVerify": "Vérifier l’accès à la carte",
+  "assetAccessVerifyHint": "Effectuez la vérification du navigateur, puis revenez au calculateur.",
   "assetAccessVerificationTitle": "Vérification pour charger la carte",
   "assetAccessVerificationHint": "Effectuez la vérification ci-dessous pour poursuivre le chargement.",
   "assetAccessLoading": "Chargement de la carte…",

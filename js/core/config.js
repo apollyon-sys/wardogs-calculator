@@ -80,6 +80,8 @@ const DEFAULT_APP_CONFIG = {
     }
 };
 
+const APP_CONFIG_LOAD_STATE = { failed: false, pending: null };
+
 function mergeAppConfig(base, override) {
     return {
         ...base,
@@ -138,28 +140,35 @@ function mergeAppConfig(base, override) {
 }
 
 async function loadAppConfig() {
+    if (APP_CONFIG_LOAD_STATE.pending) return APP_CONFIG_LOAD_STATE.pending;
+    APP_CONFIG_LOAD_STATE.pending = (async () => {
+        try {
+            const loaded = await fetchJSON('config/app.json');
+            if (!loaded || typeof loaded !== 'object' || Array.isArray(loaded) ||
+                typeof loaded.assetGateway?.enabled !== 'boolean') {
+                throw new Error('app-config-invalid');
+            }
+            APP_CONFIG = mergeAppConfig(DEFAULT_APP_CONFIG, loaded);
+            APP_CONFIG_LOAD_STATE.failed = false;
+            return true;
+        } catch (error) {
+            // The production bundle carries the configuration from the same
+            // build. A failed JSON request must not disable asset admission or
+            // silently discard the deployed ballistics and lobby settings.
+            const embedded = typeof BUILT_APP_CONFIG === 'object' && BUILT_APP_CONFIG;
+            APP_CONFIG = mergeAppConfig(DEFAULT_APP_CONFIG, embedded || {});
+            APP_CONFIG_LOAD_STATE.failed = !embedded;
+            console.warn('Failed to load config/app.json; using build configuration when available.', error);
+            if (typeof trackAnalytics === 'function') {
+                try { trackAnalytics('app-config-failed', { recovery: embedded ? 'embedded' : 'pending' }); } catch {}
+            }
+            return Boolean(embedded);
+        }
+    })();
     try {
-        const loaded =
-            await fetchJSON(
-                'config/app.json'
-            );
-
-        APP_CONFIG =
-            mergeAppConfig(
-                DEFAULT_APP_CONFIG,
-                loaded
-            );
-    } catch (error) {
-        console.warn(
-            'Failed to load config/app.json, using defaults:',
-            error
-        );
-
-        APP_CONFIG =
-            mergeAppConfig(
-                DEFAULT_APP_CONFIG,
-                {}
-            );
+        return await APP_CONFIG_LOAD_STATE.pending;
+    } finally {
+        APP_CONFIG_LOAD_STATE.pending = null;
     }
 }
 

@@ -59,6 +59,8 @@
   "assetAccessWaiting": "请在 {seconds} 秒后重试。",
   "assetAccessRetryHint": "请重新加载地图和地形数据。",
   "assetAccessRetry": "重新加载",
+  "assetAccessVerify": "验证地图访问",
+  "assetAccessVerifyHint": "请完成浏览器验证，然后返回计算器。",
   "assetAccessVerificationTitle": "请完成验证以加载地图",
   "assetAccessVerificationHint": "完成下方验证后即可继续加载。",
   "assetAccessLoading": "正在加载地图…",

@@ -59,6 +59,8 @@
   "assetAccessWaiting": "Try again in {seconds} s.",
   "assetAccessRetryHint": "Retry loading the map and terrain data.",
   "assetAccessRetry": "Retry loading",
+  "assetAccessVerify": "Verify map access",
+  "assetAccessVerifyHint": "Complete a browser check, then return to the calculator.",
   "assetAccessVerificationTitle": "Verify to load the map",
   "assetAccessVerificationHint": "Complete the check below to continue loading.",
   "assetAccessLoading": "Loading the map…",

@@ -61,6 +61,10 @@ for (const path of ['js/ui/developer.js', 'js/core/diagnostics.js', 'assets-gate
 }
 for (const name of ['app', 'mobile']) {
     const source = await readFile(join(dist, 'js', `${name}.bundle.js`), 'utf8');
+    const embeddedConfig = source.match(/^const BUILT_APP_CONFIG = (.+);$/m)?.[1];
+    assert.ok(embeddedConfig, `${name}: missing build configuration fallback`);
+    assert.deepEqual(JSON.parse(embeddedConfig), JSON.parse(await readFile(join(root, 'config/app.json'), 'utf8')),
+        `${name}: embedded configuration differs from the deployed JSON`);
     assert.doesNotMatch(source, /function (?:installDeveloperMenu|captureDeveloperFiringDiagnostics|getDeveloperDiagnostics)\(/, `${name}: developer menu entered public bundle`);
 }
 assert.equal(artifactFiles.some(path => path.includes(`${join('maps', 'tiles')}`)), false, 'map tiles entered the Pages artifact');
