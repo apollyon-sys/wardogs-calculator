@@ -10,7 +10,7 @@
     "maxY": 129.65
   },
   "tiles": {
-    "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles/bakurani-dev",
+    "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles/bakurani",
     "tileSize": 128,
     "minZoom": 0,
     "maxZoom": 6,
@@ -18,10 +18,10 @@
     "defaultStyle": "grayscale",
     "styles": {
       "grayscale": {
-        "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles/bakurani-dev"
+        "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles/bakurani"
       },
       "color": {
-        "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles-color/bakurani-dev"
+        "path": "https://assets.wardogs-artillery.com/releases/assets-v1/maps/tiles-color/bakurani"
       }
     }
   },
