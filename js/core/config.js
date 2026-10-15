@@ -57,7 +57,7 @@ const DEFAULT_APP_CONFIG = {
             sourceCodeUrl:
                 'https://github.com/apollyon-sys/wardogs-calculator',
             version:
-                '1.10.4'
+                '1.10.5'
         }
     },
 
