@@ -105,50 +105,6 @@ function request(path, options = {}) {
     );
 }
 
-test('versioned tiles require admission and use independent R2 objects and edge cache entries', async () => {
-    const previousCaches = globalThis.caches;
-    const cached = new Map();
-    const reads = [];
-    const pending = [];
-    const environment = env();
-    const legacy = '/releases/assets-v1/maps/tiles/bakurani/zoom_0/0_0.webp';
-    const revised = '/releases/assets-v1/maps/tiles/bakurani/revisions/s2-20261015/zoom_0/0_0.webp';
-    const missing = revised.replace('s2-20261015', 'not-published');
-    environment.ASSETS.get = async key => {
-        reads.push(key);
-        if (![legacy.slice(1), revised.slice(1)].includes(key)) return null;
-        const body = key === revised.slice(1) ? 'new-preview' : 'old-preview';
-        return {
-            body, size: body.length, httpEtag: `"${body}"`,
-            writeHttpMetadata(headers) { headers.set('Content-Type', 'image/webp'); }
-        };
-    };
-    globalThis.caches = { default: {
-        async match(key) { return cached.get(key.url)?.clone(); },
-        async put(key, value) { cached.set(key.url, value.clone()); }
-    } };
-    const context = { waitUntil(promise) { pending.push(promise); } };
-    try {
-        assert.equal((await handleRequest(request(revised), environment, context)).status, 401);
-        assert.equal(reads.length, 0);
-        const cookie = await admittedCookie(environment);
-        const fetchTile = path => handleRequest(request(path, { headers: { Cookie: cookie } }), environment, context);
-        assert.equal(await (await fetchTile(legacy)).text(), 'old-preview');
-        assert.equal(await (await fetchTile(revised)).text(), 'new-preview');
-        await Promise.all(pending);
-        assert.equal(await (await fetchTile(revised)).text(), 'new-preview');
-        assert.deepEqual(reads, [legacy.slice(1), revised.slice(1)]);
-        assert.equal(cached.size, 2);
-        assert.equal((await fetchTile(missing)).status, 404);
-        assert.equal(reads.at(-1), missing.slice(1));
-        assert.equal((await fetchTile(`${revised}?v=1`)).status, 400);
-        assert.equal(reads.length, 3);
-    } finally {
-        if (previousCaches === undefined) delete globalThis.caches;
-        else globalThis.caches = previousCaches;
-    }
-});
-
 test('gateway requires a signed session before reading R2', async () => {
     const environment = env();
 

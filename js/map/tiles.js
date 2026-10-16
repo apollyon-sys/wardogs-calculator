@@ -164,31 +164,14 @@ function getTileZoom(map) {
    CACHE / URL
    ========================= */
 
-function getTileSourceKey(
-    map,
-    styleId = getMapTileStyleId(map)
-) {
-    const tiles = getTileConfig(map, styleId);
-
-    // A map/style can receive a new pyramid without changing its identity.
-    // Keep detailed tiles and their preview ancestors in the same source.
-    return JSON.stringify([
-        map?.id,
-        styleId,
-        tiles?.path,
-        tiles?.tileSize,
-        tiles?.extension
-    ]);
-}
-
 function tileKey(
-    sourceKey,
+    mapId,
     zoom,
     x,
     y
 ) {
 
-    return `${sourceKey}:${zoom}:${x}:${y}`;
+    return `${mapId}:${zoom}:${x}:${y}`;
 }
 
 function getTileURL(
@@ -356,7 +339,6 @@ function isTileRequestRelevant(tile) {
     const map = typeof getCurrentMap === 'function' ? getCurrentMap() : null;
     return map?.id === tile.request.map.id &&
         getMapTileStyleId(map) === tile.request.styleId &&
-        getTileSourceKey(map, tile.request.styleId) === tile.request.sourceKey &&
         (typeof isMapLayerVisible !== 'function' || isMapLayerVisible('tiles')) &&
         tile.lastSeenEpoch === TILE_QUEUE_EPOCH;
 }
@@ -548,11 +530,9 @@ function loadTile(
             map
         );
 
-    const sourceKey = getTileSourceKey(map, styleId);
-
     const key =
         tileKey(
-            sourceKey,
+            `${map.id}:${styleId}`,
             zoom,
             x,
             y
@@ -612,7 +592,6 @@ function loadTile(
         request: {
             map,
             styleId,
-            sourceKey,
             zoom,
             x,
             y
@@ -645,8 +624,6 @@ function findCachedTileAncestor(
             map
         );
 
-    const sourceKey = getTileSourceKey(map, styleId);
-
     for (
         let levels = 1;
         zoom - levels >= tiles.minZoom;
@@ -672,7 +649,7 @@ function findCachedTileAncestor(
         const ancestor =
             TILE_CACHE.get(
                 tileKey(
-                    sourceKey,
+                    `${map.id}:${styleId}`,
                     zoom - levels,
                     Math.floor(
                         x / scale

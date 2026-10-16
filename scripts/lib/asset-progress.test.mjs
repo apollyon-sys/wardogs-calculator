@@ -234,21 +234,16 @@ test('reloading the page creates an independent initial loading cycle', async ()
 
 test('tile progress counts current viewport and style only, keeping deferred loads pending', () => {
     const r = runtime();
-    const map = { id: 'bakurani', bounds: {}, tiles: {
-        path: 'https://assets.example.test/maps/tiles/bakurani/revisions/current',
-        defaultStyle: 'grayscale'
-    } };
+    const map = { id: 'bakurani', tiles: { defaultStyle: 'grayscale' } };
     r.context.TILE_CACHE = new Map();
     r.context.getCurrentMap = () => map;
     r.context.layersVisible = true;
     r.context.isMapLayerVisible = () => r.context.layersVisible;
-    r.context.isValidBounds = bounds => Boolean(bounds);
-    r.context.isValidTileConfig = tiles => Boolean(tiles?.path);
     vm.runInContext(tilesSource, r.context);
     vm.runInContext('TILE_QUEUE_EPOCH = 2', r.context);
     const tile = overrides => ({
         loaded: false, failed: false, lastSeenEpoch: 2,
-        request: { map, styleId: 'grayscale', sourceKey: r.context.getTileSourceKey(map) }, ...overrides
+        request: { map, styleId: 'grayscale' }, ...overrides
     });
     for (const [key, value] of [
         ['ready', tile({ loaded: true })],
@@ -257,8 +252,7 @@ test('tile progress counts current viewport and style only, keeping deferred loa
         ['failed', tile({ failed: true })],
         ['old-view', tile({ lastSeenEpoch: 1 })],
         ['old-map', tile({ request: { map: { id: 'zestafona' }, styleId: 'grayscale' } })],
-        ['old-style', tile({ request: { map, styleId: 'color' } })],
-        ['old-source', tile({ request: { map, styleId: 'grayscale', sourceKey: 'previous-pyramid' } })]
+        ['old-style', tile({ request: { map, styleId: 'color' } })]
     ]) r.context.TILE_CACHE.set(key, value);
     assert.deepEqual(JSON.parse(JSON.stringify(r.context.getVisibleTileLoadingProgress())),
         { total: 4, loaded: 1, failed: 1 });

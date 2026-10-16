@@ -119,56 +119,11 @@ excludes the entire directory from `dist/`, even when a local tile copy exists.
 Already tracked tiles must be removed from Git's index separately after checking
 the CDN upload and the application. Ignoring files does not remove Git history.
 
-To update imagery, publish a complete immutable tile revision inside the existing
-`releases/assets-v1/` prefix, then change the map JSON URLs. Keep published
-revision objects unchanged so long-lived caches cannot mix old and new tiles.
+To update imagery, upload and verify a complete new release prefix first, then
+change the map JSON URLs (for example, to `releases/assets-v2/`). Keep published
+release objects unchanged so long-lived caches cannot mix old and new tiles.
 The example map's relative path can be used for local tile development; give any
 registered production map a published tile URL before deployment.
-
-### Versioned tile updates
-
-Each map and style can use its own published revision, for example:
-
-```text
-releases/assets-v1/maps/tiles/bakurani/revisions/s2-20261015/zoom_0/0_0.webp
-releases/assets-v1/maps/tiles-color/bakurani/revisions/s2-20261015/zoom_0/0_0.webp
-```
-
-Set `tiles.path` and the relevant `tiles.styles.<style>.path` to the directory
-immediately above `zoom_0`. Revisions use 1–48 lowercase letters, digits or
-hyphens, starting with a letter or digit. The release label changes when the
-imagery changes, independently of the application version. Existing unversioned
-paths remain supported; other maps do not require a tile upload for this change.
-
-The loader uses the same source for its initial low-resolution preview and
-detailed tiles. Its memory cache and pending-request checks include that source,
-so an older revision cannot supply a preview for a newer one. The protected
-client retains the complete revision path when selecting the delivery host.
-
-Publish in this order:
-
-1. Deploy the updated asset gateway before enabling versioned paths.
-2. Upload every zoom level of each changed style to a new revision directory.
-   When making a server-side copy from the parent map directory, restrict the
-   source to `zoom_*/*.webp` with `--exclude "*" --include "zoom_*/*.webp"`.
-   Otherwise the copy can include existing revision subdirectories, including
-   its own destination. Do not use `sync --delete` on the parent map directory.
-3. Verify that the new preview and all required detailed tiles exist. A new URL
-   does not repair an incomplete pyramid or an outdated low-resolution source.
-4. Update all changed style paths in the map JSON. If the admission probe uses
-   that map, update `assetGateway.probePath` in `config/app.json` to a published
-   `zoom_0/0_0.webp` from the same revision. Run `npm run check`, then deploy Pages.
-5. Keep previous revisions available for cached clients and rollback. If a
-   published revision needs correcting, publish another revision instead of
-   overwriting its objects. New revision URLs do not need a purge unless they
-   were requested and cached before the upload finished.
-
-Revision URLs use real R2 object keys under the existing protected prefix. They
-require the same access checks as unversioned tiles and need no query string,
-redirect, fallback to old imagery, or additional Worker hop for direct delivery.
-Existing prefix-based WAF rules continue to apply. CDN purging does not clear
-copies already stored in browser caches; changing the object path avoids those
-old copies on the next application load.
 
 These URLs are browser-visible, but they are not a general-purpose public asset
 API. Moving tiles out of Git reduces the checkout and build size, while CORS

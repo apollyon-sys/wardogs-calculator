@@ -371,45 +371,6 @@ test('protected tiles use fetch and release their blob URLs after decoding', asy
     assert.deepEqual(r.revoked, [r.images[0].url]);
 });
 
-test('versioned previews keep their path through direct and restricted delivery', async () => {
-    for (const restricted of [false, true]) {
-        const r = runtime(() => new Response('new-preview'), { restricted });
-        r.context.currentMap = tileMap();
-        r.context.currentMap.tiles.path += '/revisions/s2-20261015';
-        r.load('js/map/tiles.js');
-        const tile = r.context.loadTile(r.context.currentMap, 0, 0, 0);
-        await flush();
-        assert.equal(tile.loaded, true);
-        assert.equal(r.assetRequests().length, 1);
-        const { url, options } = r.assetRequests()[0];
-        assert.equal(new URL(url).origin, restricted ? gateway : direct);
-        assert.equal(new URL(url).pathname,
-            '/releases/assets-v1/maps/tiles/bakurani/revisions/s2-20261015/zoom_0/0_0.webp');
-        assert.equal(new URL(url).search, '');
-        assert.equal(options.credentials, 'include');
-    }
-});
-
-test('a revision changed during admission cancels the old preview before fetching assets', async () => {
-    let allowChallenge;
-    const gate = new Promise(resolve => { allowChallenge = resolve; });
-    const r = runtime(() => new Response('current-preview'), { challengeGate: gate });
-    r.context.currentMap = tileMap();
-    r.load('js/map/tiles.js');
-    const previous = r.context.loadTile(r.context.currentMap, 0, 0, 0);
-    await flush();
-    assert.equal(r.assetRequests().length, 0);
-    r.context.currentMap = tileMap();
-    r.context.currentMap.tiles.path += '/revisions/s2-20261015';
-    const current = r.context.loadTile(r.context.currentMap, 0, 0, 0);
-    allowChallenge();
-    await flush();
-    assert.equal(previous.loading, false);
-    assert.equal(current.loaded, true);
-    assert.equal(r.assetRequests().length, 1);
-    assert.match(r.assetRequests()[0].url, /\/revisions\/s2-20261015\/zoom_0\/0_0\.webp$/);
-});
-
 test('the protected tile queue keeps at most four requests in flight', async () => {
     let release;
     const gate = new Promise(resolve => { release = resolve; });
