@@ -7,7 +7,7 @@ const PROTECTED_MAPS = new Set([
 ]);
 
 const TILE_PATTERN =
-    /^maps\/(tiles(?:-color)?)\/([a-z0-9-]+)\/zoom_(\d+)\/(\d+)_(\d+)\.webp$/;
+    /^maps\/(tiles(?:-color)?)\/([a-z0-9-]+)(?:\/revisions\/([a-z0-9][a-z0-9-]{0,47}))?\/zoom_(\d+)\/(\d+)_(\d+)\.webp$/;
 
 const TERRAIN_CHUNK_PATTERN =
     /^data\/terrain\/([a-z0-9-]+)\/chunks\/(-?\d+)_(-?\d+)\.bin$/;
@@ -40,9 +40,9 @@ export function tileRequest(pathname, prefix) {
         return null;
     }
 
-    const zoom = Number(match[3]);
-    const x = Number(match[4]);
-    const y = Number(match[5]);
+    const zoom = Number(match[4]);
+    const x = Number(match[5]);
+    const y = Number(match[6]);
     const maximum = 2 ** zoom - 1;
 
     if (
@@ -63,6 +63,7 @@ export function tileRequest(pathname, prefix) {
     return {
         style: match[1],
         map: match[2],
+        revision: match[3] || '',
         zoom,
         x,
         y,
