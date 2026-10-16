@@ -659,16 +659,6 @@ function findCachedTileAncestor(
                 levels
             );
 
-        const sourceSize =
-            tiles.tileSize /
-            scale;
-
-        if (
-            sourceSize < 1
-        ) {
-            return null;
-        }
-
         const ancestor =
             TILE_CACHE.get(
                 tileKey(
@@ -691,19 +681,34 @@ function findCachedTileAncestor(
             continue;
         }
 
+        // Crop in decoded image pixels. A preview can have a different
+        // resolution from the nominal tile size used to select a zoom.
+        const sourceWidth = ancestor.image?.naturalWidth / scale;
+        const sourceHeight = ancestor.image?.naturalHeight / scale;
+
+        if (
+            !Number.isFinite(sourceWidth) ||
+            !Number.isFinite(sourceHeight) ||
+            sourceWidth < 1 ||
+            sourceHeight < 1
+        ) {
+            continue;
+        }
+
         return {
             image: ancestor.image,
             sourceX:
                 (
                     x % scale
                 ) *
-                sourceSize,
+                sourceWidth,
             sourceY:
                 (
                     y % scale
                 ) *
-                sourceSize,
-            sourceSize
+                sourceHeight,
+            sourceWidth,
+            sourceHeight
         };
     }
 
@@ -1059,8 +1064,8 @@ function drawTileMap(map) {
                         ancestor.image,
                         ancestor.sourceX,
                         ancestor.sourceY,
-                        ancestor.sourceSize,
-                        ancestor.sourceSize,
+                        ancestor.sourceWidth,
+                        ancestor.sourceHeight,
                         screen.x,
                         screen.y,
                         tileScreenWidth + 0.5,

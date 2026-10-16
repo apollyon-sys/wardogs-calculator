@@ -19,10 +19,15 @@ function tileRuntime() {
     let scale = 1;
     let currentMap = null;
     let imageRequests = 0;
+    let viewportLeft = 0;
+    let viewportTop = 100;
+    const drawnImages = [];
 
     class TestImage {
         constructor() {
             imageRequests++;
+            this.naturalWidth = 256;
+            this.naturalHeight = 256;
         }
 
         set src(value) {
@@ -44,7 +49,21 @@ function tileRuntime() {
         resourceURL: value => value,
         TILE_CACHE: new Map(),
         draw() {},
-        view: () => ({ scale }),
+        view: () => ({ scale, mw: 100 * scale, mh: 100 * scale }),
+        wrap: { clientWidth: 100, clientHeight: 100 },
+        toWorld: (x, y) => ({
+            x: viewportLeft + x / scale,
+            y: viewportTop - y / scale
+        }),
+        worldToLocalScreen: (x, y) => ({
+            x: (x - viewportLeft) * scale,
+            y: (viewportTop - y) * scale
+        }),
+        ctx: {
+            save() {}, restore() {}, beginPath() {}, rect() {}, clip() {},
+            fillRect() {},
+            drawImage(...args) { drawnImages.push(args); }
+        },
         window: {
             setTimeout: () => 0
         }
@@ -57,6 +76,7 @@ function tileRuntime() {
         getTileSourceKey,
         loadTile,
         findCachedTileAncestor,
+        drawTileMap,
         isTileRequestRelevant,
         enqueue(tile) { TILE_LOAD_QUEUE.push(tile); },
         pump: pumpTileLoadQueue,
@@ -67,6 +87,12 @@ function tileRuntime() {
     return {
         api: context.__tiles,
         imageRequests: () => imageRequests,
+        drawnImages,
+        setStyle: value => { context.S.mapStyle = value; },
+        setViewport: (left, top) => {
+            viewportLeft = left;
+            viewportTop = top;
+        },
         setCurrentMap: value => {
             currentMap = value;
         },
@@ -153,6 +179,65 @@ function revisedMap(revision) {
 }
 
 const flush = () => new Promise(resolve => setImmediate(resolve));
+
+test('cached previews crop decoded pixels for both styles on all three maps', async () => {
+    for (const mapId of ['bakurani', 'ozeti', 'zestafona']) {
+        const current = JSON.parse(await readFile(resolve(root, `maps/${mapId}.json`), 'utf8'));
+        for (const style of ['grayscale', 'color']) {
+            const runtime = tileRuntime();
+            runtime.setCurrentMap(current);
+            runtime.setStyle(style);
+            const config = runtime.api.getTileConfig(current);
+            const preview = runtime.api.loadTile(current, config.minZoom, 0, 0);
+            await flush();
+            assert.equal(preview.loaded, true);
+
+            const crop = runtime.api.findCachedTileAncestor(current, config, config.minZoom + 2, 2, 1);
+            assert.deepEqual(
+                [crop.sourceX, crop.sourceY, crop.sourceWidth, crop.sourceHeight],
+                [128, 64, 64, 64],
+                `${mapId}/${style}: a decoded 256 px preview must use its own pixel coordinates`
+            );
+            assert.equal(crop.image, preview.image);
+        }
+    }
+});
+
+test('a 128 px preview still covers the correct quadrant when nominal tiles are 256 px', async () => {
+    const runtime = tileRuntime();
+    runtime.setCurrentMap(map);
+    const preview = runtime.api.loadTile(map, 0, 0, 0);
+    await flush();
+    preview.image.naturalWidth = 128;
+    preview.image.naturalHeight = 128;
+
+    const crop = runtime.api.findCachedTileAncestor(map, runtime.api.getTileConfig(map), 2, 3, 2);
+    assert.deepEqual(
+        [crop.sourceX, crop.sourceY, crop.sourceWidth, crop.sourceHeight],
+        [96, 64, 32, 32]
+    );
+});
+
+test('the renderer draws the matching part of a preview while detailed tiles are pending', async () => {
+    const runtime = tileRuntime();
+    const current = { ...map, tiles: { ...map.tiles, tileSize: 128 } };
+    runtime.setCurrentMap(current);
+    runtime.setScale(128 / 100 * 4);
+    runtime.setViewport(50, 75);
+    const preview = runtime.api.loadTile(current, 0, 0, 0);
+    await flush();
+    preview.image.naturalWidth = 512;
+    preview.image.naturalHeight = 256;
+
+    runtime.api.drawTileMap(current);
+
+    assert.equal(runtime.drawnImages.length, 1);
+    const [image, ...coordinates] = runtime.drawnImages[0];
+    assert.equal(image, preview.image);
+    assert.deepEqual(coordinates.slice(0, 4), [256, 64, 128, 64]);
+    assert.deepEqual(coordinates.slice(4), [0, 0, 128.5, 128.5]);
+    await flush();
+});
 
 test('a new pyramid never reuses a previous preview or detailed tile for the same map and style', async () => {
     const runtime = tileRuntime();
