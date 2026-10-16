@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
+import { copyFile, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
+import { pathToFileURL } from 'node:url';
 import vm from 'node:vm';
 import { BrowserWorker, resolve, runtime, until } from './terrain-height-runtime.mjs';
 
@@ -25,6 +29,34 @@ async function pending(t, options = {}) {
     await until(() => control.workers[0]?.posts.length);
     return { ...control, context, worker: control.workers[0], job: control.workers[0].posts[0] };
 }
+
+test('the background worker loads a file URL with spaces and Unicode through a native filesystem path', async t => {
+    const directory = await mkdtemp(join(tmpdir(), 'wardogs terrain '));
+    let worker;
+    t.after(async () => {
+        if (worker) await worker.thread.terminate();
+        await rm(directory, { recursive: true, force: true });
+    });
+    const source = join(directory, 'terrain height \u0440\u0435\u043b\u044c\u0435\u0444.cjs');
+    await copyFile(new URL('../../js/workers/terrain-height-solver.js', import.meta.url), source);
+    worker = new BrowserWorker(
+        'https://wardogs-artillery.com/js/workers/terrain-height-solver.js?v=test-build',
+        { sourceUrl: pathToFileURL(source) }
+    );
+    let timer;
+    const message = await new Promise((resolve, reject) => {
+        worker.onmessage = event => resolve(event.data);
+        worker.onerror = reject;
+        timer = setTimeout(() => reject(new Error('background worker did not reply')), 5000);
+        worker.postMessage({ id: 7, input: {
+            arc: 'high', distanceMeters: 1800, flatMrad: 1124,
+            deltaZMeters: 0
+        } });
+    }).finally(() => clearTimeout(timer));
+    assert.equal(message.id, 7);
+    assert.equal(message.result.status, 'MODEL_ESTIMATE');
+    assert.equal(message.result.commandMrad, 1124);
+});
 
 test('a real background worker applies HIGH and LOW height estimates for all three maps without extra terrain fetches', async t => {
     const context = await runtime({ WorkerClass: BrowserWorker });

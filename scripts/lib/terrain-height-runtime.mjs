@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
+import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { Worker as ThreadWorker } from 'node:worker_threads';
 
@@ -22,14 +23,14 @@ const rawWeapon = JSON.parse(sources.get('data/weapons.json')).weapons.find(w =>
 const weapon = { ...rawWeapon, minRange: rawWeapon.minRangeKm, maxRange: rawWeapon.maxRangeKm };
 
 export class BrowserWorker {
-    constructor(url) {
+    constructor(url, { sourceUrl = new URL('js/workers/terrain-height-solver.js', root) } = {}) {
         assert.match(url, /^https:\/\/wardogs-artillery\.com\/js\/workers\/terrain-height-solver\.js\?v=test-build$/);
         this.thread = new ThreadWorker(`
             const { parentPort, workerData } = require('node:worker_threads');
             globalThis.postMessage = data => parentPort.postMessage(data);
             require(workerData.source);
             parentPort.on('message', data => globalThis.onmessage({ data }));
-        `, { eval: true, workerData: { source: new URL('js/workers/terrain-height-solver.js', root).pathname } });
+        `, { eval: true, workerData: { source: fileURLToPath(sourceUrl) } });
         this.thread.on('message', data => this.onmessage?.({ data }));
         this.thread.on('error', error => this.onerror?.(error));
     }
