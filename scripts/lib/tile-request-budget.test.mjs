@@ -276,13 +276,15 @@ test('queued requests become irrelevant when the source changes in place', () =>
     assert.equal(runtime.api.findCachedTileAncestor(current, runtime.api.getTileConfig(current), 1, 0, 0), null);
 });
 
-test('both Bakurani styles and the admission probe select the same published revision without query strings', async () => {
+test('Bakurani style revisions remain independent and the admission probe follows its default preview', async () => {
     const current = JSON.parse(await readFile(resolve(root, 'maps/bakurani.json'), 'utf8'));
     const config = JSON.parse(await readFile(resolve(root, 'config/app.json'), 'utf8'));
     const runtime = tileRuntime();
-    const revision = new URL(current.tiles.path).pathname.match(/\/revisions\/([a-z0-9][a-z0-9-]{0,47})$/)?.[1];
-    assert.ok(revision, 'the published Bakurani pyramid must have a revision');
+    assert.equal(current.tiles.path, current.tiles.styles[current.tiles.defaultStyle].path);
     for (const style of ['grayscale', 'color']) {
+        const tiles = runtime.api.getTileConfig(current, style);
+        const revision = new URL(tiles.path).pathname.match(/\/revisions\/([a-z0-9][a-z0-9-]{0,47})$/)?.[1];
+        assert.ok(revision, `the published ${style} pyramid must have a revision`);
         for (const [zoom, x, y] of [[0, 0, 0], [6, 27, 31]]) {
             const url = new URL(runtime.api.getTileURL(current, zoom, x, y, style));
             assert.equal(url.search, '');
@@ -291,5 +293,5 @@ test('both Bakurani styles and the admission probe select the same published rev
         }
     }
     assert.equal(config.assetGateway.probePath,
-        new URL(runtime.api.getTileURL(current, 0, 0, 0, 'grayscale')).pathname);
+        new URL(runtime.api.getTileURL(current, 0, 0, 0, current.tiles.defaultStyle)).pathname);
 });

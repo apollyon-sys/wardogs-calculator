@@ -148,11 +148,13 @@ client retains the complete revision path when selecting the delivery host.
 Publish in this order:
 
 1. Deploy the updated asset gateway before enabling versioned paths.
-2. Upload every zoom level of each changed style to a new revision directory.
-   When making a server-side copy from the parent map directory, restrict the
-   source to `zoom_*/*.webp` with `--exclude "*" --include "zoom_*/*.webp"`.
-   Otherwise the copy can include existing revision subdirectories, including
-   its own destination. Do not use `sync --delete` on the parent map directory.
+2. Upload every zoom level of each changed style from a verified current build
+   to a new revision directory. For server-side copies, copy each `zoom_N/`
+   prefix separately: for example, `bakurani-dev/zoom_3/` to
+   `bakurani/revisions/<new-revision>/zoom_3/`. Never recursively copy the parent
+   map prefix into its own `revisions/` subtree: this can also copy older zoom
+   levels and nested revisions. Do not use `sync --delete` on the parent map
+   directory.
 3. Verify that the new preview and all required detailed tiles exist. A new URL
    does not repair an incomplete pyramid or an outdated low-resolution source.
 4. Update all changed style paths in the map JSON. If the admission probe uses
@@ -162,6 +164,12 @@ Publish in this order:
    published revision needs correcting, publish another revision instead of
    overwriting its objects. New revision URLs do not need a purge unless they
    were requested and cached before the upload finished.
+
+Styles can publish independently: a grayscale update does not require copying
+an unchanged color pyramid. The default `tiles.path` and admission probe must
+follow the default style's published revision. Set a style's `tileSize` when its
+decoded tile dimensions differ from the shared nominal size. For Bakurani's
+current grayscale pyramid, the inspected preview and `zoom_3` tile are 256 px.
 
 Revision URLs use real R2 object keys under the existing protected prefix. They
 require the same access checks as unversioned tiles and need no query string,
