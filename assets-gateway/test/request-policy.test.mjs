@@ -8,7 +8,8 @@ import {
     assetBudgetDescriptor,
     hasBrowserRequestContext,
     isCoverageBoundaryPath,
-    sequenceRateKeys
+    sequenceRateKeys,
+    tileRequest
 } from '../src/request-policy.mjs';
 
 const prefix =
@@ -201,4 +202,45 @@ test('all protected assets receive stable weighted budget descriptors', async ()
         ),
         tile
     );
+});
+
+test('legacy and versioned pyramids retain tile classification and shared sequence limits', async () => {
+    for (const map of maps) {
+        for (const style of ['tiles', 'tiles-color']) {
+            const legacy = `${prefix}maps/${style}/${map}/zoom_5/12_14.webp`;
+            const current = `${prefix}maps/${style}/${map}/revisions/s2-20261015/zoom_5/12_14.webp`;
+            const parsed = tileRequest(current, prefix);
+            assert.equal(parsed.map, map);
+            assert.equal(parsed.style, style);
+            assert.equal(parsed.revision, 's2-20261015');
+            assert.equal(parsed.zoom, 5);
+            assert.equal(parsed.x, 12);
+            assert.equal(parsed.y, 14);
+            assert.equal(tileRequest(legacy, prefix).revision, '');
+            assert.deepEqual(sequenceRateKeys(current, prefix, 'session'),
+                sequenceRateKeys(legacy, prefix, 'session'));
+            assert.equal(isCoverageBoundaryPath(current, prefix), false);
+            assert.equal(isCoverageBoundaryPath(
+                `${prefix}maps/${style}/${map}/revisions/s2-20261015/zoom_5/31_31.webp`, prefix), true);
+            const budget = await assetBudgetDescriptor(current, prefix);
+            assert.equal(budget.category, 'tile');
+            assert.equal(budget.weight, 1);
+            assert.notEqual(budget.key, (await assetBudgetDescriptor(legacy, prefix)).key);
+        }
+    }
+});
+
+test('versioned tile parsing rejects invalid revisions and out-of-range coordinates', () => {
+    for (const relative of [
+        'bakurani/revisions//zoom_0/0_0.webp',
+        'bakurani/revisions/-invalid/zoom_0/0_0.webp',
+        'bakurani/revisions/UPPER/zoom_0/0_0.webp',
+        `bakurani/revisions/${'a'.repeat(49)}/zoom_0/0_0.webp`,
+        'unknown/revisions/current/zoom_0/0_0.webp',
+        'bakurani/revisions/current/zoom_8/0_0.webp',
+        'bakurani/revisions/current/zoom_2/4_0.webp',
+        'bakurani/revisions/current/zoom_2/0_4.webp'
+    ]) {
+        assert.equal(tileRequest(`${prefix}maps/tiles/${relative}`, prefix), null, relative);
+    }
 });
