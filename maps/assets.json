@@ -9,15 +9,6 @@
       "anchorY": 0.5,
       "placeable": true
     },
-    "artillery": {
-      "path": "assets/map-markers/artillery.webp",
-      "labelKey": "markerLabelArtillery",
-      "width": 32,
-      "height": 32,
-      "anchorX": 0.5,
-      "anchorY": 0.5,
-      "placeable": true
-    },
     "assault": {
       "path": "assets/map-markers/assault.webp",
       "width": 32,
@@ -202,8 +193,26 @@
       "placeable": true,
       "colorable": true
     },
-    "dune": {
-      "path": "assets/map-markers/dune.webp",
+    "buggy": {
+      "path": "assets/map-markers/buggy.webp",
+      "width": 32,
+      "height": 32,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "placeable": true,
+      "colorable": true
+    },
+    "wolf": {
+      "path": "assets/map-markers/wolf.webp",
+      "width": 32,
+      "height": 32,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "placeable": true,
+      "colorable": true
+    },
+    "humvee": {
+      "path": "assets/map-markers/humvee.webp",
       "width": 32,
       "height": 32,
       "anchorX": 0.5,
@@ -220,8 +229,35 @@
       "placeable": true,
       "colorable": true
     },
-    "tank": {
-      "path": "assets/map-markers/tank.webp",
+    "heavy_tank": {
+      "path": "assets/map-markers/heavy_tank.webp",
+      "width": 32,
+      "height": 32,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "placeable": true,
+      "colorable": true
+    },
+    "artillery": {
+      "path": "assets/map-markers/artillery.webp",
+      "labelKey": "markerLabelArtillery",
+      "width": 32,
+      "height": 32,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "placeable": true
+    },
+    "littlebird": {
+      "path": "assets/map-markers/littlebird.webp",
+      "width": 32,
+      "height": 32,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "placeable": true,
+      "colorable": true
+    },
+    "lakota": {
+      "path": "assets/map-markers/lakota.webp",
       "width": 32,
       "height": 32,
       "anchorX": 0.5,
@@ -231,15 +267,6 @@
     },
     "havoc": {
       "path": "assets/map-markers/havoc.webp",
-      "width": 32,
-      "height": 32,
-      "anchorX": 0.5,
-      "anchorY": 0.5,
-      "placeable": true,
-      "colorable": true
-    },
-    "heli": {
-      "path": "assets/map-markers/heli.webp",
       "width": 32,
       "height": 32,
       "anchorX": 0.5,
