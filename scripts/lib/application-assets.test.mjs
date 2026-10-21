@@ -76,11 +76,14 @@ test('vehicle markers explicitly opt in to team colors', async () => {
         'bulkhead',
         'quad',
         'kodiak',
-        'dune',
+        'buggy',
+        'wolf',
+        'humvee',
         'ural',
-        'tank',
+        'heavy_tank',
+        'littlebird',
+        'lakota',
         'havoc',
-        'heli',
         'spawn_vehicle'
     ];
 
