@@ -13,7 +13,7 @@
     "wrangler": "^4.142.0",
     "miniflare": "^4.20260730.0",
     "esbuild": "^0.28.2",
-    "happy-dom": "^20.0.0"
+    "happy-dom": "^21.0.4"
   },
   "overrides": {
     "undici": "7.29.1",
